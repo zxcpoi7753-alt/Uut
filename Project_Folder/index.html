@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حلقات الثريا لتحفيظ القرآن الكريم</title>
+    <title>حلقات الثريا لتعليم القرآن الكريم</title>
     
     <link rel="icon" type="image/png" href="1768411699920.png">
     <link rel="apple-touch-icon" href="1768411699920.png">
@@ -21,17 +21,29 @@
     <div id="toast-container" class="toast-container"></div>
 
     <header>
-        <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">☀️ نهاري</button>
+        <button class="theme-circle-btn" onclick="toggleTheme()" id="theme-btn" title="تغيير المظهر">🌙</button>
+        
         <div class="video-container">
             <video autoplay muted loop playsinline><source src="1768472913710.mp4" type="video/mp4"></video>
         </div>
+        
         <h1>حلقات الثريا</h1>
-        <p>لتحفيظ القرآن الكريم - غيل باوزير</p>
+        <p class="header-subtitle">لتعليم القرآن الكريم</p>
+        <p class="header-location">حضرموت - غيل باوزير</p>
         
         <div id="verse-display" class="verse-ticker"></div>
     </header>
 
-    <div class="nav-container" id="nav-buttons"></div>
+    <div class="nav-container-wrapper">
+        <button class="nav-btn-home active" onclick="showSection('home')">🏠 الرئيسية</button>
+        
+        <div class="nav-expand-btn" onclick="toggleNavMenu()">
+            <span>بقية الأقسام</span>
+            <span id="nav-arrow" class="arrow-icon">▼</span>
+        </div>
+
+        <div id="nav-menu-grid" class="nav-grid hidden"></div>
+    </div>
 
     <div class="container">
         
@@ -58,12 +70,10 @@
             <div class="accordion-panel">
                 <div style="padding: 15px 0;">
                     <p style="text-align:center; margin-bottom:15px;">أخبرنا بجهدك اليومي، وسنخبرك متى تختم.</p>
-                    
                     <div id="calc-step-1">
                         <p><strong>1️⃣ كم يوماً تحفظ في الأسبوع؟</strong></p>
                         <div id="days-buttons-container" class="button-grid"></div>
                     </div>
-
                     <div id="calc-step-2" style="display:none;">
                         <p><strong>2️⃣ كم مقدار الحفظ اليومي؟</strong></p>
                         <div id="amount-buttons-container" class="button-grid"></div>
@@ -72,7 +82,6 @@
                             <button class="nav-btn" style="margin-top:10px; width:100%" onclick="calculatePlan(document.getElementById('custom-pages').value)">احسب النتيجة 🧮</button>
                         </div>
                     </div>
-
                     <div id="calc-result" class="calc-result"></div>
                     <button id="reset-calc" class="nav-btn" style="display:none; margin-top:10px; width:100%; border-color:#ef4444; color:#ef4444;" onclick="resetCalc()">حساب جديد 🔄</button>
                 </div>
@@ -86,29 +95,14 @@
                         <label class="radio-label"><input type="radio" name="planType" value="حفظ" checked> 🧠 خطة حفظ</label>
                         <label class="radio-label"><input type="radio" name="planType" value="قراءة"> 📖 خطة قراءة</label>
                     </div>
-                    <div class="calc-input-group">
-                        <label>🗓️ الختم بالأيام:</label>
-                        <select id="target-days" class="form-select"></select>
-                    </div>
-                    <div class="calc-input-group">
-                        <label>📅 الختم بالأشهر:</label>
-                        <select id="target-months" class="form-select"></select>
-                    </div>
-                    <div class="calc-input-group">
-                        <label>📆 الختم بالسنوات:</label>
-                        <select id="target-years" class="form-select"></select>
-                    </div>
-                    <div class="calc-input-group">
-                        <label>⏩ تخطي أجزاء (تم إنجازها):</label>
-                        <select id="skipped-parts" class="form-select">
-                            <option value="0">لا يوجد (سأبدأ من الصفر)</option>
-                        </select>
-                    </div>
+                    <div class="calc-input-group"><label>🗓️ الختم بالأيام:</label><select id="target-days" class="form-select"></select></div>
+                    <div class="calc-input-group"><label>📅 الختم بالأشهر:</label><select id="target-months" class="form-select"></select></div>
+                    <div class="calc-input-group"><label>📆 الختم بالسنوات:</label><select id="target-years" class="form-select"></select></div>
+                    <div class="calc-input-group"><label>⏩ تخطي أجزاء:</label><select id="skipped-parts" class="form-select"><option value="0">لا يوجد (سأبدأ من الصفر)</option></select></div>
                     <button class="nav-btn active" style="width:100%; padding:15px;" onclick="calculateReversePlan()">✨ احسب خطتي ✨</button>
                     <div id="reverse-calc-result" class="calc-result"></div>
                 </div>
             </div>
-            
             <button class="accordion-btn">🧠 اختبر حفظك (نظام ذكي) <span>▼</span></button>
             <div class="accordion-panel">
                 <div style="padding: 15px 0;">
@@ -203,7 +197,7 @@
         <div id="section-about" class="page-section">
             <h2 style="color:var(--primary-color)">🕌 من نحن</h2>
             <div class="card poetic-text">
-                نحن حلقات الثريا لتحفيظ القرآن الكريم،<br>
+                نحن حلقات الثريا لتعليم القرآن الكريم،<br>
                 حيث لا يُحفظ القرآن بالألسنة فقط،<br>
                 بل تُربّى به القلوب، وتُهذَّب النفوس، وتُبنى الأرواح.<br><br>
                 <span class="quran-verse">﴿ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴾</span><br><br>
