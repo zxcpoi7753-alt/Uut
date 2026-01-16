@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حلقات الثريا لتحفيظ القرآن الكريم</title>
+    
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === محتوى ملف style.css === */
+        :root {
+            --primary-color: #047857;
+            --accent-color: #fbbf24;
+            --text-dark: #1f2937;
+            --bg-light: #f3f4f6;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+        }
+
+        body.dark-mode {
+            --primary-color: #34d399; 
+            --text-dark: #f9fafb;
+            --bg-light: #111827; 
+            --card-bg: #1f2937; 
+            --border-color: #374151;
+        }
+
+        body { font-family: 'Cairo', sans-serif; margin: 0; padding: 0; background-color: var(--bg-light); color: var(--text-dark); position: relative; transition: background 0.3s, color 0.3s; }
+
+        body::before {
+            content: ""; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80%; height: 60%; background: url('logo.png') center/contain no-repeat;
+            opacity: 0.03; z-index: -1; pointer-events: none;
+        }
+
+        header { background-color: #047857; color: white; padding: 20px; text-align: center; position: relative; border-bottom: 4px solid var(--accent-color); }
+        header h1 { margin: 0; font-family: 'Amiri', serif; font-size: 2rem; }
+
+        .video-container {
+            position: absolute; top: 10px; left: 10px;
+            width: 55px; height: 55px; border: 2px solid var(--accent-color);
+            border-radius: 50%; overflow: hidden; z-index: 1000; box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        .video-container video { width: 100%; height: 100%; object-fit: cover; }
+
+        .theme-toggle {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+            color: white; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.9rem;
+            transition: 0.3s; z-index: 1001;
+        }
+        .theme-toggle:hover { background: rgba(255,255,255,0.4); }
+
+        .verse-ticker {
+            font-family: 'Amiri', serif; color: var(--accent-color); font-size: 1.1rem;
+            margin-top: 10px; min-height: 30px; transition: opacity 1.5s ease-in-out; opacity: 0;
+        }
+        .verse-ticker.visible { opacity: 1; }
+
+        .nav-container {
+            background: var(--card-bg); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 12px;
+            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+            position: sticky; top: 0; z-index: 100; transition: background 0.3s;
+        }
+
+        .nav-btn {
+            background: none; border: 1px solid var(--primary-color); color: var(--primary-color);
+            padding: 8px 16px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: 0.3s;
+            font-size: 0.9rem;
+        }
+        .nav-btn.active, .nav-btn:hover { background-color: var(--primary-color); color: white; transform: translateY(-2px); box-shadow: 0 2px 5px rgba(4, 120, 87, 0.3); }
+        body.dark-mode .nav-btn.active { color: #111827; background-color: var(--primary-color); }
+
+        .container { max-width: 800px; margin: 25px auto; padding: 0 15px; }
+        .page-section { display: none; animation: fadeIn 0.4s ease-out; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { 
+            background: var(--card-bg); padding: 20px; margin-bottom: 20px; border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; border: 1px solid var(--border-color);
+        }
+        .clickable { cursor: pointer; border-right: 4px solid var(--accent-color); }
+
+        table { 
+            width: 100%; border-collapse: separate; border-spacing: 0; 
+            background: var(--card-bg); border-radius: 10px; overflow: hidden; 
+            margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        th, td { padding: 12px 15px; text-align: center; border-bottom: 1px solid var(--border-color); }
+        th { background-color: var(--primary-color); color: white; font-weight: bold; }
+        
+        .accordion-btn {
+            background-color: var(--card-bg); color: var(--text-dark); cursor: pointer;
+            padding: 18px 20px; width: 100%; text-align: right; border: none; outline: none;
+            transition: 0.3s; border-radius: 10px; margin-bottom: 12px;
+            font-weight: bold; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border-color);
+        }
+        .accordion-btn.active-acc { background-color: var(--primary-color); color: white; }
+        
+        .accordion-panel {
+            padding: 0 15px; background-color: var(--card-bg);
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out;
+            border-radius: 0 0 10px 10px; margin-bottom: 15px; margin-top: -10px;
+            border: 1px solid var(--border-color); border-top: none;
+        }
+
+        .calc-input-group { margin-bottom: 15px; }
+        .calc-input-group label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--primary-color); }
+        select.form-select, input.form-input {
+            width: 100%; padding: 12px; border-radius: 8px; 
+            border: 1px solid var(--border-color); 
+            background: var(--bg-light); color: var(--text-dark);
+            font-family: inherit; font-size: 1rem;
+        }
+
+        .calc-result { 
+            background: rgba(251, 191, 36, 0.1); border: 2px solid var(--accent-color); 
+            padding: 15px; border-radius: 10px; margin-top: 15px; text-align: center; 
+            display: none; animation: fadeIn 0.5s;
+        }
+
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .contact-box {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; border-radius: 12px; color: white; text-decoration: none;
+            transition: transform 0.2s; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .bg-whatsapp { background-color: #25D366; }
+        .bg-insta { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .bg-call { background-color: #3b82f6; }
+        .bg-map { background-color: #ea4335; }
+
+        .quran-verse { color: var(--primary-color); font-family: 'Amiri', serif; font-size: 1.5rem; margin-top: 15px; display: block; text-align: center;}
+        footer { text-align: center; padding: 25px; color: #666; font-size: 0.9rem; border-top: 1px solid var(--border-color); margin-top: 30px; }
+        
+        .winner-list { display: none; margin-top: 10px; color: var(--primary-color); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">☀️ نهاري</button>
+        <div class="video-container">
+            <video autoplay muted loop playsinline><source src="1768472913710.mp4" type="video/mp4"></video>
+        </div>
+        <h1>حلقات الثريا</h1>
+        <p>لتحفيظ القرآن الكريم - غيل باوزير</p>
+        <div id="verse-display" class="verse-ticker"></div>
+    </header>
+
+    <div class="nav-container" id="nav-buttons"></div>
+
+    <div class="container">
+        <div id="section-home" class="page-section active">
+            <h2 style="color:var(--primary-color)">📢 آخر الأخبار</h2>
+            <div id="news-list"></div>
+
+            <h2 style="color:var(--primary-color); margin-top:25px;">❓ السؤال الأسبوعي</h2>
+            <div class="card" style="border-right: 4px solid var(--accent-color);">
+                <p><strong>سؤال الأسبوع:</strong> ما هي السورة التي تسمى "سنام القرآن"؟</p>
+                <div style="background: rgba(251, 191, 36, 0.1); padding: 10px; border-radius: 8px;">
+                    <strong>🏆 الفائز السابق:</strong> <span style="color: var(--primary-color);">عمر بن علي باوزير</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-student" class="page-section">
+            <h2 style="color:var(--primary-color)">📖 ركن الطالب</h2>
+            
+            <button class="accordion-btn">🚀 خطة ختمي (بناءً على جهدي) <span>▼</span></button>
+            <div class="accordion-panel">
+                <div style="padding: 15px 0;">
+                    <div id="calc-step-1">
+                        <p><strong>1️⃣ كم يوماً تحفظ في الأسبوع؟</strong></p>
+                        <div id="days-options"></div>
+                    </div>
+                    <div id="calc-step-2" style="display:none;">
+                        <p><strong>2️⃣ كم مقدار الحفظ اليومي؟</strong></p>
+                        <div id="amount-options"></div>
+                        <div id="custom-amount-div" style="display:none;">
+                            <input type="number" id="custom-pages" class="form-input" placeholder="اكتب عدد الصفحات">
+                            <button class="nav-btn" style="margin-top:10px; width:100%" onclick="calculatePlan(document.getElementById('custom-pages').value)">احسب النتيجة 🧮</button>
+                        </div>
+                    </div>
+                    <div id="calc-result" class="calc-result"></div>
+                    <button id="reset-calc" class="nav-btn" style="display:none; margin-top:10px; width:100%" onclick="resetCalc()">حساب جديد 🔄</button>
+                </div>
+            </div>
+
+            <button class="accordion-btn">🧭 دليل الختم (بناءً على وقتي) <span>▼</span></button>
+            <div class="accordion-panel">
+                <div style="padding: 15px 0;">
+                    <div class="calc-input-group"><label>🗓️ الختم بالأيام:</label><select id="target-days" class="form-select"></select></div>
+                    <div class="calc-input-group"><label>📅 الختم بالأشهر:</label><select id="target-months" class="form-select"></select></div>
+                    <div class="calc-input-group"><label>📆 الختم بالسنوات:</label><select id="target-years" class="form-select"></select></div>
+                    <button class="nav-btn active" style="width:100%; padding:15px;" onclick="calculateReversePlan()">✨ احسب خطتي ✨</button>
+                    <div id="reverse-calc-result" class="calc-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-ranks" class="page-section">
+            <h2 style="color:var(--primary-color)">🏆 أوائل الحلقات</h2>
+            <div id="ranks-list"></div>
+        </div>
+
+        <div id="section-schedule" class="page-section">
+            <h2 style="color:var(--primary-color)">📅 الجداول الدراسية</h2>
+            <div class="group-title">☀️ حلقات العصر</div>
+            <div id="ring-selectors-afternoon" style="display:flex; gap:10px; margin:10px 0; flex-wrap:wrap;"></div>
+            <div class="group-title">🌙 حلقات بعد المغرب</div>
+            <div id="ring-selectors-evening" style="display:flex; gap:10px; margin:10px 0; flex-wrap:wrap;"></div>
+            <div id="schedule-display"></div>
+        </div>
+
+        <div id="section-teachers" class="page-section">
+            <h2 style="color:var(--primary-color)">👨‍🏫 قائمة المعلمين</h2>
+            <div id="teachers-list"></div>
+        </div>
+
+        <div id="section-about" class="page-section">
+            <h2 style="color:var(--primary-color)">🕌 من نحن</h2>
+            <div class="card" style="text-align:center; line-height:2;">
+                نحن حلقات الثريا لتحفيظ القرآن الكريم بغيل باوزير...<br>
+                <span class="quran-verse">﴿ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴾</span>
+            </div>
+            <h2 style="color:var(--primary-color)">📞 تواصل معنا</h2>
+            <div class="contact-grid">
+                <a href="https://wa.me/967777006546" target="_blank" class="contact-box bg-whatsapp">واتساب</a>
+                <a href="https://www.instagram.com/pb8.c" target="_blank" class="contact-box bg-insta">انستقرام</a>
+                <a href="tel:+967777006546" class="contact-box bg-call">اتصال</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>جميع الحقوق محفوظة © 2026</footer>
+
+    <script>
+        /* === محتوى ملف script.js (مع إزالة أكواد quran.json) === */
+        let isDarkMode = false;
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            const btn = document.getElementById('theme-btn');
+            btn.innerText = isDarkMode ? "🌙 ليلي" : "☀️ نهاري";
+        }
+
+        // Accordions
+        const acc = document.getElementsByClassName("accordion-btn");
+        for (let i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active-acc");
+                const panel = this.nextElementSibling;
+                panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight + "px";
+            });
+        }
+
+        // Populate Selects
+        function populateSelect(id, min, max, label) {
+            const s = document.getElementById(id);
+            for(let i=min; i<=max; i++) {
+                let op = document.createElement("option");
+                op.value = i; op.text = i + " " + label;
+                s.appendChild(op);
+            }
+        }
+        if(document.getElementById('target-days')) {
+            populateSelect("target-days", 0, 30, "يوم");
+            populateSelect("target-months", 0, 12, "شهر");
+            populateSelect("target-years", 0, 10, "سنة");
+        }
+
+        const siteData = {
+            news: [
+                { id: 1, date: "15-1", text: "تم تكريم الطلاب المتميزين", winners: ["سعيد أحمد", "محمد فؤاد"] },
+                { id: 2, date: "12-1", text: "بداية التسجيل للدورة الصيفية.", winners: [] }
+            ],
+            ranks: [
+                { ring: "حلقة عمر بن الخطاب", students: ["خالد أحمد", "ياسين عمر"] },
+                { ring: "حلقة أبو بكر الصديق", students: ["سعد إبراهيم", "عبدالله علي"] }
+            ],
+            teachers: [
+                { name: "الشيخ عبدالله", job: "المشرف العام" },
+                { name: "أ. أحمد محمد", job: "حلقة أبو بكر" }
+            ],
+            afternoonRings: [{ name: "حلقة عمر بن الخطاب", time: "4:00 - 5:00 عصراً" }],
+            eveningRings: [{ name: "حلقة أبو بكر الصديق", time: "بعد المغرب" }]
+        };
+
+        const menus = [
+            { id: 'home', text: '🏠 الرئيسية' },
+            { id: 'ranks', text: '🏆 الأوائل' },
+            { id: 'schedule', text: '📅 الجداول' },
+            { id: 'student', text: '📖 ركن الطالب' },
+            { id: 'teachers', text: '👨‍🏫 المعلمون' },
+            { id: 'about', text: 'ℹ️ من نحن' }
+        ];
+
+        const navContainer = document.getElementById('nav-buttons');
+        menus.forEach(menu => {
+            const btn = document.createElement('button');
+            btn.className = 'nav-btn'; btn.innerText = menu.text;
+            btn.onclick = () => {
+                document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(`section-${menu.id}`).classList.add('active');
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            };
+            navContainer.appendChild(btn);
+        });
+        navContainer.firstChild.classList.add('active');
+
+        // Calculators
+        let selectedDays = 0;
+        const daysOptionsDiv = document.getElementById('days-options');
+        [1,2,3,4,5,6,7].forEach(v => {
+            const btn = document.createElement('button');
+            btn.className = 'calc-btn'; btn.innerText = v + " أيام";
+            btn.onclick = () => {
+                selectedDays = v;
+                document.getElementById('calc-step-1').style.display = 'none';
+                document.getElementById('calc-step-2').style.display = 'block';
+            };
+            daysOptionsDiv.appendChild(btn);
+        });
+
+        const amountOptionsDiv = document.getElementById('amount-options');
+        [1, 2, 5, 10, 20].forEach(v => {
+            const btn = document.createElement('button');
+            btn.className = 'calc-btn'; btn.innerText = v + " صفحة";
+            btn.onclick = () => calculatePlan(v);
+            amountOptionsDiv.appendChild(btn);
+        });
+
+        function calculatePlan(pages) {
+            const totalDays = Math.ceil(604 / (pages * selectedDays) * 7);
+            const res = document.getElementById('calc-result');
+            res.style.display = 'block';
+            res.innerHTML = `ستختم خلال ${totalDays} يوم تقريباً بإذن الله.`;
+            document.getElementById('reset-calc').style.display = 'block';
+        }
+
+        function resetCalc() {
+            document.getElementById('calc-step-1').style.display = 'block';
+            document.getElementById('calc-step-2').style.display = 'none';
+            document.getElementById('calc-result').style.display = 'none';
+            document.getElementById('reset-calc').style.display = 'none';
+        }
+
+        function calculateReversePlan() {
+            const d = parseInt(document.getElementById('target-days').value) || 0;
+            const m = parseInt(document.getElementById('target-months').value) || 0;
+            const y = parseInt(document.getElementById('target-years').value) || 0;
+            const total = d + (m * 30) + (y * 365);
+            if(total === 0) return alert("اختر مدة");
+            const pages = (604 / total).toFixed(1);
+            const res = document.getElementById('reverse-calc-result');
+            res.style.display = 'block';
+            res.innerHTML = `المطلوب حفظ ${pages} صفحة يومياً.`;
+        }
+
+        // Render Data
+        siteData.news.forEach(n => {
+            document.getElementById('news-list').innerHTML += `<div class="card"><strong>${n.date}</strong><br>${n.text}</div>`;
+        });
+        siteData.ranks.forEach(r => {
+            document.getElementById('ranks-list').innerHTML += `<div class="card"><strong>${r.ring}</strong><br>${r.students.join(' - ')}</div>`;
+        });
+        siteData.teachers.forEach(t => {
+            document.getElementById('teachers-list').innerHTML += `<div class="card"><strong>${t.name}</strong> - ${t.job}</div>`;
+        });
+
+        // Verse Ticker
+        const verses = ["﴿ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴾", "﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾"];
+        function showVerse() {
+            const v = document.getElementById('verse-display');
+            v.innerText = verses[Math.floor(Math.random()*verses.length)];
+            v.classList.add('visible');
+            setTimeout(() => v.classList.remove('visible'), 5000);
+        }
+        setInterval(showVerse, 10000); showVerse();
+    </script>
+</body>
+</html>
