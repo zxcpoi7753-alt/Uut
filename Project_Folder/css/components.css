@@ -1,0 +1,48 @@
+/* css/components.css - العناصر والأزرار */
+.card { background: var(--card-bg); padding: 15px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: background 0.3s; }
+.clickable { cursor: pointer; border-right: 4px solid var(--accent-color); }
+
+/* الأزرار */
+.nav-btn {
+    background: none; border: 2px solid var(--primary-color); color: var(--primary-color);
+    padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.3s;
+}
+.nav-btn.active, .nav-btn:hover { background-color: var(--primary-color); color: white; }
+body.dark-mode .nav-btn.active { color: #111827; }
+
+.theme-toggle {
+    position: absolute; top: 15px; right: 15px;
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+    color: white; padding: 5px 10px; border-radius: 20px; cursor: pointer; font-size: 1.2rem;
+    transition: 0.3s; z-index: 1001;
+}
+
+/* القوائم المنسدلة */
+.accordion-btn {
+    background-color: var(--bg-light); color: var(--text-dark); cursor: pointer; padding: 18px;
+    width: 100%; text-align: right; border: 1px solid var(--border-color); outline: none; transition: 0.4s;
+    border-radius: 10px; margin-bottom: 10px; font-weight: bold; display: flex; justify-content: space-between;
+}
+.accordion-btn:hover, .accordion-btn.active-acc { background-color: var(--primary-color); color: white; }
+.accordion-panel { padding: 0 15px; background-color: var(--card-bg); max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; border-radius: 0 0 10px 10px; margin-bottom: 15px; border: 1px solid var(--border-color); border-top: none; }
+
+/* الجداول والحقول */
+table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; margin-top: 10px; }
+th, td { padding: 10px; text-align: center; border-bottom: 1px solid var(--border-color); }
+th { background-color: var(--primary-color); color: #fff; }
+body.dark-mode th { color: #111827; }
+
+select.form-select, input.form-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-dark); font-family: inherit; font-size: 1rem; }
+.calc-btn { display: block; width: 100%; margin: 5px 0; padding: 12px; background: var(--bg-light); border: 2px solid var(--border-color); border-radius: 8px; color: var(--text-dark); cursor: pointer; transition: 0.2s; text-align: center; }
+.calc-btn:hover { border-color: var(--primary-color); background: rgba(4, 120, 87, 0.05); }
+.calc-result { background: rgba(251, 191, 36, 0.1); border: 2px solid var(--accent-color); padding: 15px; border-radius: 10px; margin-top: 15px; text-align: center; display: none; animation: fadeIn 0.5s; }
+
+/* التواصل والمسابقات */
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+.contact-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; border-radius: 12px; color: white; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.bg-whatsapp { background-color: #25D366; } .bg-insta { background: linear-gradient(45deg, #f09433, #dc2743, #bc1888); } .bg-call { background-color: #3b82f6; } .bg-map { background-color: #ea4335; }
+.winner-list { display: none; margin-top: 10px; padding: 10px; background: rgba(4, 120, 87, 0.1); border-radius: 8px; border: 1px dashed var(--primary-color); }
+.verse-ticker { font-family: 'Amiri', serif; color: var(--accent-color); font-size: 1.1rem; margin-top: 10px; min-height: 30px; transition: opacity 1.5s; opacity: 0; }
+.verse-ticker.visible { opacity: 1; }
+.group-title { background: var(--border-color); padding: 8px; border-radius: 5px; margin-top: 15px; font-weight: bold; color: var(--primary-color); }
+.radio-group { display: flex; gap: 15px; margin-bottom: 15px; }
