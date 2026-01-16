@@ -61,19 +61,55 @@
                 </div>
             </div>
         </div>
-
         <div id="section-student" class="page-section">
             <h2 style="color:var(--primary-color)">📖 ركن الطالب</h2>
             <p style="text-align:center; color:gray; margin-bottom:20px;">أدوات ذكية لمساعدتك في رحلة القرآن</p>
+
+            <button class="accordion-btn" onclick="openQuranApp()">📖 الختمة (المصحف الشريف) <span>▼</span></button>
+            <div id="quran-app-container" class="accordion-panel">
+                <div style="padding: 15px 0;">
+                    
+                    <div class="quran-header-controls">
+                        <input type="text" id="quran-search" class="form-input" placeholder="🔍 ابحث عن سورة (مثلاً: الكهف)..." onkeyup="filterSurahs()">
+                        <button class="nav-btn" onclick="goToBookmark()" title="الذهاب لآخر موضع">🔖 استكمال</button>
+                    </div>
+
+                    <div id="surah-grid" class="surah-grid-container"></div>
+
+                    <div id="reading-area" style="display:none;">
+                        <div class="reading-header">
+                            <button onclick="closeReading()" class="nav-btn" style="border:none;">🔙 الفهرس</button>
+                            <h3 id="current-surah-title" style="margin:0; color:var(--primary-color);"></h3>
+                        </div>
+                        
+                        <div id="quran-text-display" class="quran-text-content"></div>
+                        
+                        <button class="nav-btn" style="width:100%; margin-top:30px; border-color:#d97706; color:#d97706;" onclick="showDuaa()">🤲 دعاء ختم القرآن</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:15px; border-right:4px solid #8b5cf6;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0; font-size:1.1rem;">⏰ منبه الحفظ</h3>
+                    <span style="font-size:0.8rem; color:gray;">لن تنس وردك بعد اليوم!</span>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <input type="time" id="alarm-time" class="form-input" style="flex:1;">
+                    <button class="nav-btn active" onclick="setStudyAlarm()" style="flex:1;">🔔 ضبط</button>
+                </div>
+            </div>
 
             <button class="accordion-btn">🚀 خطة ختمي (بناءً على جهدي) <span>▼</span></button>
             <div class="accordion-panel">
                 <div style="padding: 15px 0;">
                     <p style="text-align:center; margin-bottom:15px;">أخبرنا بجهدك اليومي، وسنخبرك متى تختم.</p>
+                    
                     <div id="calc-step-1">
                         <p><strong>1️⃣ كم يوماً تحفظ في الأسبوع؟</strong></p>
                         <div id="days-buttons-container" class="button-grid"></div>
                     </div>
+
                     <div id="calc-step-2" style="display:none;">
                         <p><strong>2️⃣ كم مقدار الحفظ اليومي؟</strong></p>
                         <div id="amount-buttons-container" class="button-grid"></div>
@@ -82,6 +118,7 @@
                             <button class="nav-btn" style="margin-top:10px; width:100%" onclick="calculatePlan(document.getElementById('custom-pages').value)">احسب النتيجة 🧮</button>
                         </div>
                     </div>
+
                     <div id="calc-result" class="calc-result"></div>
                     <button id="reset-calc" class="nav-btn" style="display:none; margin-top:10px; width:100%; border-color:#ef4444; color:#ef4444;" onclick="resetCalc()">حساب جديد 🔄</button>
                 </div>
@@ -91,14 +128,31 @@
             <div class="accordion-panel">
                 <div style="padding: 15px 0;">
                     <p>حدد المدة التي تريد الختم فيها، وسنرسم لك الخطة.</p>
+
                     <div class="radio-group">
                         <label class="radio-label"><input type="radio" name="planType" value="حفظ" checked> 🧠 خطة حفظ</label>
                         <label class="radio-label"><input type="radio" name="planType" value="قراءة"> 📖 خطة قراءة</label>
                     </div>
-                    <div class="calc-input-group"><label>🗓️ الختم بالأيام:</label><select id="target-days" class="form-select"></select></div>
-                    <div class="calc-input-group"><label>📅 الختم بالأشهر:</label><select id="target-months" class="form-select"></select></div>
-                    <div class="calc-input-group"><label>📆 الختم بالسنوات:</label><select id="target-years" class="form-select"></select></div>
-                    <div class="calc-input-group"><label>⏩ تخطي أجزاء:</label><select id="skipped-parts" class="form-select"><option value="0">لا يوجد (سأبدأ من الصفر)</option></select></div>
+
+                    <div class="calc-input-group">
+                        <label>🗓️ الختم بالأيام:</label>
+                        <select id="target-days" class="form-select"></select>
+                    </div>
+                    <div class="calc-input-group">
+                        <label>📅 الختم بالأشهر:</label>
+                        <select id="target-months" class="form-select"></select>
+                    </div>
+                    <div class="calc-input-group">
+                        <label>📆 الختم بالسنوات:</label>
+                        <select id="target-years" class="form-select"></select>
+                    </div>
+                    <div class="calc-input-group">
+                        <label>⏩ تخطي أجزاء (تم إنجازها):</label>
+                        <select id="skipped-parts" class="form-select">
+                            <option value="0">لا يوجد (سأبدأ من الصفر)</option>
+                        </select>
+                    </div>
+
                     <button class="nav-btn active" style="width:100%; padding:15px;" onclick="calculateReversePlan()">✨ احسب خطتي ✨</button>
                     <div id="reverse-calc-result" class="calc-result"></div>
                 </div>
@@ -106,7 +160,7 @@
             <button class="accordion-btn">🧠 اختبر حفظك (نظام ذكي) <span>▼</span></button>
             <div class="accordion-panel">
                 <div style="padding: 15px 0;">
-                    <div class="alert-box" id="quiz-loading" style="display:none;">⏳ جاري تحميل بيانات المصحف...</div>
+                    <div class="alert-box" id="quiz-loading" style="display:none;">⏳ جاري تحميل البيانات...</div>
                     
                     <div id="quiz-controls">
                         <div class="calc-input-group">
@@ -228,5 +282,5 @@
     <script src="js/calculator.js"></script>
     <script src="js/quiz.js"></script>
     <script src="js/logic.js"></script>
-</body>
+    <script src="js/quran_app.js"></script> </body>
 </html>
