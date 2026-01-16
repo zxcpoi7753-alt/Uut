@@ -1,0 +1,11 @@
+/* css/darkmode.css - ألوان الوضع الليلي فقط */
+body.dark-mode {
+    --primary-color: #34d399; 
+    --text-dark: #f9fafb;
+    --bg-light: #111827; 
+    --card-bg: #1f2937; 
+    --border-color: #374151;
+}
+
+body.dark-mode th { color: #111827; }
+body.dark-mode .nav-btn.active { color: #111827; font-weight: 800; }
