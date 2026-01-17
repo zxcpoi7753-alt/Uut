@@ -43,3 +43,9 @@ function showKhatmaDua() {
 function togglePage(el) {
     el.classList.toggle("open");
 }
+function toggleSections() {
+    const section = document.getElementById("sections-rest");
+    if (!section) return;
+
+    section.classList.toggle("open");
+}
