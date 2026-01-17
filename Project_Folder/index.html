@@ -59,19 +59,63 @@
                 </button>
             </div>
         </div>
-
         <div id="section-student" class="page-section">
             <h2 style="color:var(--primary-color)">📖 ركن الطالب</h2>
             <p style="text-align:center; color:gray; margin-bottom:20px;">أدوات ذكية لمساعدتك في رحلة القرآن</p>
 
-            <button class="accordion-btn" onclick="loadAzkarCategories()">📿 الأذكار اليومية <span>▼</span></button>
+            <button class="accordion-btn" onclick="loadAzkarCategories()">📿 الأذكار والسبحة الإلكترونية <span>▼</span></button>
             <div id="azkar-app-container" class="accordion-panel">
                 <div style="padding: 15px 0;">
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:var(--bg-light); padding:10px; border-radius:8px; border:1px dashed var(--border-color);">
+                        <label style="font-size:0.9rem;">🔄 تصفير العدادات:</label>
+                        <select id="reset-period-select" onchange="saveResetSetting()" style="padding:5px; border-radius:5px; border:1px solid var(--border-color);">
+                            <option value="24">كل 24 ساعة (يومياً)</option>
+                            <option value="12">كل 12 ساعة</option>
+                            <option value="manual">يدوياً فقط</option>
+                        </select>
+                    </div>
+
                     <div id="azkar-categories-grid" class="button-grid"></div>
+
                     <div id="azkar-list-container" style="display:none; margin-top:15px;">
-                        <button class="nav-btn" onclick="backToAzkarCategories()" style="margin-bottom:15px;">🔙 عودة للأقسام</button>
+                        <div style="display:flex; gap:10px; margin-bottom:15px;">
+                            <button class="nav-btn" onclick="backToAzkarCategories()" style="flex:1;">🔙 عودة</button>
+                            <button class="nav-btn" onclick="resetCategoryCounters()" style="flex:1; border-color:#ef4444; color:#ef4444;">🔄 تصفير القسم</button>
+                        </div>
                         <h3 id="azkar-category-title" style="color:var(--primary-color); text-align:center; margin-top:0;"></h3>
                         <div id="azkar-items-list"></div>
+                    </div>
+
+                    <div id="subha-interface" style="display:none; margin-top:15px;">
+                        <button class="nav-btn" onclick="backToAzkarCategories()" style="margin-bottom:15px; width:100%;">🔙 عودة للقائمة</button>
+                        
+                        <div class="card" style="text-align:center; border:2px solid var(--primary-color);">
+                            <h3 style="color:var(--primary-color); margin:0;">📿 المسبحة الإلكترونية</h3>
+                            <div id="subha-display-area" style="margin-top:20px;">
+                                <div style="font-size:3rem; font-weight:bold; color:var(--accent-color); font-family:'Cairo', sans-serif;" id="main-tasbeeh-counter">0</div>
+                                <p id="current-tasbeeh-label" style="color:gray; margin-top:5px;">اختر ذكراً للبدء</p>
+                            </div>
+                            
+                            <div style="display:flex; justify-content:center; gap:15px; margin-top:20px;">
+                                <button class="nav-btn" onclick="subhaAction('undo')" style="border-color:#f59e0b; color:#f59e0b;">↩️ تراجع</button>
+                                <button class="nav-btn" onclick="subhaAction('reset')" style="border-color:#ef4444; color:#ef4444;">🔄 تصفير</button>
+                            </div>
+                        </div>
+
+                        <p style="text-align:center; font-weight:bold; margin-top:15px;">اختر الذكر للتسبيح:</p>
+                        <div class="button-grid">
+                            <button class="calc-btn-option" onclick="setTasbeeh('سبحان الله')">سبحان الله</button>
+                            <button class="calc-btn-option" onclick="setTasbeeh('الحمد لله')">الحمد لله</button>
+                            <button class="calc-btn-option" onclick="setTasbeeh('الله أكبر')">الله أكبر</button>
+                            <button class="calc-btn-option" onclick="setTasbeeh('لا إله إلا الله')">لا إله إلا الله</button>
+                            <button class="calc-btn-option" onclick="setTasbeeh('أستغفر الله')">أستغفر الله</button>
+                            <button class="calc-btn-option" onclick="setTasbeeh('اللهم صل وسلم على نبينا محمد')">الصلاة على النبي</button>
+                        </div>
+                        
+                        <button id="big-tap-btn" class="nav-btn active" style="width:100%; height:100px; font-size:1.5rem; margin-top:20px; border-radius:15px; box-shadow:0 5px 15px rgba(4, 120, 87, 0.3);" onclick="subhaAction('count')">
+                            👈 اضغط للعد
+                        </button>
                     </div>
                 </div>
             </div>
@@ -153,14 +197,11 @@
             <button class="accordion-btn" onclick="openQuranApp()">📖 الختمة (المصحف الشريف) <span>▼</span></button>
             <div id="quran-app-container" class="accordion-panel" style="background: var(--bg-light);">
                 <div style="padding: 15px 0;">
-                    
                     <div class="quran-header-controls">
                         <input type="text" id="quran-search" class="form-input" placeholder="🔍 ابحث عن سورة..." onkeyup="filterSurahs()">
                         <button class="nav-btn" onclick="goToBookmark()" style="font-size:0.9rem;">🔖 استكمل</button>
                     </div>
-
                     <div id="surah-grid" class="surah-grid-container"></div>
-
                     <div id="reading-area" style="display:none;">
                         <div class="reading-header">
                             <button onclick="closeReading()" class="nav-btn" style="border:none;">🔙</button>
@@ -170,20 +211,15 @@
                                 <button class="font-control-btn" onclick="changeFontSize(-1)">A-</button>
                             </div>
                         </div>
-                        
                         <div id="bookmark-tip" style="text-align:center; font-size:0.8rem; color:gray; margin-bottom:5px; display:none;">
                              💡 اضغط على العلامة <span style="color:var(--accent-color)">🔖</span> بجانب الآية لحفظ مكانك
                         </div>
-
                         <div id="quran-text-display" class="quran-text-content"></div>
-                        
                         <button class="nav-btn" style="width:100%; margin-top:30px; border-color:#d97706; color:#d97706;" onclick="showDuaa()">🤲 دعاء الختم</button>
                     </div>
                 </div>
             </div>
-
         </div>
-        
         <div id="section-ranks" class="page-section">
             <h2 style="color:var(--primary-color)">🏆 أوائل الحلقات</h2>
             <div id="ranks-list" class="ranks-container"></div>
