@@ -1,18 +1,17 @@
-// js/quran_app.js - المصحف (النسخة النهائية: تحميل مسبق + انسيابية الحركة)
+// js/quran_app.js - المصحف (النسخة النهائية: السكرول الداخلي + التحميل المسبق)
 
 let fullQuranData = null; 
-let isQuranLoading = false; // لمنع تكرار طلب التحميل في نفس اللحظة
+let isQuranLoading = false; 
 
-// 1. دالة التحميل المسبق (تعمل في الخلفية عند دخول القسم)
+// 1. دالة التحميل المسبق
 async function preloadQuranData() {
-    if (fullQuranData || isQuranLoading) return; // إذا كان محملاً أو جاري التحميل، لا تفعل شيئاً
+    if (fullQuranData || isQuranLoading) return; 
     
     isQuranLoading = true;
     try {
         const response = await fetch('quran.json');
         if(!response.ok) throw new Error("فشل التحميل المسبق");
         fullQuranData = await response.json();
-        // عند الانتهاء، نقوم برسم الشبكة فوراً لتكون جاهزة
         renderSurahGrid();
         console.log("تم تحميل بيانات المصحف في الخلفية بنجاح ✅");
     } catch (e) {
@@ -22,24 +21,20 @@ async function preloadQuranData() {
     }
 }
 
-// 2. دالة فتح تطبيق المصحف (زر الواجهة)
+// 2. دالة فتح تطبيق المصحف
 async function openQuranApp() {
     const container = document.getElementById('quran-app-container');
     const btn = document.querySelector('.accordion-btn[onclick="openQuranApp()"]');
 
-    // أ. الإغلاق الانسيابي (إصلاح مشكلة الطوي)
+    // أ. الإغلاق الانسيابي
     if (container.classList.contains('active-panel')) {
-        // 1. قبل الإغلاق، نثبت الارتفاع الحالي بالأرقام بدلاً من 'none'
-        // ليتمكن المتصفح من عمل الانميشن تنازلياً
-        container.style.maxHeight = container.scrollHeight + "px";
+        container.style.maxHeight = container.scrollHeight + "px"; // تثبيت الارتفاع
         
-        // 2. تأخير بسيط جداً للسماح للمتصفح بتطبيق الارتفاع الرقمي
         setTimeout(() => {
-            container.style.maxHeight = null; // الآن نجعله null للإغلاق
+            container.style.maxHeight = null; // إغلاق
             container.classList.remove('active-panel');
             if(btn) btn.classList.remove('active-acc');
         }, 10);
-        
         return; 
     }
 
@@ -48,26 +43,22 @@ async function openQuranApp() {
     container.classList.add('active-panel');
     if(btn) btn.classList.add('active-acc');
     
-    // وضع ارتفاع مبدئي للانميشن
-    container.style.maxHeight = "1000px";
+    // ارتفاع مبدئي للانميشن
+    container.style.maxHeight = "800px"; // لا نحتاج لارتفاع لانهائي الآن بسبب السكرول الداخلي
 
     // ج. التحقق من البيانات
     if (fullQuranData) {
         renderSurahGrid(); 
-        // تحديث الارتفاع ليناسب المحتوى
+        // تحديث الارتفاع ليناسب المحتوى (سواء الفهرس أو القراءة)
         setTimeout(() => { 
-            // إذا كنا في وضع القراءة (والسورة طويلة)، نلغي القيد
-            const readingArea = document.getElementById('reading-area');
-            if(readingArea && readingArea.style.display === 'block') {
-                container.style.maxHeight = 'none';
-            } else {
-                container.style.maxHeight = container.scrollHeight + 100 + "px"; 
-            }
+            // جعل الارتفاع مرناً ولكن ليس لانهائياً، ليسمح بظهور السكرول الداخلي
+            // سنعتمد على scrollHeight لضمان ظهور الصندوق كاملاً
+            container.style.maxHeight = container.scrollHeight + 50 + "px"; 
         }, 200);
         return;
     }
 
-    // د. التحميل (في حال فشل التحميل المسبق فقط)
+    // د. التحميل (في حال فشل التحميل المسبق)
     const grid = document.getElementById('surah-grid');
     try {
         if(grid) grid.innerHTML = '<div style="text-align:center; padding:20px; color:var(--primary-color);">⏳ جاري تحميل المصحف...</div>';
@@ -79,7 +70,7 @@ async function openQuranApp() {
         fullQuranData = await response.json();
         
         renderSurahGrid(); 
-        setTimeout(() => { container.style.maxHeight = container.scrollHeight + 100 + "px"; }, 100);
+        setTimeout(() => { container.style.maxHeight = container.scrollHeight + 50 + "px"; }, 100);
         if(window.showToast) window.showToast("تم تحميل المصحف", "success");
         
     } catch (error) {
@@ -116,7 +107,7 @@ function filterSurahs() {
     renderSurahGrid(query);
 }
 
-// 5. القراءة (مع السماح بالتمدد الطويل)
+// 5. القراءة (تم التعديل ليتناسب مع السكرول الداخلي)
 function loadSurah(surahIndex) {
     if(!fullQuranData) return;
     
@@ -131,12 +122,17 @@ function loadSurah(surahIndex) {
     
     document.getElementById('current-surah-title').innerText = `سورة ${surahData.name}`;
     
-    // --- [السماح بالتمدد اللانهائي] ---
+    // --- [تعديل هام] ---
+    // لم نعد بحاجة لإلغاء max-height لأننا نستخدم overflow-y: auto في CSS
+    // لكن نحتاج لتحديث ارتفاع الكونتينر الأب فقط ليستوعب صندوق القراءة الجديد
     const container = document.getElementById('quran-app-container');
     if(container) {
-        container.style.maxHeight = 'none'; 
-        container.style.overflow = 'visible';
+         // نعطيه وقتاً بسيطاً ليحسب الارتفاع الجديد مع السكرول
+         setTimeout(() => {
+             container.style.maxHeight = container.scrollHeight + 50 + "px";
+         }, 50);
     }
+    // -------------------
 
     const contentDiv = document.getElementById('quran-text-display');
     contentDiv.innerHTML = "";
@@ -157,7 +153,11 @@ function loadSurah(surahIndex) {
     });
     contentDiv.innerHTML += fullText;
     
-    document.getElementById('reading-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // التمرير لأعلى *داخل الصندوق* وليس الصفحة كاملة
+    // بما أن السكرول في contentDiv، فالأمر scrollTo يعمل عليه
+    // لكننا نستخدم scrollIntoView للعنصر، وهو يعمل بشكل تلقائي
+    const readingArea = document.getElementById('reading-area');
+    if(readingArea) readingArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function closeReading() {
@@ -167,10 +167,13 @@ function closeReading() {
     const controls = document.querySelector('.quran-header-controls');
     if(controls) controls.style.display = 'flex';
     
-    // إعادة ضبط الارتفاع ليكون محدوداً (بحجم الفهرس) لتعمل انسيابية الإغلاق
+    // تحديث الارتفاع ليعود لحجم الفهرس
     const container = document.getElementById('quran-app-container');
     if(container) {
-        container.style.maxHeight = container.scrollHeight + 100 + "px";
+        // تأخير بسيط جداً لضمان اختفاء منطقة القراءة وحساب ارتفاع الفهرس
+        setTimeout(() => {
+            container.style.maxHeight = container.scrollHeight + 50 + "px";
+        }, 50);
     }
 }
 
