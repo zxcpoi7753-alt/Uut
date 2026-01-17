@@ -49,3 +49,6 @@ function toggleSections() {
 
     section.classList.toggle("open");
 }
+function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+}
