@@ -1,74 +1,60 @@
-// js/quran_app.js - المصحف، المنبه، والحماية (نسخة التصحيح)
+// js/quran_app.js - المصحف، المنبه، والحماية
 
-let fullQuranData = null; 
+// --- 1. نظام الحماية (Anti-Copy) ---
+document.addEventListener('keydown', function(e) {
+    // السماح بالنسخ فقط إذا كان العنصر هو نص قرآني
+    if (e.ctrlKey && e.key === 'c') {
+        const selection = window.getSelection();
+        if (selection.anchorNode && selection.anchorNode.parentElement.classList.contains('quran-verse') || 
+            selection.anchorNode.parentElement.closest('.quran-text-content')) {
+            return; // السماح بالنسخ
+        }
+        e.preventDefault();
+        showToast("🚫 النسخ مسموح للآيات القرآنية فقط", "error");
+    }
+});
 
-// 1. دالة فتح تطبيق المصحف (مع كشف الأخطاء)
+// منع الزر الأيمن في كل الموقع ما عدا المصحف
+document.addEventListener('contextmenu', function(e) {
+    if (e.target.classList.contains('quran-verse') || e.target.closest('.quran-text-content')) {
+        return; // السماح
+    }
+    e.preventDefault();
+});
+
+
+// --- 2. تطبيق المصحف (الختمة) ---
+let fullQuranData = null;
+
 async function openQuranApp() {
     const container = document.getElementById('quran-app-container');
+    // فتح القائمة
+    container.style.maxHeight = "1000px"; // قيمة تقريبية للفتح
     
-    // إجبار القائمة على الفتح
-    container.style.display = 'block';
-    setTimeout(() => {
-        container.style.maxHeight = "2000px";
-        container.classList.add('active-panel');
-    }, 50);
-
-    // تحميل البيانات
+    // تحميل البيانات لأول مرة
     if (!fullQuranData) {
-        const grid = document.getElementById('surah-grid');
         try {
-            // رسالة جاري التحميل
-            if(grid) grid.innerHTML = '<div style="text-align:center; padding:20px; color:var(--primary-color);">⏳ جاري الاتصال بقاعدة البيانات...</div>';
-
-            // إضافة رقم عشوائي للرابط لإجبار المتصفح على تحميل نسخة جديدة وتجاهل الكاش القديم
-            const cacheBuster = new Date().getTime(); 
-            const response = await fetch(`quran.json?v=${cacheBuster}`);
-            
-            // فحص هل الملف موجود فعلاً؟
-            if(!response.ok) {
-                throw new Error(`فشل التحميل: ${response.status} ${response.statusText}`);
-            }
-            
-            // محاولة قراءة البيانات
+            const response = await fetch('quran.json');
+            if(!response.ok) throw new Error("ملف المصحف غير موجود");
             fullQuranData = await response.json();
-            
-            // إذا وصلنا هنا فالأمور طيبة
-            renderSurahGrid(); 
-            if(window.showToast) window.showToast("تم تحميل المصحف بنجاح 📖", "success");
-            
+            renderSurahGrid();
         } catch (error) {
-            console.error("خطأ المصحف:", error);
-            if(grid) {
-                // طباعة الخطأ التقني بالكامل على الشاشة لنعرف السبب
-                grid.innerHTML = `
-                    <div style="background:#fee2e2; color:#b91c1c; padding:15px; border-radius:8px; text-align:center; direction:ltr;">
-                        <strong>⛔ حدث خطأ تقني:</strong><br>
-                        <span style="font-family:monospace; font-size:0.9rem;">${error.message}</span>
-                        <br><br>
-                        <small style="color:black; direction:rtl; display:block;">
-                        📸 صور هذه الشاشة وأرسلها لي لنحل المشكلة فوراً.
-                        </small>
-                    </div>
-                `;
-            }
+            showToast("جاري تجهيز المصحف... حاول مرة أخرى", "info");
         }
     }
 }
 
-// 2. رسم شبكة السور
+// رسم شبكة السور (الفهرس)
 function renderSurahGrid(filter = "") {
     const grid = document.getElementById('surah-grid');
-    if(!grid) return;
     grid.innerHTML = "";
     
-    if(typeof SURAH_NAMES === 'undefined') {
-        grid.innerHTML = "<p style='color:red'>خطأ: ملف data.js لم يتم تحميله.</p>";
-        return;
-    }
+    // استخدام SURAH_NAMES من data.js
+    if(typeof SURAH_NAMES === 'undefined') return;
 
     SURAH_NAMES.forEach((name, index) => {
-        if (index === 0) return;
-        if (filter && !name.includes(filter)) return;
+        if (index === 0) return; // تخطي العنصر الفارغ
+        if (filter && !name.includes(filter)) return; // فلترة البحث
 
         const box = document.createElement('div');
         box.className = 'surah-box';
@@ -78,13 +64,13 @@ function renderSurahGrid(filter = "") {
     });
 }
 
-// 3. البحث
+// البحث عن سورة
 function filterSurahs() {
     const query = document.getElementById('quran-search').value;
     renderSurahGrid(query);
 }
 
-// 4. القراءة
+// فتح سورة للقراءة
 function loadSurah(surahIndex) {
     if(!fullQuranData) return;
     
@@ -93,27 +79,26 @@ function loadSurah(surahIndex) {
 
     document.getElementById('surah-grid').style.display = 'none';
     document.getElementById('reading-area').style.display = 'block';
-    
-    // إخفاء البحث
-    const controls = document.querySelector('.quran-header-controls');
-    if(controls) controls.style.display = 'none';
+    document.getElementById('quran-header-controls').style.display = 'none'; // إخفاء البحث
     
     document.getElementById('current-surah-title').innerText = `سورة ${surahData.name}`;
     
     const contentDiv = document.getElementById('quran-text-display');
     contentDiv.innerHTML = "";
 
+    // البسملة (ما عدا التوبة والفاتحة لأنها فيها أصلاً)
     if(surahIndex !== 1 && surahIndex !== 9) {
-        contentDiv.innerHTML += `<div style="text-align:center; margin-bottom:20px; font-size:1.3rem; color:var(--primary-color);">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>`;
+        contentDiv.innerHTML += `<div style="text-align:center; margin-bottom:15px; font-size:1.2rem;">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>`;
     }
 
     let fullText = "";
     surahData.ayahs.forEach(ayah => {
+        // إضافة زر الحفظ (Bookmark) قبل الآية
         fullText += `
             <span class="ayah-span" id="ayah-${surahIndex}-${ayah.num}">
                 ${ayah.text} 
                 <span class="quran-symbol">(${ayah.num})</span>
-                <span class="bookmark-btn" onclick="saveBookmark(${surahIndex}, ${ayah.num})" title="حفظ">🔖</span>
+                <span class="bookmark-btn" onclick="saveBookmark(${surahIndex}, ${ayah.num})" title="احفظ مكاني">🔖</span>
             </span> 
         `;
     });
@@ -123,35 +108,36 @@ function loadSurah(surahIndex) {
 function closeReading() {
     document.getElementById('reading-area').style.display = 'none';
     document.getElementById('surah-grid').style.display = 'grid';
-    const controls = document.querySelector('.quran-header-controls');
-    if(controls) controls.style.display = 'flex';
+    document.getElementById('quran-header-controls').style.display = 'flex';
 }
 
-// 5. الحفظ (Bookmark)
+// --- 3. نظام الحفظ (Bookmarks) ---
 function saveBookmark(surah, ayah) {
     localStorage.setItem('quranBookmark', JSON.stringify({ surah, ayah }));
-    if(window.showToast) window.showToast(`تم حفظ: سورة ${SURAH_NAMES[surah]} - آية ${ayah}`, "success");
+    showToast(`تم حفظ مكانك: سورة ${SURAH_NAMES[surah]} - آية ${ayah}`, "success");
+    
+    // تلوين الأيقونة
+    document.querySelectorAll('.bookmark-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
 }
 
 function goToBookmark() {
     const saved = localStorage.getItem('quranBookmark');
     if(!saved) {
-        if(window.showToast) window.showToast("لم تحفظ مكاناً بعد", "info");
+        showToast("لم تقم بحفظ أي مكان سابقاً", "info");
         return;
     }
     const { surah, ayah } = JSON.parse(saved);
-    if(fullQuranData) {
+    
+    // تأكد من تحميل البيانات
+    if(!fullQuranData) {
+        openQuranApp().then(() => {
+            loadSurah(surah);
+            setTimeout(() => scrollToAyah(surah, ayah), 300);
+        });
+    } else {
         loadSurah(surah);
         setTimeout(() => scrollToAyah(surah, ayah), 100);
-    } else {
-        openQuranApp().then(() => {
-            setTimeout(() => {
-                if(fullQuranData) {
-                    loadSurah(surah);
-                    setTimeout(() => scrollToAyah(surah, ayah), 300);
-                }
-            }, 500);
-        });
     }
 }
 
@@ -159,42 +145,47 @@ function scrollToAyah(surah, ayah) {
     const el = document.getElementById(`ayah-${surah}-${ayah}`);
     if(el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.style.backgroundColor = "rgba(251, 191, 36, 0.3)";
+        el.style.backgroundColor = "rgba(251, 191, 36, 0.3)"; // وميض خفيف
         setTimeout(() => el.style.backgroundColor = "transparent", 2000);
     }
 }
 
-// 6. المنبه
+// --- 4. منبه الحفظ الذكي ⏰ ---
 function setStudyAlarm() {
     const timeInput = document.getElementById('alarm-time').value;
-    if(!timeInput) return alert("اختر وقتاً أولاً");
-
-    if ("Notification" in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                localStorage.setItem('studyAlarm', timeInput);
-                if(window.showToast) window.showToast(`تم ضبط المنبه: ${timeInput}`, "success");
-                checkAlarmLoop(timeInput);
-            } else {
-                alert("يجب السماح بالإشعارات!");
-            }
-        });
-    } else {
-        alert("متصفحك لا يدعم التنبيهات");
+    if(!timeInput) {
+        showToast("الرجاء اختيار وقت أولاً", "error");
+        return;
     }
-}
 
-function checkAlarmLoop(time) {
+    // طلب إذن الإشعارات
+    if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+
+    // حفظ الوقت
+    localStorage.setItem('studyAlarm', timeInput);
+    
+    // جلب الاسم
+    let name = localStorage.getItem('studentName') || "يا بطل";
+    
+    showToast(`تم ضبط المنبه على ${timeInput}.. سنذكرك يا ${name}!`, "success");
+
+    // التحقق الدوري (كل دقيقة)
     setInterval(() => {
         const now = new Date();
         const current = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-        if (current === time) {
-            new Notification("حلقات الثريا", { body: "حان وقت وردك يا بطل!", icon: "1768411699920.png" });
+        
+        if (current === timeInput) {
+            new Notification("حلقات الثريا 🕌", {
+                body: `حان وقت الحفظ والمراجعة يا ${name}.. القرآن ينتظرك!`,
+                icon: "1768411699920.png"
+            });
         }
-    }, 60000);
+    }, 60000); // فحص كل 60 ثانية
 }
 
-// 7. دعاء الختم
 function showDuaa() {
-    alert("اللهم ارحمني بالقرآن...");
+    alert("اللهم ارحمني بالقرآن واجعله لي إماماً ونوراً وهدى ورحمة...");
+    // يمكن استبدال الـ alert بـ Modal جميل لاحقاً
 }
