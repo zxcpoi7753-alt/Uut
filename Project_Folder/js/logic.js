@@ -1,4 +1,4 @@
-// js/logic.js - المحرك الرئيسي (معدل للتحميل المسبق)
+// js/logic.js - المحرك الرئيسي (محدث للواتساب وحفظ البيانات)
 
 // 1. نظام التنبيهات (Toast System)
 window.showToast = function(message, type = 'info') {
@@ -40,7 +40,7 @@ function toggleNavMenu() {
     }
 }
 
-// دالة التنقل بين الأقسام (تم التعديل هنا للتحميل المسبق)
+// دالة التنقل بين الأقسام
 function showSection(sectionId) {
     document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
     
@@ -50,12 +50,10 @@ function showSection(sectionId) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // --- [تعديل جديد: التحميل المسبق للمصحف] ---
-    // بمجرد دخول قسم الطالب، نبدأ تحميل البيانات في الخلفية
+    // التحميل المسبق للمصحف عند دخول قسم الطالب
     if (sectionId === 'student' && typeof preloadQuranData === 'function') {
         preloadQuranData(); 
     }
-    // ---------------------------------------------
 
     const homeBtn = document.querySelector('.nav-btn-home');
     if(sectionId === 'home') homeBtn.classList.add('active');
@@ -90,15 +88,104 @@ function startVerseTicker() {
     runCycle(); 
 }
 
-// 5. التهيئة العامة
-document.addEventListener('DOMContentLoaded', () => {
-    if(typeof updateWelcomeMessage === 'function') updateWelcomeMessage();
+// 5. حفظ واسترجاع بيانات الطالب (الاسم + الحلقة)
+function saveStudentName() {
+    const nameInput = document.getElementById('student-name-input');
+    const ringInput = document.getElementById('student-ring-select');
+    const resDiv = document.getElementById('name-save-result');
     
-    // تفعيل القوائم المنسدلة (Accordions)
+    const name = nameInput.value.trim();
+    const ring = ringInput.value;
+
+    if (!name) {
+        if(window.showToast) window.showToast("يرجى كتابة الاسم أولاً", "error");
+        return;
+    }
+
+    localStorage.setItem('studentName', name);
+    if(ring) localStorage.setItem('studentRing', ring);
+    
+    if(resDiv) {
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `تم حفظ بياناتك بنجاح يا <strong>${name}</strong> ✅`;
+    }
+    if(window.showToast) window.showToast("تم الحفظ بنجاح", "success");
+    
+    updateWelcomeMessage();
+}
+
+function deleteStudentName() {
+    localStorage.removeItem('studentName');
+    localStorage.removeItem('studentRing');
+    document.getElementById('student-name-input').value = "";
+    document.getElementById('student-ring-select').value = "";
+    document.getElementById('name-save-result').style.display = 'none';
+    if(window.showToast) window.showToast("تم حذف البيانات", "info");
+    updateWelcomeMessage();
+}
+
+function updateWelcomeMessage() {
+    const savedName = localStorage.getItem('studentName');
+    const savedRing = localStorage.getItem('studentRing');
+    const msgBox = document.getElementById('home-welcome-msg');
+    
+    // استرجاع البيانات للحقول في قسم البطاقة
+    const nameInput = document.getElementById('student-name-input');
+    const ringInput = document.getElementById('student-ring-select');
+    if(nameInput && savedName) nameInput.value = savedName;
+    if(ringInput && savedRing) ringInput.value = savedRing;
+
+    if (savedName && msgBox) {
+        msgBox.style.display = 'block';
+        msgBox.innerHTML = `👋 أهلاً بك يا <strong>${savedName}</strong> في حلقات الثريا!`;
+    } else if (msgBox) {
+        msgBox.style.display = 'none';
+    }
+}
+
+// 6. إرسال الإجابة عبر الواتساب (الميزة الجديدة)
+function sendAnswerViaWhatsapp() {
+    const name = localStorage.getItem('studentName') || "طالب (لم يسجل اسمه)";
+    const ring = localStorage.getItem('studentRing') || "غير محدد";
+    
+    // جلب نص السؤال وتنظيفه
+    const questionEl = document.getElementById('weekly-question-text');
+    let questionText = "سؤال الأسبوع";
+    if(questionEl) {
+        // إزالة كلمة "سؤال الأسبوع:" المكررة إن وجدت
+        questionText = questionEl.innerText.replace(/سؤال الأسبوع:|سؤال الأسبوع/g, "").trim();
+    }
+
+    // تجهيز الرسالة
+    const message = `السلام عليكم ورحمة الله 🌙
+
+👤 الطالب: ${name}
+🕌 الحلقة: ${ring}
+
+❓ سؤال الأسبوع:
+${questionText}
+
+✅ الإجابة:
+(اكتب إجابتك هنا...)
+
+-----------------------
+مرسلة عبر: موقع حلقات الثريا الإلكتروني 📱`;
+
+    // فتح الرابط
+    const phone = "967777006546"; // رقم المشرف
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+}
+
+// 7. التهيئة العامة
+document.addEventListener('DOMContentLoaded', () => {
+    updateWelcomeMessage();
+    
+    // تفعيل القوائم المنسدلة
     const acc = document.getElementsByClassName("accordion-btn");
     for (let i = 0; i < acc.length; i++) {
-        // استثناء زر المصحف لأن له دالة خاصة (openQuranApp)
-        if (acc[i].getAttribute('onclick') && acc[i].getAttribute('onclick').includes('openQuranApp')) continue;
+        // استثناء الأزرار الخاصة (مصحف، أذكار) لأن لها دوال خاصة
+        if (acc[i].getAttribute('onclick') && (acc[i].getAttribute('onclick').includes('openQuranApp') || acc[i].getAttribute('onclick').includes('loadAzkarCategories'))) continue;
 
         acc[i].addEventListener("click", function() {
             this.classList.toggle("active-acc");
@@ -108,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // بناء شبكة القائمة
+    // تعبئة البيانات (أخبار، معلمين، جداول)
     const navGrid = document.getElementById('nav-menu-grid');
     if(navGrid && typeof menus !== 'undefined') {
         menus.forEach(menu => {
@@ -121,7 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // تعبئة البيانات
     if(typeof siteData !== 'undefined') {
         const newsList = document.getElementById('news-list');
         if(newsList) siteData.news.forEach(n => {
