@@ -2,60 +2,43 @@
 
 let fullQuranData = null; // لتخزين بيانات المصحف كاملة
 
-// 1. دالة فتح تطبيق المصحف
+// استبدل أول دالة في ملف js/quran_app.js بهذه:
+
 async function openQuranApp() {
     const container = document.getElementById('quran-app-container');
     
-    // فتح القائمة يدوياً لضمان الاستجابة
-    if (container.style.maxHeight) {
-        // إذا كانت مفتوحة، نتركها (سيقوم الكود العام بإغلاقها)
-    } else {
-        container.style.maxHeight = container.scrollHeight + 1000 + "px"; // فتح
-        container.classList.add('active-panel');
-    }
+    // 1. إجبار القائمة على الفتح فوراً
+    container.style.display = 'block'; // تأكيد الظهور
+    setTimeout(() => {
+        container.style.maxHeight = "2000px"; // فتح الارتفاع
+        container.style.opacity = "1";
+    }, 50);
 
-    // تحميل البيانات إذا لم تكن موجودة
+    // 2. تحميل البيانات
     if (!fullQuranData) {
         try {
-            // إظهار رسالة انتظار
-            if(window.showToast) window.showToast("جاري تحميل المصحف...", "info");
-            
+            // إظهار رسالة تحميل
+            const grid = document.getElementById('surah-grid');
+            if(grid) grid.innerHTML = '<div style="text-align:center; padding:20px;">⏳ جاري إحضار المصحف...</div>';
+
             const response = await fetch('quran.json');
-            if(!response.ok) throw new Error("ملف المصحف غير موجود");
+            
+            if(!response.ok) {
+                throw new Error("ملف quran.json غير موجود أو فيه مشكلة");
+            }
             
             fullQuranData = await response.json();
-            renderSurahGrid(); // رسم الفهرس
+            renderSurahGrid(); // رسم الفهرس عند النجاح
             
         } catch (error) {
             console.error(error);
-            if(window.showToast) window.showToast("خطأ: تأكد من وجود ملف quran.json", "error");
+            const grid = document.getElementById('surah-grid');
+            if(grid) grid.innerHTML = `<div style="color:red; text-align:center; padding:20px;">
+                خطأ في التحميل!<br>
+                تأكد أن ملف <b>quran.json</b> موجود بنفس الاسم بجوار index.html
+                </div>`;
         }
     }
-}
-
-// 2. رسم شبكة السور (الفهرس)
-function renderSurahGrid(filter = "") {
-    const grid = document.getElementById('surah-grid');
-    if(!grid) return;
-    
-    grid.innerHTML = ""; // تنظيف
-    
-    // التأكد من وجود أسماء السور (من ملف data.js)
-    if(typeof SURAH_NAMES === 'undefined') {
-        grid.innerHTML = "<p>خطأ: ملف data.js لم يتم تحميله.</p>";
-        return;
-    }
-
-    SURAH_NAMES.forEach((name, index) => {
-        if (index === 0) return; // تخطي العنصر الفارغ
-        if (filter && !name.includes(filter)) return; // فلترة البحث
-
-        const box = document.createElement('div');
-        box.className = 'surah-box';
-        box.innerHTML = `<span class="surah-number">${index}</span>${name}`;
-        box.onclick = () => loadSurah(index); // عند الضغط نفتح السورة
-        grid.appendChild(box);
-    });
 }
 
 // 3. البحث عن سورة
