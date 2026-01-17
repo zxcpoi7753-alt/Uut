@@ -1,204 +1,186 @@
-// js/calculator.js - حاسبة الخطط القرآنية (نظام الأزرار)
+// js/calculator.js - حاسبة الختم الذكية (الاتجاهين)
 
-let selectedDays = 0; // تخزين عدد الأيام المختارة
+// متغيرات لحفظ خيارات المستخدم للحاسبة الأولى
+let selectedDaysPerWeek = 0;
+let selectedAmount = 0;
 
-// 1. تهيئة الحاسبة (يتم استدعاؤها من logic.js)
+// 1. تهيئة القوائم المنسدلة عند التحميل
 function initCalculator() {
-    renderDaysButtons();
-    renderAmountButtons();
-    
-    // تهيئة حاسبة "دليل الختم" (القوائم المنسدلة)
-    populateSelect("target-days", 1, 30, "يوم");
-    populateSelect("target-months", 1, 12, "شهر");
-    populateSelect("target-years", 1, 10, "سنة");
-    
-    // تعبئة خيارات التخطي
-    const skipSelect = document.getElementById("skipped-parts");
-    if(skipSelect && skipSelect.options.length <= 1) { // تجنب التكرار
-        for(let i=1; i<=29; i++) {
-            let option = document.createElement("option");
-            option.value = i; option.text = i + " جزء";
-            skipSelect.appendChild(option);
-        }
+    // تعبئة أزرار الأيام (الحاسبة الأولى)
+    const daysContainer = document.getElementById('days-buttons-container');
+    if(daysContainer) {
+        daysContainer.innerHTML = '';
+        [1, 2, 3, 4, 5, 6, 7].forEach(d => {
+            daysContainer.innerHTML += `<div class="calc-btn-option" onclick="selectDays(${d}, this)">${d} أيام</div>`;
+        });
+    }
+
+    // تعبئة أزرار المقدار (الحاسبة الأولى)
+    const amountContainer = document.getElementById('amount-buttons-container');
+    if(amountContainer) {
+        amountContainer.innerHTML = '';
+        const amounts = [
+            { label: "وجه واحد", val: 1 },
+            { label: "صفحة واحدة", val: 2 }, // الصفحة وجهين في الغالب، أو حسب الاصطلاح (هنا نعتبرها صفحة كاملة ورقة واحدة = وجهين؟ عادة في الحلقات الصفحة = وجه. سأفترض الصفحة = 1 والورقة = 2. لكن للتسهيل سأجعل القيم واضحة)
+            // سأعتمد: الصفحة = وجه واحد (المعيار الشائع)
+            // لتفادي اللبس سأسميها بوضوح
+            { label: "وجه (صفحة)", val: 1 },
+            { label: "ورقة (وجهين)", val: 2 },
+            { label: "ربع حزب", val: 5 },
+            { label: "نصف حزب", val: 10 }
+        ];
+        
+        amounts.forEach(opt => {
+            amountContainer.innerHTML += `<div class="calc-btn-option" onclick="selectAmount(${opt.val}, this)">${opt.label}</div>`;
+        });
+        // زر "محدد" لإظهار حقل الإدخال اليدوي
+        amountContainer.innerHTML += `<div class="calc-btn-option" onclick="showCustomInput(this)">عدد آخر...</div>`;
+    }
+
+    // تعبئة قوائم الوقت (الحاسبة العكسية)
+    populateDropdown('target-days', 0, 30, ' يوم');
+    populateDropdown('target-months', 0, 11, ' شهر');
+    populateDropdown('target-years', 0, 5, ' سنة');
+}
+
+function populateDropdown(id, start, end, suffix) {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = `<option value="0">0${suffix}</option>`;
+    for(let i=1; i<=end; i++) { // بدأنا من 1 لأن 0 مضاف
+        el.innerHTML += `<option value="${i}">${i}${suffix}</option>`;
     }
 }
 
-// 2. رسم أزرار الأيام
-function renderDaysButtons() {
-    const container = document.getElementById('days-buttons-container');
-    if(!container) return;
-    
-    container.innerHTML = ''; // تنظيف
-    const daysOptions = [
-        { v: 1, t: "يوم واحد" }, { v: 2, t: "يومان" },
-        { v: 3, t: "3 أيام" }, { v: 4, t: "4 أيام" },
-        { v: 5, t: "5 أيام" }, { v: 6, t: "6 أيام" },
-        { v: 7, t: "يومياً (7)" }
-    ];
 
-    daysOptions.forEach(opt => {
-        const btn = document.createElement('div');
-        btn.className = 'calc-btn-option';
-        btn.innerText = opt.t;
-        btn.onclick = () => {
-            // إزالة التحديد السابق
-            document.querySelectorAll('#days-buttons-container .calc-btn-option').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            
-            selectedDays = opt.v;
-            
-            // الانتقال للخطوة التالية
-            document.getElementById('calc-step-2').style.display = 'block';
-            
-            // تمرير بسيط للأسفل
-            setTimeout(() => {
-                document.getElementById('calc-step-2').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-        };
-        container.appendChild(btn);
-    });
+// --- منطق الحاسبة الأولى (بناءً على الجهد) ---
+
+function selectDays(days, btn) {
+    selectedDaysPerWeek = days;
+    // تلوين الزر المختار
+    document.querySelectorAll('#days-buttons-container .calc-btn-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    
+    // الانتقال للخطوة 2
+    document.getElementById('calc-step-2').style.display = 'block';
+    // تمرير ناعم
+    document.getElementById('calc-step-2').scrollIntoView({behavior: 'smooth'});
 }
 
-// 3. رسم أزرار الكمية
-function renderAmountButtons() {
-    const container = document.getElementById('amount-buttons-container');
-    if(!container) return;
+function selectAmount(amount, btn) {
+    selectedAmount = amount;
+    document.getElementById('custom-amount-div').style.display = 'none'; // إخفاء المخصص
     
-    container.innerHTML = '';
-    const amountsOptions = [
-        { v: 0.5, t: "نصف صفحة" }, { v: 1, t: "صفحة واحدة" },
-        { v: 2, t: "صفحتان" }, { v: 3, t: "3 صفحات" },
-        { v: 4, t: "4 صفحات" }, { v: 10, t: "نصف جزء" },
-        { v: 20, t: "جزء كامل" }
-    ];
-
-    amountsOptions.forEach(opt => {
-        const btn = document.createElement('div');
-        btn.className = 'calc-btn-option';
-        btn.innerText = opt.t;
-        btn.onclick = () => calculatePlan(opt.v);
-        container.appendChild(btn);
-    });
-
-    // زر "رقم آخر"
-    const customBtn = document.createElement('div');
-    customBtn.className = 'calc-btn-option';
-    customBtn.innerText = "✏️ رقم آخر";
-    customBtn.style.borderColor = "var(--accent-color)";
-    customBtn.onclick = () => {
-        document.getElementById('custom-amount-div').style.display = 'block';
-    };
-    container.appendChild(customBtn);
+    document.querySelectorAll('#amount-buttons-container .calc-btn-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    
+    calculatePlan(selectedAmount);
 }
 
-// 4. دالة الحساب (المنطق)
+function showCustomInput(btn) {
+    document.querySelectorAll('#amount-buttons-container .calc-btn-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('custom-amount-div').style.display = 'block';
+}
+
 function calculatePlan(pagesPerDay) {
-    pagesPerDay = parseFloat(pagesPerDay);
-    if(!pagesPerDay || pagesPerDay <= 0) {
-        if(window.showToast) window.showToast("الرجاء اختيار رقم صحيح", "error");
-        else alert("الرجاء اختيار رقم صحيح");
+    if(!selectedDaysPerWeek || !pagesPerDay) return;
+    
+    const totalPages = 604;
+    const pagesPerWeek = pagesPerDay * selectedDaysPerWeek;
+    const weeksNeeded = totalPages / pagesPerWeek;
+    const monthsNeeded = weeksNeeded / 4.3;
+    const yearsNeeded = monthsNeeded / 12;
+
+    let timeText = "";
+    if (yearsNeeded >= 1) {
+        const y = Math.floor(yearsNeeded);
+        const m = Math.round((yearsNeeded - y) * 12);
+        timeText = `${y} سنة و ${m} شهر`;
+    } else if (monthsNeeded >= 1) {
+        timeText = `${Math.round(monthsNeeded)} شهر تقريباً`;
+    } else {
+        timeText = `${Math.round(weeksNeeded)} أسبوع تقريباً`;
+    }
+
+    const resDiv = document.getElementById('calc-result');
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = `
+        <h3 style="color:var(--primary-color); margin-top:0;">🎉 خطتك جاهزة!</h3>
+        <p>إذا استمريت بهذا المعدل، ستختم القرآن كاملاً خلال:</p>
+        <p style="font-size:1.5rem; color:var(--accent-color); margin:10px 0;">⏳ ${timeText}</p>
+        <small style="color:gray">بمعدل ${selectedDaysPerWeek} أيام في الأسبوع</small>
+    `;
+    
+    document.getElementById('reset-calc').style.display = 'block';
+    resDiv.scrollIntoView({behavior: 'smooth'});
+}
+
+function resetCalc() {
+    selectedDaysPerWeek = 0;
+    selectedAmount = 0;
+    document.getElementById('calc-step-2').style.display = 'none';
+    document.getElementById('calc-result').style.display = 'none';
+    document.getElementById('reset-calc').style.display = 'none';
+    document.querySelectorAll('.calc-btn-option').forEach(b => b.classList.remove('selected'));
+    document.getElementById('custom-pages').value = '';
+    document.getElementById('custom-amount-div').style.display = 'none';
+    // العودة للأعلى
+    document.getElementById('calc-step-1').scrollIntoView({behavior: 'smooth'});
+}
+
+
+// --- منطق الحاسبة العكسية (بناءً على الوقت) [تم إصلاحها] ---
+
+function calculateReversePlan() {
+    // جلب القيم
+    const planTypeInputs = document.getElementsByName('planType');
+    let planType = "حفظ"; // افتراضي
+    for(let r of planTypeInputs) if(r.checked) planType = r.value;
+
+    const d = parseInt(document.getElementById('target-days').value) || 0;
+    const m = parseInt(document.getElementById('target-months').value) || 0;
+    const y = parseInt(document.getElementById('target-years').value) || 0;
+
+    // حساب إجمالي الأيام
+    const totalDaysTarget = d + (m * 30) + (y * 365);
+
+    if (totalDaysTarget === 0) {
+        if(window.showToast) window.showToast("الرجاء تحديد المدة أولاً!", "error");
         return;
     }
 
-    const totalPages = 604;
-    const weeklyPages = selectedDays * pagesPerDay;
-    const weeksNeeded = totalPages / weeklyPages;
-    const totalDaysNeeded = Math.ceil(weeksNeeded * 7);
+    const totalPagesQuran = 604;
+    // المعادلة: الكمية اليومية = عدد صفحات المصحف / عدد الأيام المتاحة
+    const pagesPerDay = totalPagesQuran / totalDaysTarget;
+
+    // تنسيق النتيجة للنص
+    let resultAmountText = "";
     
-    let durationText = "";
-    if (totalDaysNeeded < 30) durationText = `${totalDaysNeeded} يوم`;
-    else if (totalDaysNeeded < 365) {
-        const months = Math.floor(totalDaysNeeded / 30);
-        const days = totalDaysNeeded % 30;
-        durationText = `${months} شهر و ${days} يوم`;
+    if (pagesPerDay < 1) {
+        // إذا كان أقل من صفحة (مثلاً نصف صفحة)
+        const percent = Math.round(pagesPerDay * 100);
+        resultAmountText = `حوالي <strong>${percent}%</strong> من الصفحة`;
     } else {
-        const years = Math.floor(totalDaysNeeded / 365);
-        const months = Math.floor((totalDaysNeeded % 365) / 30);
-        durationText = `${years} سنة و ${months} شهر`;
+        resultAmountText = `حوالي <strong>${pagesPerDay.toFixed(1)}</strong> صفحة`;
     }
 
-    const resultDiv = document.getElementById('calc-result');
+    // صياغة الرسالة حسب النوع (حفظ/قراءة)
+    let actionVerb = planType === "حفظ" ? "تحفظ" : "تقرأ";
+    let titleText = planType === "حفظ" ? "🧠 خطة الحفظ المقترحة" : "📖 خطة القراءة المقترحة";
+
+    // عرض النتيجة (بنفس تصميم الحاسبة الأولى)
+    const resultDiv = document.getElementById('reverse-calc-result');
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `
-        <h3>🎉 النتيجة المتوقعة</h3>
-        <p>معدل الحفظ الأسبوعي: <strong>${weeklyPages} صفحات</strong></p>
-        <p style="font-size:1.2rem; color:var(--primary-color); font-weight:bold;">
-            ستختم القرآن كاملاً بإذن الله خلال:<br>
-            ⏳ ${durationText}
-        </p>
-        <p style="font-size:0.9rem; color:gray">استعن بالله ولا تعجز 💪</p>
+        <h3 style="color:var(--primary-color); margin-top:0;">${titleText}</h3>
+        <p>لكي تختم القرآن في هذه المدة، عليك أن ${actionVerb} يومياً:</p>
+        <p style="font-size:1.5rem; color:var(--accent-color); margin:10px 0;">${resultAmountText}</p>
+        <div style="font-size:0.9rem; color:gray; border-top:1px solid rgba(0,0,0,0.1); padding-top:5px; margin-top:5px;">
+            المدة المحددة: ${y > 0 ? y + ' سنة ' : ''}${m > 0 ? m + ' شهر ' : ''}${d > 0 ? d + ' يوم' : ''}
+        </div>
     `;
     
-    // إخفاء الخيارات وإظهار زر إعادة الحساب
-    document.getElementById('calc-step-2').style.display = 'none';
-    document.getElementById('calc-step-1').style.display = 'none';
-    document.getElementById('reset-calc').style.display = 'block';
-    
-    // تكبير اللوحة
-    const panel = resultDiv.closest('.accordion-panel');
-    panel.style.maxHeight = panel.scrollHeight + 500 + "px";
-}
-
-// 5. إعادة تعيين الحاسبة
-function resetCalc() {
-    selectedDays = 0;
-    document.getElementById('calc-result').style.display = 'none';
-    document.getElementById('reset-calc').style.display = 'none';
-    document.getElementById('calc-step-2').style.display = 'none';
-    document.getElementById('custom-amount-div').style.display = 'none';
-    document.getElementById('calc-step-1').style.display = 'block';
-    document.getElementById('custom-pages').value = '';
-    
-    // إزالة التحديد
-    document.querySelectorAll('.calc-btn-option').forEach(b => b.classList.remove('selected'));
-
-    const panel = document.getElementById('calc-step-1').closest('.accordion-panel');
-    panel.style.maxHeight = panel.scrollHeight + "px";
-}
-
-// 6. دوال مساعدة لحاسبة الدليل العكسي
-function populateSelect(id, min, max, labelSuffix) {
-    const select = document.getElementById(id);
-    if(!select || select.options.length > 1) return; // منع التكرار
-    
-    let optionZero = document.createElement("option");
-    optionZero.value = 0; optionZero.text = "0 " + labelSuffix; select.appendChild(optionZero);
-    for(let i=min; i<=max; i++) {
-        let option = document.createElement("option");
-        option.value = i; option.text = i + " " + labelSuffix; select.appendChild(option);
-    }
-}
-
-function calculateReversePlan() {
-    const days = parseInt(document.getElementById('target-days').value) || 0;
-    const months = parseInt(document.getElementById('target-months').value) || 0;
-    const years = parseInt(document.getElementById('target-years').value) || 0;
-    const skipped = parseInt(document.getElementById('skipped-parts').value) || 0;
-    const planType = document.querySelector('input[name="planType"]:checked').value;
-    
-    const totalDaysAvailable = days + (months * 30) + (years * 365);
-    
-    if (totalDaysAvailable === 0) { 
-        if(window.showToast) showToast("يرجى اختيار مدة زمنية", "error");
-        else alert("يرجى اختيار مدة زمنية");
-        return; 
-    }
-
-    const remainingParts = 30 - skipped;
-    const totalPages = remainingParts * 20;
-    const dailyPages = totalPages / totalDaysAvailable;
-    let amountText = "";
-
-    if(dailyPages >= 20) amountText = `<strong>${(dailyPages/20).toFixed(1)} جزء</strong> يومياً`;
-    else if (dailyPages >= 1) amountText = `<strong>${Math.ceil(dailyPages)} صفحات</strong> يومياً`;
-    else { const lines = Math.ceil(dailyPages * 15); amountText = `<strong>${lines} أسطر</strong> يومياً`; }
-
-    const resultDiv = document.getElementById('reverse-calc-result');
-    resultDiv.style.display = "block";
-    
-    // تحديث ارتفاع اللوحة
-    const panel = resultDiv.closest('.accordion-panel');
-    panel.style.maxHeight = panel.scrollHeight + 500 + "px";
-    
-    resultDiv.innerHTML = `<h3>🎯 خطتك المقترحة</h3><p>المطلوب منك (${planType}) بمعدل:</p><div style="font-size:1.5rem; color:var(--primary-color); margin:10px 0;">${amountText}</div>`;
+    // تمرير للنتيجة
+    resultDiv.scrollIntoView({behavior: 'smooth'});
 }
