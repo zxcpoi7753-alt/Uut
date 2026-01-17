@@ -3,11 +3,17 @@
 let khatmaShown = false;
 let currentPage = null;
 
+/* =========================
+   المصحف (الصفحات)
+========================= */
+
 function openQuranPage(page) {
     currentPage = page;
     saveLastPage(page);
 
     const pageBox = document.getElementById("quran-page-box");
+    if (!pageBox) return;
+
     pageBox.textContent = "الصفحة رقم " + page;
     pageBox.classList.add("open");
 
@@ -25,6 +31,10 @@ function resumeReading() {
     openQuranPage(parseInt(page));
 }
 
+/* =========================
+   دعاء الختمة (مرة واحدة)
+========================= */
+
 function showKhatmaDua() {
     if (khatmaShown) return;
     khatmaShown = true;
@@ -40,15 +50,31 @@ function showKhatmaDua() {
     duaBox.style.display = "block";
 }
 
+/* =========================
+   السهم (فقط للمصحف)
+========================= */
+
 function togglePage(el) {
+    // لا يعمل إلا داخل المصحف
+    if (!el.closest(".mushaf")) return;
     el.classList.toggle("open");
 }
+
+/* =========================
+   بقية الأقسام
+========================= */
+
 function toggleSections() {
     const section = document.getElementById("sections-rest");
     if (!section) return;
 
     section.classList.toggle("open");
 }
+
+/* =========================
+   الوضع الليلي
+========================= */
+
 function toggleDarkMode() {
     document.body.classList.toggle("dark-mode");
 }
