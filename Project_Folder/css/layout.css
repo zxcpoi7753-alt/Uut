@@ -178,15 +178,3 @@ footer {
     border-top: 1px solid var(--border-color);
     margin-top: 40px;
 }
-.sections-rest {
-    background-color: #0c6a4e;
-}
-#sections-rest {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
-}
-
-#sections-rest.open {
-    max-height: 1000px;
-}
