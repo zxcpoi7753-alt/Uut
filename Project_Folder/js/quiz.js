@@ -1,190 +1,201 @@
-// js/quiz.js - نظام الاختبارات الذكي الشامل (تم إصلاح قائمة السور)
+// js/quiz.js - نظام الاختبارات الذكي (المصحح)
 
 let currentQuestion = null;
-let quranData = null;
-let pagesData = null;
 
-// 1. تهيئة القوائم
+// 1. تهيئة القوائم عند التحميل
 function initQuiz() {
     const juzSelect = document.getElementById('quiz-juz');
-    if(!juzSelect) return;
-    
-    juzSelect.innerHTML = '<option value="0">-- اختر الجزء (عشوائي) --</option>';
-    for(let i=1; i<=30; i++) {
-        let op = document.createElement('option');
-        op.value = i;
-        op.innerText = `الجزء ${i}`;
-        juzSelect.appendChild(op);
+    if(juzSelect) {
+        juzSelect.innerHTML = '<option value="all">كل المصحف</option>';
+        // إضافة الأجزاء (كخيار شكلي حالياً للتبسيط)
+        for(let i=1; i<=30; i++) {
+            juzSelect.innerHTML += `<option value="${i}">الجزء ${i}</option>`;
+        }
     }
+    updateQuizSurahs();
 }
 
-// 2. تحديث قائمة السور (الآن تعمل فوراً!)
+// 2. تحديث قائمة السور
 function updateQuizSurahs() {
-    const juz = parseInt(document.getElementById('quiz-juz').value);
     const surahSelect = document.getElementById('quiz-surah');
-    surahSelect.innerHTML = '<option value="0">-- كل السور --</option>';
+    if(!surahSelect) return;
     
-    if (juz === 0 || typeof JUZ_START === 'undefined' || typeof SURAH_NAMES === 'undefined') return;
-
-    // تحديد بداية ونهاية الجزء من ملف data.js
-    let startSurah = JUZ_START[juz][0];
-    let endSurah = (juz === 30) ? 114 : JUZ_START[juz+1][0];
-
-    // تعبئة القائمة من مصفوفة الأسماء مباشرة
-    for(let i = startSurah; i <= endSurah; i++) {
-        let op = document.createElement('option');
-        op.value = i;
-        op.innerText = `${i}. سورة ${SURAH_NAMES[i]}`;
-        surahSelect.appendChild(op);
+    surahSelect.innerHTML = '<option value="all">عشوائي (من كل السور)</option>';
+    if(typeof SURAH_NAMES !== 'undefined') {
+        SURAH_NAMES.forEach((name, index) => {
+            if(index === 0) return;
+            surahSelect.innerHTML += `<option value="${index}">${index}. ${name}</option>`;
+        });
     }
 }
 
-// 3. بدأ الاختبار
+// 3. بدء الاختبار (إصلاح مشكلة عدم الظهور)
 async function startQuiz() {
-    document.getElementById('quiz-loading').style.display = 'block';
-    document.getElementById('quiz-area').style.display = 'none';
+    const quizArea = document.getElementById('quiz-area');
+    
+    // إخفاء النتيجة السابقة
+    quizArea.style.display = 'none';
 
-    try {
-        if (!quranData) {
+    // 🔴 التحقق الحاسم: هل بيانات المصحف موجودة؟
+    // نظرًا لأن المتغير fullQuranData موجود في ملف quran_app.js، فهو متاح هنا (Global)
+    if (!fullQuranData) {
+        if(window.showToast) window.showToast("جاري تجهيز بيانات الاختبار...", "info");
+        try {
             const response = await fetch('quran.json');
-            if (!response.ok) throw new Error("تأكد من وجود quran.json");
-            quranData = await response.json();
+            if(!response.ok) throw new Error("فشل التحميل");
+            fullQuranData = await response.json();
+        } catch (e) {
+            alert("عذراً، فشل تحميل بيانات المصحف للاختبار. تأكد من اتصالك بالإنترنت.");
+            return;
         }
-        if (!pagesData) {
-            const response = await fetch('pagesquran.json');
-            if (!response.ok) throw new Error("تأكد من وجود pagesquran.json");
-            pagesData = await response.json();
-        }
-
-        document.getElementById('quiz-loading').style.display = 'none';
-        generateNewQuestion();
-
-    } catch (error) {
-        document.getElementById('quiz-loading').style.display = 'none';
-        if(window.showToast) window.showToast("خطأ: لم يتم العثور على ملفات البيانات (quran.json)", "error");
-        else alert("خطأ في تحميل الملفات");
-        console.error(error);
     }
+
+    // الآن البيانات موجودة، نولد السؤال
+    generateQuestion();
 }
 
 // 4. توليد سؤال جديد
-function generateNewQuestion() {
-    if (!quranData) return;
+function generateQuestion() {
+    const surahVal = document.getElementById('quiz-surah').value;
+    const typeVal = document.getElementById('quiz-type').value;
 
-    const juz = parseInt(document.getElementById('quiz-juz').value);
-    const targetSurah = parseInt(document.getElementById('quiz-surah').value);
-    const type = document.getElementById('quiz-type').value;
-
-    let candidates = [];
-    let startS = 1, startA = 1, endS = 114;
+    // تحديد السور المتاحة للاختيار منها
+    let availableSurahs = [];
     
-    if (juz > 0 && typeof JUZ_START !== 'undefined') {
-        startS = JUZ_START[juz][0];
-        startA = JUZ_START[juz][1];
-        endS = (juz === 30) ? 114 : JUZ_START[juz+1][0];
+    if (surahVal !== 'all') {
+        availableSurahs = [parseInt(surahVal)]; // سورة محددة
+    } else {
+        // نختار عشوائياً من كل السور (1 إلى 114)
+        availableSurahs = Array.from({length: 114}, (_, i) => i + 1);
     }
 
-    if (targetSurah > 0) {
-        startS = targetSurah;
-        endS = targetSurah;
-        startA = 1;
-    }
+    // اختيار سورة عشوائية
+    const randomSurahIndex = availableSurahs[Math.floor(Math.random() * availableSurahs.length)];
+    const surahData = fullQuranData[randomSurahIndex];
 
-    for (let s = startS; s <= endS; s++) {
-        let surahKey = s.toString();
-        let surahObj = quranData[surahKey];
-        if (!surahObj) continue;
-
-        surahObj.ayahs.forEach(ay => {
-            if (juz > 0 && targetSurah === 0) {
-                if (s === JUZ_START[juz][0] && ay.num < JUZ_START[juz][1]) return;
-                if (juz < 30 && s === JUZ_START[juz+1][0] && ay.num >= JUZ_START[juz+1][1]) return;
-            }
-            candidates.push({
-                surahNum: s, surahName: surahObj.name, ayahNum: ay.num, text: ay.text
-            });
-        });
-    }
-
-    if (candidates.length === 0) {
-        if(window.showToast) window.showToast("لم يتم العثور على آيات!", "info");
+    if (!surahData || !surahData.ayahs || surahData.ayahs.length === 0) {
+        alert("حدث خطأ غير متوقع في اختيار السورة، حاول مرة أخرى.");
         return;
     }
 
-    const randomAyah = candidates[Math.floor(Math.random() * candidates.length)];
-    prepareQuestionLogic(randomAyah, type);
+    // اختيار آية عشوائية
+    const randomAyahIndex = Math.floor(Math.random() * surahData.ayahs.length);
+    const ayahObj = surahData.ayahs[randomAyahIndex];
+
+    // حفظ السؤال الحالي في الذاكرة
+    currentQuestion = {
+        surah: surahData.name,
+        surahNum: randomSurahIndex,
+        ayahText: ayahObj.text,
+        ayahNum: ayahObj.num,
+        type: typeVal,
+        fullSurahData: surahData, // نحتاج البيانات الكاملة للسابق والتالي
+        ayahIndexInArray: randomAyahIndex
+    };
+
+    renderQuestionUI();
 }
 
-// 5. منطق السؤال
-function prepareQuestionLogic(ayah, type) {
-    let qText = "", aText = "", details = `سورة ${ayah.surahName} | الآية ${ayah.ayahNum}`;
+// 5. رسم واجهة السؤال
+function renderQuestionUI() {
+    const quizArea = document.getElementById('quiz-area');
+    const qText = document.getElementById('question-text');
+    const ansBox = document.getElementById('answer-box');
+    const showAnsBtn = document.getElementById('show-answer-btn');
+    
+    // إظهار المنطقة وإخفاء الإجابة القديمة
+    quizArea.style.display = 'block';
+    ansBox.style.display = 'none';
+    showAnsBtn.style.display = 'block'; // تأكدنا من ظهور الزر
+    
+    // تجهيز نص السؤال
+    let text = "";
+    const verseHtml = `<span class="quran-verse" style="display:block; margin:15px 0; color:var(--primary-color);">"${currentQuestion.ayahText}"</span>`;
 
-    switch (type) {
+    switch(currentQuestion.type) {
         case 'complete':
-            qText = `أكمل الآية التالية:<br><br><span class="quran-verse" style="font-size:1.6rem">"${ayah.text}"</span>`;
-            const nextAyahObj = getAyah(ayah.surahNum, ayah.ayahNum + 1);
-            aText = nextAyahObj ? `<span class="quran-verse">${nextAyahObj.text}</span>` : "هذه آخر آية في السورة.";
+            // نأخذ أول بضع كلمات فقط
+            let words = currentQuestion.ayahText.split(' ');
+            let startText = words.slice(0, Math.min(5, words.length)).join(' ');
+            text = `أكمل الآية التي تبدأ بـ:<br><span class="quran-verse" style="display:block; margin:15px 0; color:var(--primary-color);">"${startText}..."</span><small>(سورة ${currentQuestion.surah})</small>`;
             break;
         case 'prev_ayah':
-            qText = `ما هي الآية التي تسبق قوله تعالى:<br><br><span class="quran-verse">"${ayah.text}"</span>`;
-            const prevAyahObj = getAyah(ayah.surahNum, ayah.ayahNum - 1);
-            aText = prevAyahObj ? `<span class="quran-verse">${prevAyahObj.text}</span>` : "هذه أول آية في السورة.";
+            text = `ما هي الآية التي **تسبق** قوله تعالى:${verseHtml}`;
             break;
         case 'next_ayah':
-            qText = `ما هي الآية التي تلي قوله تعالى:<br><br><span class="quran-verse">"${ayah.text}"</span>`;
-            const nextA = getAyah(ayah.surahNum, ayah.ayahNum + 1);
-            aText = nextA ? `<span class="quran-verse">${nextA.text}</span>` : "هذه آخر آية في السورة.";
+            text = `ما هي الآية التي **تلي** قوله تعالى:${verseHtml}`;
             break;
         case 'ayah_num':
-            qText = `ما هو رقم هذه الآية؟<br><br><span class="quran-verse">"${ayah.text}"</span>`;
-            aText = `الآية رقم <strong>${ayah.ayahNum}</strong>`;
+            text = `ما هو **رقم** هذه الآية:${verseHtml}في سورة ${currentQuestion.surah}؟`;
             break;
         case 'surah_name':
-            qText = `في أي سورة وردت هذه الآية؟<br><br><span class="quran-verse">"${ayah.text}"</span>`;
-            aText = `سورة <strong>${ayah.surahName}</strong>`;
+            text = `في **أي سورة** توجد هذه الآية:${verseHtml}`;
             break;
         case 'page_num':
-            qText = `في أي صفحة تقع هذه الآية؟<br><br><span class="quran-verse">"${ayah.text}"</span>`;
-            const pageNum = getPageNumber(ayah.surahNum, ayah.ayahNum);
-            aText = pageNum ? `الصفحة <strong>${pageNum}</strong>` : "غير محدد";
+             text = `في أي **صفحة** (تقريباً) تقع هذه الآية:${verseHtml}`;
+             break;
+    }
+    
+    qText.innerHTML = text;
+    // التمرير لمنطقة السؤال
+    quizArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// 6. إظهار الإجابة
+function showAnswer() {
+    const ansBox = document.getElementById('answer-box');
+    const ansText = document.getElementById('answer-text');
+    const ansDet = document.getElementById('answer-details');
+    const showAnsBtn = document.getElementById('show-answer-btn');
+    
+    ansBox.style.display = 'block';
+    showAnsBtn.style.display = 'none'; // إخفاء زر الإظهار للترتيب
+    
+    let answer = "";
+    let details = `سورة ${currentQuestion.surah} - الآية ${currentQuestion.ayahNum}`;
+
+    switch(currentQuestion.type) {
+        case 'complete':
+            answer = currentQuestion.ayahText;
+            break;
+        case 'prev_ayah':
+            if (currentQuestion.ayahIndexInArray > 0) {
+                answer = currentQuestion.fullSurahData.ayahs[currentQuestion.ayahIndexInArray - 1].text;
+                details = `الآية السابقة رقم ${currentQuestion.ayahNum - 1}`;
+            } else {
+                answer = "هذه الآية هي الأولى في السورة، لا يوجد قبلها شيء (سوى البسملة).";
+            }
+            break;
+        case 'next_ayah':
+             if (currentQuestion.ayahIndexInArray < currentQuestion.fullSurahData.ayahs.length - 1) {
+                answer = currentQuestion.fullSurahData.ayahs[currentQuestion.ayahIndexInArray + 1].text;
+                details = `الآية التالية رقم ${currentQuestion.ayahNum + 1}`;
+            } else {
+                answer = "هذه آخر آية في السورة.";
+            }
+            break;
+        case 'ayah_num':
+            answer = `رقم الآية: ${currentQuestion.ayahNum}`;
+            break;
+        case 'surah_name':
+            answer = `سورة ${currentQuestion.surah}`;
+            break;
+        case 'page_num':
+            answer = "راجع المصحف للتأكد."; // لأننا لا نملك بيانات الصفحات حالياً
             break;
     }
-
-    document.getElementById('quiz-area').style.display = 'block';
-    document.getElementById('question-text').innerHTML = qText;
-    document.getElementById('answer-box').style.display = 'none';
-    document.getElementById('show-answer-btn').style.display = 'inline-block';
-    currentQuestion = { main: aText, det: details };
-    document.getElementById('quiz-area').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    ansText.innerHTML = answer;
+    ansDet.innerHTML = details;
+    
+    // تمرير للإجابة
+    ansBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function getAyah(surahNum, ayahNum) {
-    if (!quranData) return null;
-    const surah = quranData[surahNum.toString()];
-    return surah ? surah.ayahs.find(a => a.num === ayahNum) : null;
+function nextQuestionSameType() {
+    generateQuestion();
 }
 
-function getPageNumber(surahNum, ayahNum) {
-    if (!pagesData) return null;
-    const page = pagesData.find(p => {
-        const afterStart = (surahNum > p.start.surah_number) || (surahNum === p.start.surah_number && ayahNum >= p.start.verse);
-        const beforeEnd = (surahNum < p.end.surah_number) || (surahNum === p.end.surah_number && ayahNum <= p.end.verse);
-        return afterStart && beforeEnd;
-    });
-    return page ? page.page : null;
-}
-
-function showAnswer() {
-    document.getElementById('show-answer-btn').style.display = 'none';
-    const box = document.getElementById('answer-box');
-    box.style.display = 'block';
-    document.getElementById('answer-text').innerHTML = currentQuestion.main;
-    document.getElementById('answer-details').innerText = currentQuestion.det;
-    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function nextQuestionSameType() { generateNewQuestion(); }
 function resetQuiz() {
     document.getElementById('quiz-area').style.display = 'none';
-    document.getElementById('quiz-controls').scrollIntoView({ behavior: 'smooth' });
 }
