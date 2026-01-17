@@ -1,4 +1,4 @@
-// js/quran_app.js - المصحف (النسخة النهائية: خط + تلميحات + سرعة)
+// js/quran_app.js - المصحف (النسخة النهائية: خط + تلميحات + حدود التكبير)
 
 let fullQuranData = null; 
 let isQuranLoading = false; 
@@ -49,7 +49,6 @@ async function openQuranApp() {
     if (fullQuranData) {
         renderSurahGrid(); 
         setTimeout(() => { 
-            // تحديث الارتفاع مع مساحة إضافية بسيطة
             container.style.maxHeight = container.scrollHeight + 50 + "px"; 
         }, 200);
         return;
@@ -77,11 +76,21 @@ async function openQuranApp() {
     }
 }
 
-// 3. التحكم في حجم الخط (الميزة الجديدة)
+// 3. التحكم في حجم الخط (معدل مع تنبيهات)
 function changeFontSize(step) {
-    currentFontSize += (step * 0.1); // زيادة أو نقصان بمقدار 0.1
+    // التحقق من الحدود قبل التغيير
+    if (step > 0 && currentFontSize >= 3.0) {
+        if(window.showToast) window.showToast("⚠️ وصلت لأكبر حجم للخط", "info");
+        return;
+    }
+    if (step < 0 && currentFontSize <= 0.8) {
+         if(window.showToast) window.showToast("⚠️ وصلت لأصغر حجم للخط", "info");
+         return;
+    }
+
+    currentFontSize += (step * 0.1); 
     
-    // وضع حدود للحجم (أدنى 0.8 وأعلى 3.0)
+    // تأكيد الحدود رقمياً
     if(currentFontSize < 0.8) currentFontSize = 0.8;
     if(currentFontSize > 3.0) currentFontSize = 3.0;
 
@@ -136,7 +145,7 @@ function loadSurah(surahIndex) {
     
     document.getElementById('current-surah-title').innerText = `سورة ${surahData.name}`;
     
-    // تحديث ارتفاع الحاوية الأب ليستوعب السكرول
+    // تحديث ارتفاع الحاوية
     const container = document.getElementById('quran-app-container');
     if(container) {
          setTimeout(() => {
@@ -165,7 +174,7 @@ function loadSurah(surahIndex) {
     });
     contentDiv.innerHTML += fullText;
     
-    // تمرير ناعم لأعلى منطقة القراءة
+    // تمرير ناعم
     const readingArea = document.getElementById('reading-area');
     if(readingArea) readingArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -177,7 +186,6 @@ function closeReading() {
     const controls = document.querySelector('.quran-header-controls');
     if(controls) controls.style.display = 'flex';
     
-    // إعادة ضبط الارتفاع ليتناسب مع الفهرس
     const container = document.getElementById('quran-app-container');
     if(container) {
         setTimeout(() => {
