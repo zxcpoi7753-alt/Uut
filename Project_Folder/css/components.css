@@ -242,3 +242,19 @@ select.form-select:focus, input.form-input:focus {
 .bg-whatsapp { background-color: #25D366; } .bg-insta { background: linear-gradient(45deg, #f09433, #dc2743, #bc1888); } .bg-call { background-color: #3b82f6; } .bg-map { background-color: #ea4335; }
 .winner-list { display: none; margin-top: 10px; padding: 10px; background: rgba(4, 120, 87, 0.1); border-radius: 8px; border: 1px dashed var(--primary-color); }
 .alert-box { padding: 10px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; }
+#quiz-surah,
+#search-surah {
+    max-width: 220px;
+    font-size: 14px;
+    padding: 6px 10px;
+}
+
+.quran-page {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.quran-page.open {
+    max-height: 2000px;
+}
