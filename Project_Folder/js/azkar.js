@@ -1,13 +1,42 @@
-// js/azkar.js - نظام الأذكار الذكي (مصحح للبحث في مسارين)
+// js/azkar.js - نظام الأذكار (التحميل المسبق الفوري)
 
 let allAzkarData = [];
 
-// 1. تحميل الأقسام (عند فتح القائمة)
+// 1. دالة التحميل المسبق (تعمل تلقائياً عند فتح الموقع)
+async function preloadAzkar() {
+    try {
+        let response;
+        // محاولة 1: البحث في المجلد الرئيسي (المكان الصحيح)
+        try {
+            response = await fetch('azkar.json');
+            if (!response.ok) throw new Error("Not in root");
+        } catch (e1) {
+            // محاولة 2: البحث داخل مجلد js (احتياطي)
+            try {
+                response = await fetch('js/azkar.json');
+            } catch (e2) { return; } // فشل صامت
+        }
+
+        if (response && response.ok) {
+            allAzkarData = await response.json();
+            console.log("تم تحميل الأذكار في الخلفية بنجاح ✅");
+        }
+    } catch (e) {
+        // لا نزعج المستخدم بأخطاء في الخلفية
+        console.warn("فشل التحميل المسبق للأذكار");
+    }
+}
+
+// استدعاء التحميل فوراً
+preloadAzkar();
+
+
+// 2. دالة فتح القائمة وعرض الأقسام
 async function loadAzkarCategories() {
     const grid = document.getElementById('azkar-categories-grid');
     const container = document.getElementById('azkar-app-container');
     
-    // فتح القائمة (Accordion Logic)
+    // منطق الفتح والإغلاق (Accordion)
     const btn = document.querySelector('.accordion-btn[onclick="loadAzkarCategories()"]');
     if (container.classList.contains('active-panel')) {
         container.style.maxHeight = null;
@@ -18,35 +47,25 @@ async function loadAzkarCategories() {
         container.style.display = 'block';
         container.classList.add('active-panel');
         if(btn) btn.classList.add('active-acc');
-        container.style.maxHeight = "500px";
+        container.style.maxHeight = "500px"; // ارتفاع مبدئي للحركة
     }
 
+    // ✅ السيناريو الأفضل: البيانات تحملت مسبقاً
     if(allAzkarData.length > 0) {
+        renderAzkarCategories();
         setTimeout(() => container.style.maxHeight = container.scrollHeight + "px", 100);
         return;
     }
 
-    // بدء التحميل
+    // ⚠️ السيناريو البديل: إذا فشل التحميل المسبق، نحاول التحميل الآن
     try {
         grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; color:var(--primary-color);">⏳ جاري تحميل الأذكار...</div>';
         
-        // --- التعديل الذكي: المحاولة في مسارين ---
         let response;
-        try {
-            // المحاولة الأولى: في المجلد الرئيسي (Standard)
-            response = await fetch('azkar.json');
-            if(!response.ok) throw new Error("Not found in root");
-        } catch (e1) {
-            try {
-                // المحاولة الثانية: داخل مجلد js (Fallback)
-                console.log("لم يتم العثور في الرئيسي، جاري البحث في مجلد js...");
-                response = await fetch('js/azkar.json');
-                if(!response.ok) throw new Error("Not found in js folder");
-            } catch (e2) {
-                throw new Error("لم يتم العثور على ملف azkar.json في أي مكان!");
-            }
-        }
-        // -------------------------------------------
+        try { response = await fetch('azkar.json'); if(!response.ok) throw new Error(); }
+        catch { response = await fetch('js/azkar.json'); }
+
+        if(!response.ok) throw new Error("الملف غير موجود");
         
         const data = await response.json();
         allAzkarData = data;
@@ -55,26 +74,20 @@ async function loadAzkarCategories() {
         setTimeout(() => container.style.maxHeight = container.scrollHeight + "px", 100);
         
     } catch (e) {
-        console.error(e);
-        grid.innerHTML = `<div style="color:red; text-align:center; grid-column:1/-1; padding:10px; border:1px dashed red; border-radius:8px;">
-            ⚠️ <strong>عذراً، ملف البيانات مفقود!</strong><br>
-            يرجى التأكد من رفع ملف <code>azkar.json</code><br>
-            بجانب ملف index.html
+        grid.innerHTML = `<div style="color:red; text-align:center; grid-column:1/-1; padding:10px;">
+            ⚠️ لم يتم العثور على ملف الأذكار (azkar.json)
         </div>`;
     }
 }
 
-// 2. رسم أزرار الأقسام (الفلترة)
+// 3. رسم أزرار الأقسام (الفلترة)
 function renderAzkarCategories() {
     const grid = document.getElementById('azkar-categories-grid');
     grid.innerHTML = "";
 
     const targetKeywords = ["الصباح", "المساء", "النوم", "الاستيقاظ", "المسجد", "الصلاة"];
     
-    // استخراج أسماء الأقسام الموجودة
     const uniqueCategories = [...new Set(allAzkarData.map(item => item.category))];
-    
-    // فلترة الأقسام
     const filteredCategories = uniqueCategories.filter(cat => 
         targetKeywords.some(keyword => cat.includes(keyword))
     );
@@ -102,7 +115,7 @@ function renderAzkarCategories() {
     });
 }
 
-// 3. عرض قائمة الأذكار لقسم معين
+// 4. عرض قائمة الأذكار لقسم معين
 function showAzkarList(category) {
     document.getElementById('azkar-categories-grid').style.display = 'none';
     const listContainer = document.getElementById('azkar-list-container');
@@ -139,7 +152,7 @@ function showAzkarList(category) {
     }, 100);
 }
 
-// 4. العودة للقائمة الرئيسية
+// 5. العودة للقائمة الرئيسية
 function backToAzkarCategories() {
     document.getElementById('azkar-list-container').style.display = 'none';
     document.getElementById('azkar-categories-grid').style.display = 'grid';
@@ -148,7 +161,7 @@ function backToAzkarCategories() {
     setTimeout(() => container.style.maxHeight = container.scrollHeight + "px", 50);
 }
 
-// 5. منطق العداد
+// 6. منطق العداد
 function updateZekrCounter(btn, originalCount) {
     if(btn.classList.contains('completed')) return;
 
