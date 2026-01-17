@@ -9,3 +9,7 @@ body.dark-mode {
 
 body.dark-mode th { color: #111827; }
 body.dark-mode .nav-btn.active { color: #111827; font-weight: 800; }
+body.dark-mode {
+    background-color: #0e1f1a;
+    color: #e6f5ef;
+}
