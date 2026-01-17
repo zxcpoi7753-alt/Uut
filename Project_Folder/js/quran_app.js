@@ -1,7 +1,8 @@
-// js/quran_app.js - المصحف (النسخة النهائية: السكرول الداخلي + التحميل المسبق)
+// js/quran_app.js - المصحف (النسخة النهائية: خط + تلميحات + سرعة)
 
 let fullQuranData = null; 
 let isQuranLoading = false; 
+let currentFontSize = 1.3; // حجم الخط الافتراضي (rem)
 
 // 1. دالة التحميل المسبق
 async function preloadQuranData() {
@@ -15,7 +16,7 @@ async function preloadQuranData() {
         renderSurahGrid();
         console.log("تم تحميل بيانات المصحف في الخلفية بنجاح ✅");
     } catch (e) {
-        console.warn("فشل التحميل المسبق، سيتم المحاولة لاحقاً عند الفتح.", e);
+        console.warn("فشل التحميل المسبق.", e);
     } finally {
         isQuranLoading = false;
     }
@@ -29,7 +30,6 @@ async function openQuranApp() {
     // أ. الإغلاق الانسيابي
     if (container.classList.contains('active-panel')) {
         container.style.maxHeight = container.scrollHeight + "px"; // تثبيت الارتفاع
-        
         setTimeout(() => {
             container.style.maxHeight = null; // إغلاق
             container.classList.remove('active-panel');
@@ -43,22 +43,19 @@ async function openQuranApp() {
     container.classList.add('active-panel');
     if(btn) btn.classList.add('active-acc');
     
-    // ارتفاع مبدئي للانميشن
-    container.style.maxHeight = "800px"; // لا نحتاج لارتفاع لانهائي الآن بسبب السكرول الداخلي
+    container.style.maxHeight = "800px"; // ارتفاع مبدئي
 
     // ج. التحقق من البيانات
     if (fullQuranData) {
         renderSurahGrid(); 
-        // تحديث الارتفاع ليناسب المحتوى (سواء الفهرس أو القراءة)
         setTimeout(() => { 
-            // جعل الارتفاع مرناً ولكن ليس لانهائياً، ليسمح بظهور السكرول الداخلي
-            // سنعتمد على scrollHeight لضمان ظهور الصندوق كاملاً
+            // تحديث الارتفاع مع مساحة إضافية بسيطة
             container.style.maxHeight = container.scrollHeight + 50 + "px"; 
         }, 200);
         return;
     }
 
-    // د. التحميل (في حال فشل التحميل المسبق)
+    // د. التحميل (إذا لم يحمل مسبقاً)
     const grid = document.getElementById('surah-grid');
     try {
         if(grid) grid.innerHTML = '<div style="text-align:center; padding:20px; color:var(--primary-color);">⏳ جاري تحميل المصحف...</div>';
@@ -68,7 +65,6 @@ async function openQuranApp() {
         if(!response.ok) throw new Error(`Status: ${response.status}`);
         
         fullQuranData = await response.json();
-        
         renderSurahGrid(); 
         setTimeout(() => { container.style.maxHeight = container.scrollHeight + 50 + "px"; }, 100);
         if(window.showToast) window.showToast("تم تحميل المصحف", "success");
@@ -81,7 +77,21 @@ async function openQuranApp() {
     }
 }
 
-// 3. رسم شبكة السور
+// 3. التحكم في حجم الخط (الميزة الجديدة)
+function changeFontSize(step) {
+    currentFontSize += (step * 0.1); // زيادة أو نقصان بمقدار 0.1
+    
+    // وضع حدود للحجم (أدنى 0.8 وأعلى 3.0)
+    if(currentFontSize < 0.8) currentFontSize = 0.8;
+    if(currentFontSize > 3.0) currentFontSize = 3.0;
+
+    const textDiv = document.getElementById('quran-text-display');
+    if(textDiv) {
+        textDiv.style.fontSize = currentFontSize + "rem";
+    }
+}
+
+// 4. رسم شبكة السور
 function renderSurahGrid(filter = "") {
     const grid = document.getElementById('surah-grid');
     if(!grid) return;
@@ -101,13 +111,13 @@ function renderSurahGrid(filter = "") {
     });
 }
 
-// 4. البحث
+// 5. البحث
 function filterSurahs() {
     const query = document.getElementById('quran-search').value;
     renderSurahGrid(query);
 }
 
-// 5. القراءة (تم التعديل ليتناسب مع السكرول الداخلي)
+// 6. القراءة
 function loadSurah(surahIndex) {
     if(!fullQuranData) return;
     
@@ -117,25 +127,27 @@ function loadSurah(surahIndex) {
     document.getElementById('surah-grid').style.display = 'none';
     document.getElementById('reading-area').style.display = 'block';
     
+    // إظهار تلميح الحفظ
+    const tip = document.getElementById('bookmark-tip');
+    if(tip) tip.style.display = 'block';
+
     const controls = document.querySelector('.quran-header-controls');
     if(controls) controls.style.display = 'none';
     
     document.getElementById('current-surah-title').innerText = `سورة ${surahData.name}`;
     
-    // --- [تعديل هام] ---
-    // لم نعد بحاجة لإلغاء max-height لأننا نستخدم overflow-y: auto في CSS
-    // لكن نحتاج لتحديث ارتفاع الكونتينر الأب فقط ليستوعب صندوق القراءة الجديد
+    // تحديث ارتفاع الحاوية الأب ليستوعب السكرول
     const container = document.getElementById('quran-app-container');
     if(container) {
-         // نعطيه وقتاً بسيطاً ليحسب الارتفاع الجديد مع السكرول
          setTimeout(() => {
              container.style.maxHeight = container.scrollHeight + 50 + "px";
          }, 50);
     }
-    // -------------------
 
     const contentDiv = document.getElementById('quran-text-display');
     contentDiv.innerHTML = "";
+    // تطبيق حجم الخط الحالي
+    contentDiv.style.fontSize = currentFontSize + "rem";
 
     if(surahIndex !== 1 && surahIndex !== 9) {
         contentDiv.innerHTML += `<div style="text-align:center; margin-bottom:20px; font-size:1.3rem; color:var(--primary-color); font-family:'Amiri', serif;">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>`;
@@ -153,9 +165,7 @@ function loadSurah(surahIndex) {
     });
     contentDiv.innerHTML += fullText;
     
-    // التمرير لأعلى *داخل الصندوق* وليس الصفحة كاملة
-    // بما أن السكرول في contentDiv، فالأمر scrollTo يعمل عليه
-    // لكننا نستخدم scrollIntoView للعنصر، وهو يعمل بشكل تلقائي
+    // تمرير ناعم لأعلى منطقة القراءة
     const readingArea = document.getElementById('reading-area');
     if(readingArea) readingArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -167,17 +177,16 @@ function closeReading() {
     const controls = document.querySelector('.quran-header-controls');
     if(controls) controls.style.display = 'flex';
     
-    // تحديث الارتفاع ليعود لحجم الفهرس
+    // إعادة ضبط الارتفاع ليتناسب مع الفهرس
     const container = document.getElementById('quran-app-container');
     if(container) {
-        // تأخير بسيط جداً لضمان اختفاء منطقة القراءة وحساب ارتفاع الفهرس
         setTimeout(() => {
             container.style.maxHeight = container.scrollHeight + 50 + "px";
         }, 50);
     }
 }
 
-// 6. الحفظ والمنبه والدعاء
+// 7. الحفظ والمنبه والدعاء
 function saveBookmark(surah, ayah) {
     localStorage.setItem('quranBookmark', JSON.stringify({ surah, ayah }));
     if(window.showToast) window.showToast(`تم حفظ: سورة ${SURAH_NAMES[surah]} - آية ${ayah}`, "success");
