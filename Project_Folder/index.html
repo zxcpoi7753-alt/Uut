@@ -16,9 +16,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/darkmode.css">
 </head>
-<body>
-
-    <div id="toast-container" class="toast-container"></div>
+<body oncontextmenu="return false;"> <div id="toast-container" class="toast-container"></div>
 
     <header>
         <button class="theme-circle-btn" onclick="toggleTheme()" id="theme-btn" title="تغيير المظهر">🌙</button>
@@ -65,29 +63,6 @@
         <div id="section-student" class="page-section">
             <h2 style="color:var(--primary-color)">📖 ركن الطالب</h2>
             <p style="text-align:center; color:gray; margin-bottom:20px;">أدوات ذكية لمساعدتك في رحلة القرآن</p>
-
-            <button class="accordion-btn" onclick="openQuranApp()">📖 الختمة (المصحف الشريف) <span>▼</span></button>
-            <div id="quran-app-container" class="accordion-panel" style="background: var(--bg-light);">
-                <div style="padding: 15px 0;">
-                    
-                    <div class="quran-header-controls">
-                        <input type="text" id="quran-search" class="form-input" placeholder="🔍 ابحث عن سورة (مثلاً: الكهف)..." onkeyup="filterSurahs()">
-                        <button class="nav-btn" onclick="goToBookmark()" style="font-size:0.9rem;">🔖 استكمل وردك</button>
-                    </div>
-
-                    <div id="surah-grid" class="surah-grid-container"></div>
-
-                    <div id="reading-area" style="display:none;">
-                        <div class="reading-header">
-                            <button onclick="closeReading()" class="nav-btn" style="border:none;">🔙 رجوع للفهرس</button>
-                            <h3 id="current-surah-title" style="margin:0; color:var(--primary-color);"></h3>
-                        </div>
-                        <div id="quran-text-display" class="quran-text-content"></div>
-                        
-                        <button class="nav-btn" style="width:100%; margin-top:30px; border-color:#d97706; color:#d97706;" onclick="showDuaa()">🤲 دعاء ختم القرآن</button>
-                    </div>
-                </div>
-            </div>
 
             <div class="card" style="margin-top:15px; border-right:4px solid #8b5cf6;">
                 <h3 style="margin-top:0;">⏰ منبه الحفظ الذكي</h3>
@@ -181,7 +156,32 @@
                     </div>
                 </div>
             </div>
+
+            <button class="accordion-btn" onclick="openQuranApp()">📖 الختمة (المصحف الشريف) <span>▼</span></button>
+            <div id="quran-app-container" class="accordion-panel" style="background: var(--bg-light);">
+                <div style="padding: 15px 0;">
+                    
+                    <div class="quran-header-controls">
+                        <input type="text" id="quran-search" class="form-input" placeholder="🔍 ابحث عن سورة (مثلاً: الكهف)..." onkeyup="filterSurahs()">
+                        <button class="nav-btn" onclick="goToBookmark()" style="font-size:0.9rem;">🔖 استكمل وردك</button>
+                    </div>
+
+                    <div id="surah-grid" class="surah-grid-container"></div>
+
+                    <div id="reading-area" style="display:none;">
+                        <div class="reading-header">
+                            <button onclick="closeReading()" class="nav-btn" style="border:none;">🔙 رجوع للفهرس</button>
+                            <h3 id="current-surah-title" style="margin:0; color:var(--primary-color);"></h3>
+                        </div>
+                        <div id="quran-text-display" class="quran-text-content"></div>
+                        
+                        <button class="nav-btn" style="width:100%; margin-top:30px; border-color:#d97706; color:#d97706;" onclick="showDuaa()">🤲 دعاء ختم القرآن</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
+        
         <div id="section-ranks" class="page-section">
             <h2 style="color:var(--primary-color)">🏆 أوائل الحلقات</h2>
             <div id="ranks-list" class="ranks-container"></div>
@@ -259,7 +259,6 @@
     <script src="js/storage.js"></script>
     <script src="js/calculator.js"></script>
     <script src="js/quiz.js"></script>
-    <script src="js/logic.js"></script>
-    <script src="js/quran_app.js"></script>)
+    <script src="js/quran_app.js"></script> <script src="js/logic.js"></script>
 </body>
 </html>
