@@ -1,15 +1,14 @@
-// js/azkar.js - نظام الأذكار والسبحة (شامل الحفظ والتصفير)
+// js/azkar.js - نظام الأذكار والسبحة (تصفير فوري بدون رسائل)
 
 let allAzkarData = [];
-let resetSetting = localStorage.getItem('azkarResetPeriod') || '24'; // الافتراضي 24 ساعة
+let resetSetting = localStorage.getItem('azkarResetPeriod') || '24'; 
 let lastResetDate = localStorage.getItem('azkarLastResetDate');
 
-// تهيئة الإعدادات عند البدء
 document.addEventListener('DOMContentLoaded', () => {
     const select = document.getElementById('reset-period-select');
     if(select) select.value = resetSetting;
-    checkAutoReset(); // فحص هل حان وقت التصفير
-    preloadAzkar(); // تحميل البيانات
+    checkAutoReset(); 
+    preloadAzkar(); 
 });
 
 // 1. التحميل المسبق
@@ -43,7 +42,6 @@ async function loadAzkarCategories() {
     }
 
     if(allAzkarData.length === 0) {
-        // محاولة تحميل إذا لم تكن محملة
         try {
             let response;
             try { response = await fetch('azkar.json'); if(!response.ok) throw new Error(); }
@@ -59,23 +57,20 @@ async function loadAzkarCategories() {
     setTimeout(() => container.style.maxHeight = container.scrollHeight + "px", 100);
 }
 
-// 3. رسم الأزرار (بما فيها السبحة)
+// 3. رسم الأزرار
 function renderAzkarCategories() {
     const grid = document.getElementById('azkar-categories-grid');
     grid.innerHTML = "";
 
     const targetKeywords = ["الصباح", "المساء", "النوم", "الاستيقاظ", "المسجد", "الصلاة"];
-    
     const uniqueCategories = [...new Set(allAzkarData.map(item => item.category))];
     const filteredCategories = uniqueCategories.filter(cat => 
         targetKeywords.some(keyword => cat.includes(keyword))
     );
 
-    // رسم أزرار الأقسام الموجودة في الملف
     filteredCategories.forEach(cat => {
         const btn = document.createElement('div');
         btn.className = 'calc-btn-option';
-        
         let icon = "📿";
         if(cat.includes("الصباح")) icon = "☀️";
         else if(cat.includes("المساء")) icon = "🌙";
@@ -89,7 +84,7 @@ function renderAzkarCategories() {
         grid.appendChild(btn);
     });
 
-    // --- إضافة زر السبحة الإلكترونية (يدوياً) ---
+    // زر السبحة
     const subhaBtn = document.createElement('div');
     subhaBtn.className = 'calc-btn-option';
     subhaBtn.style.borderColor = "var(--primary-color)";
@@ -97,10 +92,9 @@ function renderAzkarCategories() {
     subhaBtn.innerHTML = `<div style="font-size:1.5rem; margin-bottom:5px;">⏱️</div>السبحة الإلكترونية`;
     subhaBtn.onclick = () => showSubhaInterface();
     grid.appendChild(subhaBtn);
-    // ---------------------------------------------
 }
 
-// 4. عرض قائمة أذكار القراءة
+// 4. عرض القائمة
 function showAzkarList(category) {
     document.getElementById('azkar-categories-grid').style.display = 'none';
     const listContainer = document.getElementById('azkar-list-container');
@@ -115,7 +109,6 @@ function showAzkarList(category) {
 
     zekrList.forEach((item, index) => {
         const count = item.count ? parseInt(item.count) : 1;
-        // استرجاع العدد المحفوظ
         const storageKey = `zekr_${category}_${index}`;
         const savedCount = localStorage.getItem(storageKey);
         const currentCount = savedCount !== null ? parseInt(savedCount) : count;
@@ -139,7 +132,7 @@ function showAzkarList(category) {
     listContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// 5. عداد الأذكار العادية (مع الحفظ)
+// 5. عداد الأذكار
 function updateZekrCounter(btn, key, originalTotal) {
     if(btn.classList.contains('completed')) return;
 
@@ -147,26 +140,25 @@ function updateZekrCounter(btn, key, originalTotal) {
     if (current > 1) {
         current--;
         btn.querySelector('span').innerText = current;
-        localStorage.setItem(key, current); // حفظ التقدم
+        localStorage.setItem(key, current);
         btn.style.transform = "scale(0.95)";
         setTimeout(() => btn.style.transform = "scale(1)", 100);
     } else {
         btn.innerHTML = "✅ تم الانتهاء";
         btn.classList.add('completed');
-        localStorage.setItem(key, 0); // حفظ الانتهاء
+        localStorage.setItem(key, 0);
         if (navigator.vibrate) navigator.vibrate(50);
     }
 }
 
+// تصفير القسم (تم إزالة الرسالة أيضاً هنا لتكون سريعة)
 function resetCategoryCounters() {
-    if(confirm("هل تريد تصفير عدادات هذا القسم؟")) {
-        // حذف المفاتيح الخاصة بهذا القسم فقط من localStorage
-        const catTitle = document.getElementById('azkar-category-title').innerText;
-        Object.keys(localStorage).forEach(k => {
-            if(k.startsWith(`zekr_${catTitle}`)) localStorage.removeItem(k);
-        });
-        showAzkarList(catTitle); // إعادة الرسم
-    }
+    const catTitle = document.getElementById('azkar-category-title').innerText;
+    Object.keys(localStorage).forEach(k => {
+        if(k.startsWith(`zekr_${catTitle}`)) localStorage.removeItem(k);
+    });
+    showAzkarList(catTitle);
+    if(window.showToast) window.showToast("تم تصفير القسم", "success");
 }
 
 // 6. واجهة السبحة الإلكترونية
@@ -177,11 +169,8 @@ function showSubhaInterface() {
     document.getElementById('azkar-categories-grid').style.display = 'none';
     document.getElementById('subha-interface').style.display = 'block';
     
-    // استرجاع آخر تسبيحة
     const savedName = localStorage.getItem('subha_last_name');
-    const savedCount = localStorage.getItem('subha_last_count');
-    
-    if(savedName) setTasbeeh(savedName, false); // false = لا تصفير عند الفتح
+    if(savedName) setTasbeeh(savedName, false); 
     else setTasbeeh("سبحان الله");
     
     resizeContainer();
@@ -192,11 +181,9 @@ function setTasbeeh(name, reset = true) {
     document.getElementById('current-tasbeeh-label').innerText = name;
     
     if(reset) {
-        // هل يوجد عدد محفوظ لهذا الاسم؟
         const saved = localStorage.getItem(`subha_count_${name}`);
         currentTasbeehCount = saved ? parseInt(saved) : 0;
     } else {
-        // استرجاع الحالة العامة
         const savedTotal = localStorage.getItem('subha_last_count');
         currentTasbeehCount = savedTotal ? parseInt(savedTotal) : 0;
     }
@@ -212,19 +199,19 @@ function subhaAction(action) {
     } else if (action === 'undo') {
         if(currentTasbeehCount > 0) currentTasbeehCount--;
     } else if (action === 'reset') {
-        if(confirm("تصفير العداد؟")) currentTasbeehCount = 0;
+        // 🔥 تم التعديل: تصفير فوري بدون رسالة
+        currentTasbeehCount = 0;
+        if(navigator.vibrate) navigator.vibrate(50); // اهتزاز للتأكيد
+        if(window.showToast) window.showToast("تم التصفير", "success");
     }
 
     updateSubhaDisplay();
-    // حفظ العدد الخاص بهذا الذكر
     localStorage.setItem(`subha_count_${currentTasbeehName}`, currentTasbeehCount);
-    // حفظ الحالة العامة
     localStorage.setItem('subha_last_count', currentTasbeehCount);
 }
 
 function updateSubhaDisplay() {
     document.getElementById('main-tasbeeh-counter').innerText = currentTasbeehCount;
-    // تأثير بصري بسيط
     const btn = document.getElementById('big-tap-btn');
     btn.style.transform = "scale(0.98)";
     setTimeout(() => btn.style.transform = "scale(1)", 100);
@@ -243,12 +230,12 @@ function resizeContainer() {
     setTimeout(() => container.style.maxHeight = container.scrollHeight + "px", 50);
 }
 
-// 8. نظام التصفير التلقائي
+// 8. التصفير التلقائي
 function saveResetSetting() {
     const val = document.getElementById('reset-period-select').value;
     localStorage.setItem('azkarResetPeriod', val);
     resetSetting = val;
-    if(window.showToast) window.showToast("تم حفظ إعداد التصفير", "success");
+    if(window.showToast) window.showToast("تم حفظ الإعداد", "success");
 }
 
 function checkAutoReset() {
@@ -257,16 +244,12 @@ function checkAutoReset() {
     const now = new Date().getTime();
     const last = lastResetDate ? parseInt(lastResetDate) : 0;
     const hoursPassed = (now - last) / (1000 * 60 * 60);
-    
-    const threshold = parseInt(resetSetting); // 12 or 24
+    const threshold = parseInt(resetSetting); 
 
     if(hoursPassed >= threshold) {
-        console.log("Auto-resetting counters...");
-        // حذف كل مفاتيح الأذكار (التي تبدأ بـ zekr_)
         Object.keys(localStorage).forEach(key => {
             if(key.startsWith('zekr_')) localStorage.removeItem(key);
         });
-        // تحديث وقت التصفير
         localStorage.setItem('azkarLastResetDate', now);
     }
 }
