@@ -87,36 +87,35 @@
                         <div id="azkar-items-list"></div>
                     </div>
 
-                    <div id="subha-interface" style="display:none; margin-top:15px;">
-                        <button class="nav-btn" onclick="backToAzkarCategories()" style="margin-bottom:15px; width:100%;">🔙 عودة للقائمة</button>
-                        
-                        <div class="card" style="text-align:center; border:2px solid var(--primary-color);">
-                            <h3 style="color:var(--primary-color); margin:0;">📿 المسبحة الإلكترونية</h3>
-                            <div id="subha-display-area" style="margin-top:20px;">
-                                <div style="font-size:3rem; font-weight:bold; color:var(--accent-color); font-family:'Cairo', sans-serif;" id="main-tasbeeh-counter">0</div>
-                                <p id="current-tasbeeh-label" style="color:gray; margin-top:5px;">اختر ذكراً للبدء</p>
-                            </div>
-                            
-                            <div style="display:flex; justify-content:center; gap:15px; margin-top:20px;">
-                                <button class="nav-btn" onclick="subhaAction('undo')" style="border-color:#f59e0b; color:#f59e0b;">↩️ تراجع</button>
-                                <button class="nav-btn" onclick="subhaAction('reset')" style="border-color:#ef4444; color:#ef4444;">🔄 تصفير</button>
+                    <div id="subha-interface" style="display:none; margin-top:10px;">
+                        <div style="display:flex; gap:10px; align-items:stretch; margin-bottom:10px;">
+                            <button class="nav-btn" onclick="backToAzkarCategories()" style="padding:0 15px; font-size:1.2rem;">🔙</button>
+                            <div class="card" style="flex:1; margin:0; padding:10px 15px; display:flex; justify-content:space-between; align-items:center; border:2px solid var(--primary-color);">
+                                <div style="text-align:right;">
+                                    <div id="main-tasbeeh-counter" style="font-size:2.2rem; font-weight:bold; color:var(--accent-color); line-height:1;">0</div>
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:5px;">
+                                    <button class="nav-btn" onclick="subhaAction('undo')" style="padding:2px 8px; font-size:0.75rem; border-color:#f59e0b; color:#f59e0b; min-height:auto;">تراجع</button>
+                                    <button class="nav-btn" onclick="subhaAction('reset')" style="padding:2px 8px; font-size:0.75rem; border-color:#ef4444; color:#ef4444; min-height:auto;">تصفير</button>
+                                </div>
                             </div>
                         </div>
 
-                        <p style="text-align:center; font-weight:bold; margin-top:15px;">اختر الذكر للتسبيح:</p>
-                        <div class="button-grid">
-                            <button class="calc-btn-option" onclick="setTasbeeh('سبحان الله')">سبحان الله</button>
-                            <button class="calc-btn-option" onclick="setTasbeeh('الحمد لله')">الحمد لله</button>
-                            <button class="calc-btn-option" onclick="setTasbeeh('الله أكبر')">الله أكبر</button>
-                            <button class="calc-btn-option" onclick="setTasbeeh('لا إله إلا الله')">لا إله إلا الله</button>
-                            <button class="calc-btn-option" onclick="setTasbeeh('أستغفر الله')">أستغفر الله</button>
-                            <button class="calc-btn-option" onclick="setTasbeeh('اللهم صل وسلم على نبينا محمد')">الصلاة على النبي</button>
+                        <p id="current-tasbeeh-label" style="text-align:center; font-weight:bold; color:var(--primary-color); margin:5px 0; font-size:1rem;">سبحان الله</p>
+                        <div class="button-grid" style="grid-template-columns: repeat(3, 1fr); gap:5px; margin-bottom:10px;">
+                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('سبحان الله')">سبحان الله</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('الحمد لله')">الحمد لله</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('الله أكبر')">الله أكبر</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('لا إله إلا الله')">لا إله إلا الله</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('أستغفر الله')">أستغفر الله</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('الصلاة على النبي')">الصلاة على النبي</button>
                         </div>
                         
-                        <button id="big-tap-btn" class="nav-btn active" style="width:100%; height:100px; font-size:1.5rem; margin-top:20px; border-radius:15px; box-shadow:0 5px 15px rgba(4, 120, 87, 0.3);" onclick="subhaAction('count')">
-                            👈 اضغط للعد
+                        <button id="big-tap-btn" class="nav-btn active" style="width:100%; height:100px; font-size:1.5rem; border-radius:15px; box-shadow:0 5px 15px rgba(4, 120, 87, 0.3); display:flex; align-items:center; justify-content:center; gap:10px;" onclick="subhaAction('count')">
+                            <span>اضغط للعد</span> 👆
                         </button>
                     </div>
+
                 </div>
             </div>
 
