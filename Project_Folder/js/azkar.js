@@ -1,4 +1,4 @@
-// js/azkar.js - (محدث: لون موحد + انتقال تلقائي)
+// js/azkar.js - (محدث: السبحة تظهر في الأعلى)
 
 let allAzkarData = [];
 let resetSetting = localStorage.getItem('azkarResetPeriod') || '24'; 
@@ -38,7 +38,7 @@ async function loadAzkarCategories() {
         container.style.display = 'block';
         container.classList.add('active-panel');
         if(btn) btn.classList.add('active-acc');
-        container.style.maxHeight = "800px"; // زدنا الارتفاع قليلاً
+        container.style.maxHeight = "800px";
     }
 
     if(allAzkarData.length === 0) {
@@ -54,10 +54,9 @@ async function loadAzkarCategories() {
     }
     
     renderAzkarCategories();
-    // تحديث الارتفاع
     setTimeout(() => {
         const h = container.scrollHeight;
-        container.style.maxHeight = (h + 50) + "px";
+        container.style.maxHeight = (h + 100) + "px";
     }, 100);
 }
 
@@ -88,10 +87,8 @@ function renderAzkarCategories() {
         grid.appendChild(btn);
     });
 
-    // --- زر السبحة (تم توحيد اللون) ---
     const subhaBtn = document.createElement('div');
     subhaBtn.className = 'calc-btn-option'; 
-    // حذفنا التنسيقات الخاصة ليصبح مثل إخوته تماماً
     subhaBtn.innerHTML = `<div style="font-size:1.5rem; margin-bottom:5px;">⏱️</div>السبحة الإلكترونية`;
     subhaBtn.onclick = () => showSubhaInterface();
     grid.appendChild(subhaBtn);
@@ -178,9 +175,14 @@ function showSubhaInterface() {
     
     resizeContainer();
 
-    // 🔥 ميزة الانتقال التلقائي (Scroll)
+    // 🔥🔥 التعديل لرفع الشاشة للأعلى 🔥🔥
     setTimeout(() => {
-        subhaInterface.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // نستخدم 'start' لجعلها في البداية
+        subhaInterface.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // تعديل إضافي بعد التمرير (لترك مسافة صغيرة)
+        setTimeout(() => {
+             window.scrollBy({top: -60, behavior: 'smooth'}); 
+        }, 300);
     }, 100);
 }
 
@@ -188,13 +190,12 @@ function setTasbeeh(name, reset = true) {
     currentTasbeehName = name;
     document.getElementById('current-tasbeeh-label').innerText = name;
     
-    // تلوين الزر المختار
     document.querySelectorAll('.tasbeeh-btn-small').forEach(btn => {
         if(btn.innerText.includes(name)) {
             btn.style.backgroundColor = "var(--primary-color)";
             btn.style.color = "white";
         } else {
-            btn.style.backgroundColor = ""; // Reset
+            btn.style.backgroundColor = ""; 
             btn.style.color = "";
         }
     });
@@ -245,7 +246,6 @@ function backToAzkarCategories() {
 
 function resizeContainer() {
     const container = document.getElementById('azkar-app-container');
-    // إضافة وقت إضافي للسماح للرسم
     setTimeout(() => container.style.maxHeight = container.scrollHeight + 100 + "px", 50);
 }
 
