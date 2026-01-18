@@ -1,4 +1,4 @@
-// js/azkar.js - (محدث: السبحة تظهر في الأعلى)
+// js/azkar.js - (محدث: إصلاح دقيق لمكان التمرير)
 
 let allAzkarData = [];
 let resetSetting = localStorage.getItem('azkarResetPeriod') || '24'; 
@@ -38,7 +38,7 @@ async function loadAzkarCategories() {
         container.style.display = 'block';
         container.classList.add('active-panel');
         if(btn) btn.classList.add('active-acc');
-        container.style.maxHeight = "800px";
+        container.style.maxHeight = "1200px"; // زيادة المساحة لتستوعب السبحة براحة
     }
 
     if(allAzkarData.length === 0) {
@@ -54,9 +54,9 @@ async function loadAzkarCategories() {
     }
     
     renderAzkarCategories();
+    // تحديث الارتفاع
     setTimeout(() => {
-        const h = container.scrollHeight;
-        container.style.maxHeight = (h + 100) + "px";
+        container.style.maxHeight = container.scrollHeight + 150 + "px";
     }, 100);
 }
 
@@ -173,17 +173,23 @@ function showSubhaInterface() {
     if(savedName) setTasbeeh(savedName, false); 
     else setTasbeeh("سبحان الله");
     
+    // تحديث ارتفاع الحاوية
     resizeContainer();
 
-    // 🔥🔥 التعديل لرفع الشاشة للأعلى 🔥🔥
+    // 🔥🔥 التمرير الذكي (الحل الجديد) 🔥🔥
     setTimeout(() => {
-        // نستخدم 'start' لجعلها في البداية
-        subhaInterface.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // تعديل إضافي بعد التمرير (لترك مسافة صغيرة)
-        setTimeout(() => {
-             window.scrollBy({top: -60, behavior: 'smooth'}); 
-        }, 300);
-    }, 100);
+        // حساب موقع العنصر بالنسبة للصفحة
+        const element = document.getElementById('subha-interface');
+        const headerOffset = 150; // ترك مسافة 150 بكسل من الأعلى (للهيدر)
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+    
+        // التنفيذ
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+        });
+    }, 200); // تأخير بسيط لضمان اكتمال الرسم
 }
 
 function setTasbeeh(name, reset = true) {
@@ -246,7 +252,8 @@ function backToAzkarCategories() {
 
 function resizeContainer() {
     const container = document.getElementById('azkar-app-container');
-    setTimeout(() => container.style.maxHeight = container.scrollHeight + 100 + "px", 50);
+    // زيادة مسافة الأمان عند حساب الارتفاع
+    setTimeout(() => container.style.maxHeight = container.scrollHeight + 150 + "px", 50);
 }
 
 // 8. التصفير التلقائي
