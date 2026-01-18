@@ -1,4 +1,4 @@
-// js/azkar.js - نظام الأذكار والسبحة (تصفير فوري بدون رسائل)
+// js/azkar.js - (محدث: لون موحد + انتقال تلقائي)
 
 let allAzkarData = [];
 let resetSetting = localStorage.getItem('azkarResetPeriod') || '24'; 
@@ -38,7 +38,7 @@ async function loadAzkarCategories() {
         container.style.display = 'block';
         container.classList.add('active-panel');
         if(btn) btn.classList.add('active-acc');
-        container.style.maxHeight = "600px";
+        container.style.maxHeight = "800px"; // زدنا الارتفاع قليلاً
     }
 
     if(allAzkarData.length === 0) {
@@ -54,7 +54,11 @@ async function loadAzkarCategories() {
     }
     
     renderAzkarCategories();
-    setTimeout(() => container.style.maxHeight = container.scrollHeight + "px", 100);
+    // تحديث الارتفاع
+    setTimeout(() => {
+        const h = container.scrollHeight;
+        container.style.maxHeight = (h + 50) + "px";
+    }, 100);
 }
 
 // 3. رسم الأزرار
@@ -84,11 +88,10 @@ function renderAzkarCategories() {
         grid.appendChild(btn);
     });
 
-    // زر السبحة
+    // --- زر السبحة (تم توحيد اللون) ---
     const subhaBtn = document.createElement('div');
-    subhaBtn.className = 'calc-btn-option';
-    subhaBtn.style.borderColor = "var(--primary-color)";
-    subhaBtn.style.background = "rgba(4, 120, 87, 0.05)";
+    subhaBtn.className = 'calc-btn-option'; 
+    // حذفنا التنسيقات الخاصة ليصبح مثل إخوته تماماً
     subhaBtn.innerHTML = `<div style="font-size:1.5rem; margin-bottom:5px;">⏱️</div>السبحة الإلكترونية`;
     subhaBtn.onclick = () => showSubhaInterface();
     grid.appendChild(subhaBtn);
@@ -151,7 +154,6 @@ function updateZekrCounter(btn, key, originalTotal) {
     }
 }
 
-// تصفير القسم (تم إزالة الرسالة أيضاً هنا لتكون سريعة)
 function resetCategoryCounters() {
     const catTitle = document.getElementById('azkar-category-title').innerText;
     Object.keys(localStorage).forEach(k => {
@@ -167,18 +169,35 @@ let currentTasbeehCount = 0;
 
 function showSubhaInterface() {
     document.getElementById('azkar-categories-grid').style.display = 'none';
-    document.getElementById('subha-interface').style.display = 'block';
+    const subhaInterface = document.getElementById('subha-interface');
+    subhaInterface.style.display = 'block';
     
     const savedName = localStorage.getItem('subha_last_name');
     if(savedName) setTasbeeh(savedName, false); 
     else setTasbeeh("سبحان الله");
     
     resizeContainer();
+
+    // 🔥 ميزة الانتقال التلقائي (Scroll)
+    setTimeout(() => {
+        subhaInterface.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
 }
 
 function setTasbeeh(name, reset = true) {
     currentTasbeehName = name;
     document.getElementById('current-tasbeeh-label').innerText = name;
+    
+    // تلوين الزر المختار
+    document.querySelectorAll('.tasbeeh-btn-small').forEach(btn => {
+        if(btn.innerText.includes(name)) {
+            btn.style.backgroundColor = "var(--primary-color)";
+            btn.style.color = "white";
+        } else {
+            btn.style.backgroundColor = ""; // Reset
+            btn.style.color = "";
+        }
+    });
     
     if(reset) {
         const saved = localStorage.getItem(`subha_count_${name}`);
@@ -199,9 +218,8 @@ function subhaAction(action) {
     } else if (action === 'undo') {
         if(currentTasbeehCount > 0) currentTasbeehCount--;
     } else if (action === 'reset') {
-        // 🔥 تم التعديل: تصفير فوري بدون رسالة
         currentTasbeehCount = 0;
-        if(navigator.vibrate) navigator.vibrate(50); // اهتزاز للتأكيد
+        if(navigator.vibrate) navigator.vibrate(50); 
         if(window.showToast) window.showToast("تم التصفير", "success");
     }
 
@@ -227,7 +245,8 @@ function backToAzkarCategories() {
 
 function resizeContainer() {
     const container = document.getElementById('azkar-app-container');
-    setTimeout(() => container.style.maxHeight = container.scrollHeight + "px", 50);
+    // إضافة وقت إضافي للسماح للرسم
+    setTimeout(() => container.style.maxHeight = container.scrollHeight + 100 + "px", 50);
 }
 
 // 8. التصفير التلقائي
