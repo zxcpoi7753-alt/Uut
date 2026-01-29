@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - حلقات الثريا</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        body { padding: 40px; background-color: #f3f4f6; font-family: 'Cairo', sans-serif; }
+        .admin-box { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            border: 2px solid var(--primary-color);
+        }
+        .status-msg { margin-top: 15px; padding: 15px; border-radius: 8px; display: none; text-align: center; font-weight: bold; }
+        .success { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        .error { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-box">
+        <h2 style="color:var(--primary-color); text-align:center; margin-top:0;">🔧 تحديث السؤال الأسبوعي</h2>
+        <p style="text-align:center; color:gray; margin-bottom:20px;">اكتب السؤال الجديد والفائز، واضغط نشر.</p>
+        
+        <div class="calc-input-group">
+            <label>❓ نص السؤال الجديد:</label>
+            <textarea id="q-text" class="form-input" rows="3" placeholder="مثال: كم عدد أجزاء القرآن الكريم؟"></textarea>
+        </div>
+
+        <div class="calc-input-group" style="margin-top:15px;">
+            <label>🏆 اسم الفائز السابق:</label>
+            <input type="text" id="q-winner" class="form-input" placeholder="مثال: محمد أحمد">
+        </div>
+
+        <button onclick="saveData()" class="nav-btn active" style="width:100%; margin-top:20px; font-size:1.1rem;">🚀 نشر التحديث للموقع</button>
+        
+        <div id="msg" class="status-msg"></div>
+
+        <hr style="margin:20px 0; border-color:#eee;">
+        <a href="index.html" class="nav-btn" style="display:block; text-align:center; background:#eee; color:#333; border:none;">➡️ معاينة الموقع الرئيسي</a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <script>
+        // 1. مفاتيح الربط الخاصة بمشروعك (جاهزة)
+        const firebaseConfig = {
+          apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
+          authDomain: "quran-app-93e24.firebaseapp.com",
+          projectId: "quran-app-93e24",
+          storageBucket: "quran-app-93e24.firebasestorage.app",
+          messagingSenderId: "82150677933",
+          appId: "1:82150677933:web:64213e04463c1bb3179524"
+        };
+
+        // 2. تشغيل الاتصال
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 3. دالة الحفظ عند ضغط الزر
+        function saveData() {
+            const question = document.getElementById('q-text').value;
+            const winner = document.getElementById('q-winner').value;
+            const msgDiv = document.getElementById('msg');
+
+            // التأكد أن الحقول ليست فارغة
+            if(!question || !winner) {
+                alert("⚠️ الرجاء كتابة السؤال واسم الفائز!");
+                return;
+            }
+
+            msgDiv.style.display = 'none';
+
+            // إرسال البيانات إلى فايربيس
+            db.ref('weekly_question').set({
+                text: question,
+                last_winner: winner
+            })
+            .then(() => {
+                msgDiv.innerText = "✅ تم تحديث الموقع بنجاح! انتقل للصفحة الرئيسية لرؤية التغيير.";
+                msgDiv.className = "status-msg success";
+                msgDiv.style.display = "block";
+            })
+            .catch((error) => {
+                msgDiv.innerText = "❌ حدث خطأ: " + error.message;
+                msgDiv.className = "status-msg error";
+                msgDiv.style.display = "block";
+            });
+        }
+    </script>
+</body>
+</html>
