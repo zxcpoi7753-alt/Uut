@@ -235,13 +235,13 @@
         function logout() {
             if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
                 localStorage.removeItem('admin_token');
-                window.location.href = 'index.html';
+                window.location.replace('index.html');
             }
         }
 
         // --- دوال الحفظ ---
 
-        // 1. حفظ نصوص الموقع (CMS)
+        // 1. حفظ نصوص الموقع (CMS) - الميزة الجديدة
         function saveSiteTexts() {
             const data = {
                 txt_header_title: val('inp_header_title'),
@@ -261,7 +261,7 @@
             .catch(e => msg('msg-texts', '❌ حدث خطأ', true));
         }
 
-        // 2. حفظ الأخبار والسؤال والطالب (كما سبق)
+        // 2. حفظ الأخبار والسؤال والطالب
         function saveNews() {
             db.ref('news_bar').set({ text: val('news-content') })
             .then(() => msg('msg-news', '✅ تم النشر'))
