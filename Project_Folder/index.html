@@ -386,7 +386,7 @@
             document.getElementById('admin-user').focus();
         }
 
-                function secureLogin() {
+        function secureLogin() {
             const uInput = document.getElementById('admin-user').value;
             const pInput = document.getElementById('admin-pass').value;
             const btn = document.querySelector('button[onclick="secureLogin()"]');
@@ -395,32 +395,13 @@
             btn.innerText = "⏳ جاري التحقق...";
             btn.disabled = true;
 
+            // جلب بيانات الدخول الحقيقية من قاعدة البيانات
             const db = firebase.database();
             db.ref('admin_account').once('value').then((snapshot) => {
                 const creds = snapshot.val();
                 let realUser = "admin";
-                let realPass = "12345"; // القيم الافتراضية
+                let realPass = "12345";
 
-                if (creds) { realUser = creds.username; realPass = creds.password; }
-
-                if (uInput === realUser && pInput === realPass) {
-                    // 👇👇 هنا التصحيح: نعطيك "تذكرة الدخول" قبل التحويل 👇👇
-                    localStorage.setItem('admin_token', 'SECRET_PASS_123'); 
-                    window.location.href = "admin.html";
-                } else {
-                    alert("⛔ بيانات الدخول خاطئة!");
-                    document.getElementById('admin-pass').value = '';
-                    btn.innerText = oldText;
-                    btn.disabled = false;
-                }
-            }).catch((e) => {
-                alert("تأكد من الاتصال بالإنترنت!");
-                console.error(e);
-                btn.innerText = oldText;
-                btn.disabled = false;
-            });
-        }
-        
                 // إذا قام المدير بتغيير كلمة السر، نستخدم الجديدة
                 if (creds) { realUser = creds.username; realPass = creds.password; }
 
@@ -439,5 +420,141 @@
             });
         }
     </script>
+        <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div style="background: white; padding: 30px; border-radius: 15px; width: 300px; text-align: center; border: 2px solid var(--primary-color); box-shadow: 0 0 20px rgba(4, 120, 87, 0.3);">
+            <h3 style="margin-top:0; color:#1e293b;">🔐 بوابة الإدارة</h3>
+            
+            <input type="text" id="admin-user" placeholder="اسم المستخدم" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align:center;">
+            <input type="password" id="admin-pass" placeholder="كلمة المرور" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align:center;">
+            
+            <button onclick="secureLogin()" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight:bold; font-size:1rem;">دخول 🚀</button>
+            <button onclick="document.getElementById('login-modal').style.display='none'" style="margin-top: 15px; background: none; border: none; color: #ef4444; cursor: pointer; text-decoration: underline;">إلغاء</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <script>
+        // إعدادات فايربيس (لا تغيرها)
+        const firebaseConfig = {
+          apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
+          authDomain: "quran-app-93e24.firebaseapp.com",
+          projectId: "quran-app-93e24",
+          storageBucket: "quran-app-93e24.firebasestorage.app",
+          messagingSenderId: "82150677933",
+          appId: "1:82150677933:web:64213e04463c1bb3179524"
+        };
+        
+        try {
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+
+            // الاستماع للبيانات (الأخبار والأسئلة)
+            db.ref().on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    if (data.news_bar) {
+                        const newsEl = document.getElementById('dynamic-news-bar');
+                        if (newsEl) newsEl.innerText = data.news_bar.text;
+                    }
+                    if (data.weekly_question) {
+                        const qEl = document.getElementById('weekly-question-text');
+                        const wEl = document.getElementById('weekly-winner-text');
+                        if (qEl) qEl.innerHTML = `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`;
+                        if (wEl) wEl.innerText = data.weekly_question.last_winner;
+                    }
+                    if (data.top_student) {
+                        const sName = document.getElementById('top-student-name');
+                        const sDesc = document.getElementById('top-student-desc');
+                        if (sName) sName.innerText = data.top_student.name;
+                        if (sDesc) sDesc.innerText = data.top_student.category;
+                    }
+                }
+            });
+        } catch(e) { console.error(e); }
+
+        // فتح النافذة
+        function openLoginModal() {
+            document.getElementById('login-modal').style.display = 'flex';
+            document.getElementById('admin-user').focus();
+        }
+
+        // 👇👇 دالة الدخول (المصححة) 👇👇
+        function secureLogin() {
+            const uInput = document.getElementById('admin-user').value;
+            const pInput = document.getElementById('admin-pass').value;
+            const btn = document.querySelector('button[onclick="secureLogin()"]');
+            
+            // نغير نص الزر لنعرف أنه يعمل
+            const oldText = btn.innerText;
+            btn.innerText = "⏳ جاري التحقق...";
+            btn.disabled = true;
+
+            const db = firebase.database();
+            // نجلب بيانات الدخول الحقيقية من السحابة
+            db.ref('admin_account').once('value').then((snapshot) => {
+                const creds = snapshot.val();
+                let realUser = "admin";
+                let realPass = "12345";
+
+                if (creds) { realUser = creds.username; realPass = creds.password; }
+
+                if (uInput === realUser && pInput === realPass) {
+                    // ✅ كلمة السر صحيحة:
+                    // 1. نعطيه المفتاح السري (التذكرة)
+                    localStorage.setItem('admin_token', 'SECRET_PASS_123');
+                    // 2. نرسله لصفحة الأدمن
+                    window.location.href = "admin.html";
+                } else {
+                    // ❌ كلمة السر خطأ:
+                    alert("⛔ بيانات الدخول خاطئة! حاول مرة أخرى.");
+                    document.getElementById('admin-pass').value = '';
+                    // نعيد الزر لحالته الطبيعية (لا نحدث الصفحة ولا نطرده)
+                    btn.innerText = oldText;
+                    btn.disabled = false;
+                    document.getElementById('admin-user').focus();
+                }
+            }).catch((e) => {
+                alert("⚠️ تأكد من الاتصال بالإنترنت");
+                btn.innerText = oldText;
+                btn.disabled = false;
+            });
+        }
+    </script>
+    ```
+
+---
+
+### 📂 الملف الثاني: `admin.html` (صفحة الإدارة)
+
+**أين الصق الكود؟**
+في **أول سطر** في الملف تماماً (في الأعلى).
+يجب أن يكون هذا الكود هو أول شيء في الصفحة لكي يعمل "كحارس".
+
+**🔴 تأكد أن بداية ملف `admin.html` تبدو هكذا بالضبط:**
+
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة القيادة</title>
+    
+    <script>
+        // 1. نبحث عن التذكرة في جيب المستخدم
+        const token = localStorage.getItem('admin_token');
+        
+        // 2. نتأكد هل التذكرة صحيحة؟ (نفس الكلمة التي وضعناها في index.html)
+        if (token !== 'SECRET_PASS_123') {
+            // ❌ إذا لم يجد التذكرة، يطرده فوراً للصفحة الرئيسية
+            window.location.href = "index.html"; 
+        }
+        // ✅ إذا وجدت التذكرة، سيسمح له بالبقاء ولن يفعل شيئاً
+    </script>
+    <link rel="stylesheet" href="css/main.css">
+    ...
+
 </body>
-    </html>
+                                    </html>
