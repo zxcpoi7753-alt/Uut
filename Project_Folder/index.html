@@ -306,52 +306,52 @@
     <script src="js/quran_app.js"></script>
     <script src="js/azkar.js"></script>
     <script src="js/logic.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <script>
-        // 1. مفاتيحك الخاصة
-        const firebaseConfig = {
-          apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
-          authDomain: "quran-app-93e24.firebaseapp.com",
-          projectId: "quran-app-93e24",
-          storageBucket: "quran-app-93e24.firebasestorage.app",
-          messagingSenderId: "82150677933",
-          appId: "1:82150677933:web:64213e04463c1bb3179524"
-        };
+        <button onclick="document.getElementById('login-modal').style.display='flex'" style="
+        position: fixed; 
+        bottom: 20px; 
+        left: 20px; 
+        background: #333; 
+        color: white; 
+        border: none; 
+        border-radius: 50%; 
+        width: 45px; height: 45px; 
+        font-size: 20px; 
+        cursor: pointer; 
+        z-index: 99999;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    " title="دخول المدير">🔒</button>
 
-        try {
-            // 2. تشغيل الاتصال
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.database();
-
-            // 3. الاستماع للبيانات وتحديث الشاشة
-            console.log("📡 جاري الاتصال بقاعدة البيانات...");
+    <div id="login-modal" style="
+        display: none; 
+        position: fixed; 
+        top: 0; left: 0; 
+        width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.85); 
+        z-index: 100000; 
+        justify-content: center; 
+        align-items: center;
+    ">
+        <div style="background: white; padding: 30px; border-radius: 10px; width: 300px; text-align: center;">
+            <h3 style="margin-top:0; color:#333;">🔐 دخول المشرف</h3>
+            <input type="text" id="admin-user" placeholder="اسم المستخدم" style="width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;">
+            <input type="password" id="admin-pass" placeholder="كلمة المرور" style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box;">
             
-            db.ref('weekly_question').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    console.log("✅ وصلت البيانات:", data);
+            <button onclick="checkLogin()" style="width: 100%; padding: 10px; background: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">دخول</button>
+            <button onclick="document.getElementById('login-modal').style.display='none'" style="margin-top: 10px; background: none; border: none; color: red; cursor: pointer; text-decoration: underline;">إلغاء</button>
+        </div>
+    </div>
 
-                    // تحديث السؤال
-                    const qBox = document.getElementById('weekly-question-text');
-                    if(qBox) {
-                        qBox.innerHTML = `<strong>سؤال الأسبوع:</strong> ${data.text}`;
-                    } else {
-                        console.error("❌ لم أجد مكان السؤال (تأكد من الـ ID)");
-                    }
-
-                    // تحديث الفائز
-                    const wBox = document.getElementById('weekly-winner-text');
-                    if(wBox) {
-                        wBox.innerText = data.last_winner;
-                    } else {
-                        console.error("❌ لم أجد مكان الفائز (تأكد من الـ ID)");
-                    }
-                }
-            });
-        } catch (e) {
-            console.error("🔥 خطأ في الاتصال:", e);
+    <script>
+        function checkLogin() {
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
+            // 🔴 اسم المستخدم وكلمة السر هنا 🔴
+            if(u === "admin" && p === "12345") {
+                window.location.href = "admin.html"; // الانتقال لصفحة الأدمن
+            } else {
+                alert("❌ بيانات خاطئة!");
+            }
         }
     </script>
 </body>
-</html>
+                </html>
