@@ -3,51 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة القيادة</title>
+    <title>لوحة القيادة - المدير العام</title>
     
     <script>
-        // 1. هل المستخدم دخل من قبل ومعه التذكرة؟
+        // التحقق من "تصريح الدخول" قبل تحميل أي شيء
         const token = localStorage.getItem('admin_token');
-        
-        // 2. إذا لم يجد التذكرة، يطرده
         if (token !== 'SECRET_PASS_123') {
-            // نستخدم replace بدلاً من href لكي لا يستطيع الضغط على زر "رجوع"
-            window.location.replace("index.html"); 
+            window.location.replace("index.html"); // طرد فوري
         }
-        // إذا التذكرة موجودة، سيكمل تحميل الصفحة بشكل طبيعي
     </script>
-    <link rel="stylesheet" href="css/main.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        :root { --sidebar-width: 260px; --header-height: 70px; }
-        body { background-color: #f3f4f6; overflow-x: hidden; margin: 0; display: flex; font-family: 'Cairo', sans-serif; }
+        :root { --primary: #0f172a; --accent: #3b82f6; --bg: #f3f4f6; --white: #ffffff; --text: #334155; }
+        body { margin: 0; font-family: 'Cairo', sans-serif; background: var(--bg); display: flex; height: 100vh; overflow: hidden; }
 
-        .sidebar { width: var(--sidebar-width); height: 100vh; background: #1e293b; color: white; position: fixed; right: 0; top: 0; display: flex; flex-direction: column; z-index: 1000; transition: 0.3s; }
-        .brand { padding: 25px; font-size: 1.4rem; font-weight: bold; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
-        .menu { list-style: none; padding: 20px 0; margin: 0; }
-        .menu li { padding: 0 20px; margin-bottom: 5px; }
-        .menu a { display: flex; align-items: center; gap: 15px; padding: 12px 15px; color: #94a3b8; text-decoration: none; border-radius: 8px; transition: 0.3s; cursor: pointer; }
-        .menu a:hover, .menu a.active { background: var(--primary-color); color: white; }
+        /* القائمة الجانبية */
+        .sidebar { width: 260px; background: var(--primary); color: var(--white); display: flex; flex-direction: column; padding-top: 20px; transition: 0.3s; z-index: 1000; }
+        .brand { font-size: 1.5rem; font-weight: bold; text-align: center; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
+        .menu { list-style: none; padding: 0; margin: 0; flex: 1; overflow-y: auto; }
+        .menu li a { display: flex; align-items: center; padding: 15px 25px; color: #94a3b8; text-decoration: none; transition: 0.2s; cursor: pointer; border-right: 4px solid transparent; }
+        .menu li a:hover, .menu li a.active { background: rgba(255,255,255,0.05); color: var(--white); border-right-color: var(--accent); }
+        .menu li a i { margin-left: 10px; width: 25px; text-align: center; }
+
+        /* المحتوى الرئيسي */
+        .main { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--white); padding: 15px 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .page-title { font-size: 1.4rem; font-weight: bold; color: var(--primary); }
         
-        .main-content { margin-right: var(--sidebar-width); width: 100%; min-height: 100vh; transition: 0.3s; }
-        .top-header { height: var(--header-height); background: white; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .content-area { padding: 30px; }
-        .card-panel { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: none; animation: fadeIn 0.4s ease; }
-        .card-panel.active-panel { display: block; }
+        /* البطاقات والأقسام */
+        .panel { background: var(--white); padding: 30px; border-radius: 15px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); display: none; animation: fadeIn 0.3s ease; }
+        .panel.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* النماذج */
         .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #4b5563; }
-        .form-input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; box-sizing: border-box; }
-        .btn-submit { background: var(--primary-color); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 1rem; width: 100%; transition: 0.2s; }
-        .status-msg { margin-top: 15px; text-align: center; font-weight: bold; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--text); }
+        .input-field { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 1rem; box-sizing: border-box; transition: 0.2s; }
+        .input-field:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; width: 100%; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-save { background: var(--primary); }
+        .btn-save:hover { background: #1e293b; }
+        .btn-danger { background: #ef4444; }
+        
+        .msg { margin-top: 15px; text-align: center; font-weight: bold; font-size: 0.9rem; min-height: 20px; }
+        
+        .section-divider { margin: 30px 0; border: 0; border-top: 1px solid #e2e8f0; }
+        .sub-label { font-size: 0.85rem; color: #64748b; margin-bottom: 5px; display: block; }
 
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(100%); width: 260px; }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { margin-right: 0; }
-            .mobile-toggle { display: block !important; font-size: 1.5rem; cursor: pointer; }
+            .sidebar { position: fixed; right: -260px; height: 100%; }
+            .sidebar.open { right: 0; }
+            .mobile-toggle { display: block; font-size: 1.5rem; cursor: pointer; }
         }
         .mobile-toggle { display: none; }
     </style>
@@ -55,68 +64,147 @@
 <body>
 
     <aside class="sidebar" id="sidebar">
-        <div class="brand"><i class="fas fa-quran"></i> لوحة التحكم</div>
+        <div class="brand"><i class="fas fa-crown"></i> الإدارة العليا</div>
         <ul class="menu">
-            <li><a onclick="switchTab('tab-question', this)" class="active"><i class="fas fa-question-circle"></i> سؤال الأسبوع</a></li>
-            <li><a onclick="switchTab('tab-news', this)"><i class="fas fa-newspaper"></i> شريط الأخبار</a></li>
-            <li><a onclick="switchTab('tab-students', this)"><i class="fas fa-user-graduate"></i> الطلاب المتميزون</a></li>
-            <li><a onclick="switchTab('tab-settings', this)"><i class="fas fa-cog"></i> إعدادات الأدمن</a></li>
-            <li style="margin-top: 30px; border-top: 1px solid #334155; padding-top: 10px;">
-                <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
+            <li><a onclick="switchTab('tab-texts', this)" class="active"><i class="fas fa-edit"></i> نصوص الموقع</a></li>
+            <li><a onclick="switchTab('tab-news', this)"><i class="fas fa-bullhorn"></i> الأخبار والمسابقات</a></li>
+            <li><a onclick="switchTab('tab-student', this)"><i class="fas fa-user-graduate"></i> الطالب المتميز</a></li>
+            <li><a onclick="switchTab('tab-settings', this)"><i class="fas fa-cog"></i> بيانات الدخول</a></li>
+            <li style="margin-top:auto; border-top:1px solid rgba(255,255,255,0.1);">
+                <a onclick="logout()" style="color:#fca5a5;"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>
             </li>
         </ul>
     </aside>
 
-    <div class="main-content">
-        <header class="top-header">
+    <div class="main">
+        <div class="header">
             <div style="display:flex; align-items:center; gap:15px;">
                 <div class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
-                <div class="page-title" id="page-title">سؤال الأسبوع</div>
+                <h2 class="page-title" id="page-title">📝 إدارة نصوص الموقع</h2>
             </div>
-            <div onclick="logout()" style="color:#ef4444; cursor:pointer; font-weight:bold;"><i class="fas fa-sign-out-alt"></i> خروج</div>
-        </header>
-
-        <div class="content-area">
-            
-            <div id="tab-question" class="card-panel active-panel">
-                <h3 style="margin-top:0;">❓ تحديث مسابقة الأسبوع</h3>
-                <div class="form-group"><label>نص السؤال:</label><textarea id="q-text" class="form-input" rows="4"></textarea></div>
-                <div class="form-group"><label>اسم الفائز:</label><input type="text" id="q-winner" class="form-input"></div>
-                <button onclick="saveQuestion()" class="btn-submit">💾 حفظ التحديث</button>
-                <div id="msg-q" class="status-msg"></div>
-            </div>
-
-            <div id="tab-news" class="card-panel">
-                <h3 style="margin-top:0;">📰 تحديث شريط الأخبار</h3>
-                <div class="form-group"><label>نص الخبر:</label><textarea id="news-content" class="form-input" rows="3"></textarea></div>
-                <button onclick="saveNews()" class="btn-submit" style="background:#059669;">💾 نشر الخبر</button>
-                <div id="msg-news" class="status-msg"></div>
-            </div>
-
-            <div id="tab-students" class="card-panel">
-                <h3 style="margin-top:0;">🎓 نجم الأسبوع</h3>
-                <div class="form-group"><label>اسم الطالب:</label><input type="text" id="std-name" class="form-input"></div>
-                <div class="form-group"><label>الإنجاز:</label><input type="text" id="std-desc" class="form-input"></div>
-                <button onclick="saveStudent()" class="btn-submit" style="background:#d97706;">💾 تتويج الطالب</button>
-                <div id="msg-std" class="status-msg"></div>
-            </div>
-
-            <div id="tab-settings" class="card-panel">
-                <h3 style="margin-top:0; color:#333;">🔐 بيانات الدخول</h3>
-                <p style="color:gray;">تغيير اسم المستخدم وكلمة المرور.</p>
-                <div class="form-group"><label>المستخدم الجديد:</label><input type="text" id="new-admin-user" class="form-input"></div>
-                <div class="form-group"><label>كلمة المرور الجديدة:</label><input type="text" id="new-admin-pass" class="form-input"></div>
-                <button onclick="saveAdminCreds()" class="btn-submit" style="background-color:#1e293b;">💾 حفظ التغييرات</button>
-                <div id="msg-admin" class="status-msg"></div>
-            </div>
-
+            <a href="index.html" target="_blank" style="text-decoration:none; color:var(--accent); font-weight:bold;">زيارة الموقع <i class="fas fa-external-link-alt"></i></a>
         </div>
+
+        <div id="tab-texts" class="panel active">
+            <h3 style="margin-top:0; color:var(--accent);">✏️ تعديل محتوى الموقع</h3>
+            <p style="color:gray; margin-bottom:20px;">هنا يمكنك تغيير أي نص في الموقع فوراً.</p>
+
+            <div class="form-group">
+                <label>العنوان الرئيسي (H1):</label>
+                <input type="text" id="inp_header_title" class="input-field" placeholder="حلقات الثريا...">
+            </div>
+            <div class="form-group">
+                <label>الوصف الفرعي (تحت العنوان):</label>
+                <input type="text" id="inp_header_subtitle" class="input-field" placeholder="لتعليم القرآن الكريم...">
+            </div>
+            <div class="form-group">
+                <label>الموقع الجغرافي (الهيدر):</label>
+                <input type="text" id="inp_header_location" class="input-field">
+            </div>
+
+            <hr class="section-divider">
+            
+            <div class="form-group">
+                <span class="sub-label">عناوين الأقسام الرئيسية</span>
+                <label>عنوان قسم الأخبار:</label>
+                <input type="text" id="inp_news_title" class="input-field">
+            </div>
+            <div class="form-group">
+                <label>عنوان قسم الطالب المتميز:</label>
+                <input type="text" id="inp_student_title" class="input-field">
+            </div>
+            <div class="form-group">
+                <label>عنوان قسم السؤال الأسبوعي:</label>
+                <input type="text" id="inp_question_title" class="input-field">
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="form-group">
+                <label>عنوان "من نحن":</label>
+                <input type="text" id="inp_about_title" class="input-field">
+            </div>
+            <div class="form-group">
+                <label>محتوى "من نحن" (نص طويل):</label>
+                <textarea id="inp_about_content" class="input-field" rows="5"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>عنوان "تواصل معنا":</label>
+                <input type="text" id="inp_contact_title" class="input-field">
+            </div>
+            
+            <div class="form-group">
+                <label>حقوق الملكية (أسفل الصفحة):</label>
+                <input type="text" id="inp_footer" class="input-field">
+            </div>
+
+            <button onclick="saveSiteTexts()" class="btn btn-save">💾 حفظ وتحديث الموقع</button>
+            <div id="msg-texts" class="msg"></div>
+        </div>
+        <div id="tab-news" class="panel">
+            <h3 style="margin-top:0; color:#059669;">📰 الأخبار والمسابقات</h3>
+            
+            <div class="form-group">
+                <label>نص شريط الأخبار المتحرك:</label>
+                <textarea id="news-content" class="input-field" rows="3"></textarea>
+                <button onclick="saveNews()" class="btn btn-save" style="margin-top:10px; background:#059669;">نشر الخبر</button>
+                <div id="msg-news" class="msg"></div>
+            </div>
+            
+            <hr class="section-divider">
+            
+            <h4 style="color:#d97706;">❓ سؤال الأسبوع</h4>
+            <div class="form-group">
+                <label>نص السؤال:</label>
+                <textarea id="q-text" class="input-field" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>اسم الفائز السابق:</label>
+                <input type="text" id="q-winner" class="input-field">
+            </div>
+            <button onclick="saveQuestion()" class="btn btn-save" style="background:#d97706;">تحديث المسابقة</button>
+            <div id="msg-q" class="msg"></div>
+        </div>
+
+        <div id="tab-student" class="panel">
+            <h3 style="margin-top:0; color:#7c3aed;">🎓 نجم الأسبوع</h3>
+            
+            <div class="form-group">
+                <label>اسم الطالب:</label>
+                <input type="text" id="std-name" class="input-field">
+            </div>
+            <div class="form-group">
+                <label>وصف الإنجاز (أو الحلقة):</label>
+                <input type="text" id="std-desc" class="input-field">
+            </div>
+            <button onclick="saveStudent()" class="btn btn-save" style="background:#7c3aed;">تتويج الطالب</button>
+            <div id="msg-std" class="msg"></div>
+        </div>
+
+        <div id="tab-settings" class="panel">
+            <h3 style="margin-top:0; color:#333;">🔐 بيانات الدخول</h3>
+            <p style="color:red; font-size:0.9rem;">⚠️ تنبيه: احفظ البيانات الجديدة جيداً قبل الخروج.</p>
+            
+            <div class="form-group">
+                <label>اسم المستخدم الجديد:</label>
+                <input type="text" id="new-admin-user" class="input-field" dir="ltr" style="text-align:right;">
+            </div>
+            <div class="form-group">
+                <label>كلمة المرور الجديدة:</label>
+                <input type="text" id="new-admin-pass" class="input-field" dir="ltr" style="text-align:right;">
+            </div>
+            <button onclick="saveAdminCreds()" class="btn btn-save" style="background:#1e293b;">تحديث البيانات الأمنية</button>
+            <div id="msg-admin" class="msg"></div>
+        </div>
+
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     
     <script>
+        // إعدادات الاتصال
         const firebaseConfig = {
           apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
           authDomain: "quran-app-93e24.firebaseapp.com",
@@ -128,61 +216,123 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // التبديل بين الأقسام
         function switchTab(tabId, el) {
-            document.querySelectorAll('.card-panel').forEach(p => p.classList.remove('active-panel'));
-            document.getElementById(tabId).classList.add('active-panel');
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
             document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
             el.classList.add('active');
-            document.getElementById('page-title').innerText = el.innerText;
+            
+            document.getElementById('page-title').innerHTML = el.innerHTML;
+            
             if(window.innerWidth <= 768) toggleSidebar();
         }
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-        
-        // دالة الخروج (تحذف التصريح وتطرد المستخدم)
-        function logout() { 
-            if(confirm('هل تود الخروج؟')) {
-                localStorage.removeItem('admin_token'); // حذف المفتاح
-                window.location.href='index.html'; // طرد
+
+        // دالة الخروج
+        function logout() {
+            if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                localStorage.removeItem('admin_token');
+                window.location.href = 'index.html';
             }
         }
 
-        function saveQuestion() {
-            db.ref('weekly_question').set({ text: document.getElementById('q-text').value, last_winner: document.getElementById('q-winner').value })
-            .then(() => msg('msg-q', '✅ تم'))
-            .catch(e => msg('msg-q', '❌ خطأ', true));
+        // --- دوال الحفظ ---
+
+        // 1. حفظ نصوص الموقع (CMS)
+        function saveSiteTexts() {
+            const data = {
+                txt_header_title: val('inp_header_title'),
+                txt_header_subtitle: val('inp_header_subtitle'),
+                txt_header_location: val('inp_header_location'),
+                txt_news_title: val('inp_news_title'),
+                txt_student_title: val('inp_student_title'),
+                txt_question_title: val('inp_question_title'),
+                txt_about_title: val('inp_about_title'),
+                txt_about_content: val('inp_about_content'),
+                txt_contact_title: val('inp_contact_title'),
+                txt_footer: val('inp_footer')
+            };
+            
+            db.ref('site_content').set(data)
+            .then(() => msg('msg-texts', '✅ تم تحديث جميع نصوص الموقع بنجاح!'))
+            .catch(e => msg('msg-texts', '❌ حدث خطأ', true));
         }
+
+        // 2. حفظ الأخبار والسؤال والطالب (كما سبق)
         function saveNews() {
-            db.ref('news_bar').set({ text: document.getElementById('news-content').value })
-            .then(() => msg('msg-news', '✅ تم'))
+            db.ref('news_bar').set({ text: val('news-content') })
+            .then(() => msg('msg-news', '✅ تم النشر'))
             .catch(e => msg('msg-news', '❌ خطأ', true));
         }
+        function saveQuestion() {
+            db.ref('weekly_question').set({ text: val('q-text'), last_winner: val('q-winner') })
+            .then(() => msg('msg-q', '✅ تم التحديث'))
+            .catch(e => msg('msg-q', '❌ خطأ', true));
+        }
         function saveStudent() {
-            db.ref('top_student').set({ name: document.getElementById('std-name').value, category: document.getElementById('std-desc').value })
-            .then(() => msg('msg-std', '✅ تم'))
+            db.ref('top_student').set({ name: val('std-name'), category: val('std-desc') })
+            .then(() => msg('msg-std', '✅ تم التتويج'))
             .catch(e => msg('msg-std', '❌ خطأ', true));
         }
+
+        // 3. حفظ بيانات الدخول
         function saveAdminCreds() {
-            const u = document.getElementById('new-admin-user').value;
-            const p = document.getElementById('new-admin-pass').value;
-            if(!u || !p) { alert('اكتب البيانات'); return; }
+            const u = val('new-admin-user');
+            const p = val('new-admin-pass');
+            if(!u || !p) return alert('الرجاء تعبئة البيانات');
+            
             if(confirm("هل أنت متأكد؟ ستحتاج لتسجيل الدخول بالبيانات الجديدة.")) {
                 db.ref('admin_account').set({ username: u, password: p })
-                .then(() => msg('msg-admin', '✅ تم تغيير البيانات!'))
+                .then(() => msg('msg-admin', '✅ تم تغيير كلمة المرور بنجاح'))
                 .catch(e => msg('msg-admin', '❌ خطأ', true));
             }
         }
-        function msg(id, text, isError=false) {
+
+        // دوال مساعدة
+        function val(id) { return document.getElementById(id).value; }
+        function msg(id, text, err=false) {
             const el = document.getElementById(id);
-            el.innerHTML = text; el.style.color = isError ? 'red' : 'green';
+            el.innerHTML = text; el.style.color = err ? 'red' : 'green';
+            setTimeout(() => el.innerHTML = '', 3000);
         }
 
+        // --- جلب البيانات عند الفتح ---
         db.ref().once('value').then(snap => {
             const d = snap.val();
             if(!d) return;
-            if(d.weekly_question) { document.getElementById('q-text').value = d.weekly_question.text; document.getElementById('q-winner').value = d.weekly_question.last_winner; }
+
+            // تعبئة نصوص الموقع
+            if(d.site_content) {
+                const c = d.site_content;
+                document.getElementById('inp_header_title').value = c.txt_header_title || "";
+                document.getElementById('inp_header_subtitle').value = c.txt_header_subtitle || "";
+                document.getElementById('inp_header_location').value = c.txt_header_location || "";
+                document.getElementById('inp_news_title').value = c.txt_news_title || "";
+                document.getElementById('inp_student_title').value = c.txt_student_title || "";
+                document.getElementById('inp_question_title').value = c.txt_question_title || "";
+                document.getElementById('inp_about_title').value = c.txt_about_title || "";
+                document.getElementById('inp_about_content').value = c.txt_about_content || "";
+                document.getElementById('inp_contact_title').value = c.txt_contact_title || "";
+                document.getElementById('inp_footer').value = c.txt_footer || "";
+            }
+
+            // تعبئة باقي البيانات
             if(d.news_bar) document.getElementById('news-content').value = d.news_bar.text;
-            if(d.top_student) { document.getElementById('std-name').value = d.top_student.name; document.getElementById('std-desc').value = d.top_student.category; }
-            if(d.admin_account) { document.getElementById('new-admin-user').value = d.admin_account.username; document.getElementById('new-admin-pass').value = d.admin_account.password; }
+            if(d.weekly_question) { 
+                document.getElementById('q-text').value = d.weekly_question.text; 
+                document.getElementById('q-winner').value = d.weekly_question.last_winner; 
+            }
+            if(d.top_student) { 
+                document.getElementById('std-name').value = d.top_student.name; 
+                document.getElementById('std-desc').value = d.top_student.category; 
+            }
+            if(d.admin_account) {
+                document.getElementById('new-admin-user').value = d.admin_account.username;
+                document.getElementById('new-admin-pass').value = d.admin_account.password;
+            }
         });
     </script>
 </body>
