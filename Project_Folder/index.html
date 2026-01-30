@@ -25,9 +25,9 @@
         <div class="video-container">
             <video autoplay muted loop playsinline><source src="1768472913710.mp4" type="video/mp4"></video>
         </div>
-        <h1>حلقات الثريا</h1>
-        <p class="header-subtitle">لتعليم القرآن الكريم</p>
-        <p class="header-location">حضرموت - غيل باوزير</p>
+        <h1 id="txt_header_title">حلقات الثريا</h1>
+        <p class="header-subtitle" id="txt_header_subtitle">لتعليم القرآن الكريم</p>
+        <p class="header-location" id="txt_header_location">حضرموت - غيل باوزير</p>
         <div id="verse-display" class="verse-ticker"></div>
     </header>
 
@@ -45,15 +45,31 @@
         <div id="section-home" class="page-section active">
             <div id="home-welcome-msg" class="card" style="display:none; background: rgba(4, 120, 87, 0.1); border: 2px solid var(--primary-color);"></div>
 
-            <h2 style="color:var(--primary-color)">📢 آخر الأخبار</h2>
-            <div id="news-list"></div>
+            <h2 style="color:var(--primary-color)" id="txt_news_title">📢 آخر الأخبار</h2>
+            <div class="news-ticker" style="background: #f1f5f9; padding: 10px; border-bottom: 2px solid var(--primary-color); border-radius: 8px; margin-bottom: 20px;">
+                <marquee id="dynamic-news-bar" direction="right" scrollamount="6" style="font-weight: bold; color: #333; font-size: 1.1rem;">
+                    ⏳ جاري تحميل الأخبار...
+                </marquee>
+            </div>
 
-            <h2 style="color:var(--primary-color); margin-top:25px;">❓ السؤال الأسبوعي</h2>
-            <div class="card" style="border-right: 4px solid var(--accent-color);">
-                <h3 id="weekly-question-text" style="color:var(--primary-color);">⏳ جاري تحميل السؤال...</h3>                
-                <div style="background: rgba(251, 191, 36, 0.1); padding: 10px; border-radius: 8px;">
-                    <strong>🏆 الفائز السابق:</strong> <span id="weekly-winner-text" style="font-weight:bold; color:#d97706;">⏳ جاري التحميل...</span>
+            <div class="card" style="background: linear-gradient(135deg, #fffbeb 0%, #fff 100%); border: 1px solid #fcd34d;">
+                <div style="text-align:center;">
+                    <span style="font-size:2rem;">👑</span>
+                    <h3 style="margin:5px 0; color:#d97706;" id="txt_student_title">نجم الأسبوع</h3>
+                    <h2 id="top-student-name" style="margin: 10px 0; color: var(--primary-color); font-size: 1.5rem;">⏳ جاري التحميل...</h2>
+                    <p id="top-student-desc" style="color: gray; font-size: 0.9rem;">...</p>
                 </div>
+            </div>
+
+            <h2 style="color:var(--primary-color); margin-top:25px;" id="txt_question_title">❓ السؤال الأسبوعي</h2>
+            <div class="card" style="border-right: 4px solid var(--accent-color);">
+               <h3 id="weekly-question-text" style="color:var(--primary-color); margin-top:0;">⏳ جاري تحميل السؤال...</h3>
+                
+                <div style="background: rgba(251, 191, 36, 0.1); padding: 10px; border-radius: 8px; margin-top:10px;">
+                    <strong>🏆 الفائز السابق:</strong> 
+                    <span id="weekly-winner-text" style="color: var(--primary-color); font-weight:bold;">...</span>
+                </div>
+
                 <button class="nav-btn" style="width:100%; margin-top:15px; border-color:#25D366; color:#25D366; display:flex; align-items:center; justify-content:center; gap:5px;" onclick="sendAnswerViaWhatsapp()">
                     <span>💬 أرسل الإجابة (واتساب)</span>
                 </button>
@@ -66,7 +82,6 @@
             <button class="accordion-btn" onclick="loadAzkarCategories()">📿 الأذكار والسبحة الإلكترونية <span>▼</span></button>
             <div id="azkar-app-container" class="accordion-panel">
                 <div style="padding: 15px 0;">
-                    
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:var(--bg-light); padding:10px; border-radius:8px; border:1px dashed var(--border-color);">
                         <label style="font-size:0.9rem;">🔄 تصفير العدادات:</label>
                         <select id="reset-period-select" onchange="saveResetSetting()" style="padding:5px; border-radius:5px; border:1px solid var(--border-color);">
@@ -75,9 +90,7 @@
                             <option value="manual">يدوياً فقط</option>
                         </select>
                     </div>
-
                     <div id="azkar-categories-grid" class="button-grid"></div>
-
                     <div id="azkar-list-container" style="display:none; margin-top:15px;">
                         <div style="display:flex; gap:10px; margin-bottom:15px;">
                             <button class="nav-btn" onclick="backToAzkarCategories()" style="flex:1;">🔙 عودة</button>
@@ -86,7 +99,7 @@
                         <h3 id="azkar-category-title" style="color:var(--primary-color); text-align:center; margin-top:0;"></h3>
                         <div id="azkar-items-list"></div>
                     </div>
-
+                    
                     <div id="subha-interface" style="display:none; margin-top:10px;">
                         <div style="display:flex; gap:10px; align-items:stretch; margin-bottom:10px;">
                             <button class="nav-btn" onclick="backToAzkarCategories()" style="padding:0 15px; font-size:1.2rem;">🔙</button>
@@ -100,22 +113,19 @@
                                 </div>
                             </div>
                         </div>
-
                         <p id="current-tasbeeh-label" style="text-align:center; font-weight:bold; color:var(--primary-color); margin:5px 0; font-size:1rem;">سبحان الله</p>
                         <div class="button-grid" style="grid-template-columns: repeat(3, 1fr); gap:5px; margin-bottom:10px;">
-                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('سبحان الله')">سبحان الله</button>
-                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('الحمد لله')">الحمد لله</button>
-                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('الله أكبر')">الله أكبر</button>
-                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('لا إله إلا الله')">لا إله إلا الله</button>
-                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('أستغفر الله')">أستغفر الله</button>
-                            <button class="calc-btn-option tasbeeh-btn-small" style="padding:8px 2px; font-size:0.8rem;" onclick="setTasbeeh('الصلاة على النبي')">الصلاة على النبي</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" onclick="setTasbeeh('سبحان الله')">سبحان الله</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" onclick="setTasbeeh('الحمد لله')">الحمد لله</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" onclick="setTasbeeh('الله أكبر')">الله أكبر</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" onclick="setTasbeeh('لا إله إلا الله')">لا إله إلا الله</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" onclick="setTasbeeh('أستغفر الله')">أستغفر الله</button>
+                            <button class="calc-btn-option tasbeeh-btn-small" onclick="setTasbeeh('الصلاة على النبي')">الصلاة على النبي</button>
                         </div>
-                        
                         <button id="big-tap-btn" class="nav-btn active" style="width:100%; height:100px; font-size:1.5rem; border-radius:15px; box-shadow:0 5px 15px rgba(4, 120, 87, 0.3); display:flex; align-items:center; justify-content:center; gap:10px;" onclick="subhaAction('count')">
                             <span>اضغط للعد</span> 👆
                         </button>
                     </div>
-
                 </div>
             </div>
 
@@ -168,14 +178,16 @@
                     <div id="quiz-controls">
                         <div class="calc-input-group"><label>نطاق الاختبار:</label><select id="quiz-juz" class="form-select" onchange="updateQuizSurahs()"></select></div>
                         <div class="calc-input-group"><label>السورة:</label><select id="quiz-surah" class="form-select"></select></div>
-                        <div class="calc-input-group"><label>نوع السؤال:</label><select id="quiz-type" class="form-select">
+                        <div class="calc-input-group"><label>نوع السؤال:</label>
+                            <select id="quiz-type" class="form-select">
                                 <option value="complete">أكمل الآية</option>
                                 <option value="prev_ayah">الآية السابقة</option>
                                 <option value="next_ayah">الآية التالية</option>
                                 <option value="ayah_num">رقم الآية</option>
                                 <option value="page_num">رقم الصفحة</option>
                                 <option value="surah_name">اسم السورة</option>
-                        </select></div>
+                            </select>
+                        </div>
                         <button class="nav-btn active" style="width:100%;" onclick="startQuiz()">🚀 ابدأ</button>
                     </div>
                     <div id="quiz-area" class="card" style="display:none; margin-top:15px; border:2px dashed var(--primary-color);">
@@ -219,6 +231,7 @@
                 </div>
             </div>
         </div>
+
         <div id="section-ranks" class="page-section">
             <h2 style="color:var(--primary-color)">🏆 أوائل الحلقات</h2>
             <div id="ranks-list" class="ranks-container"></div>
@@ -271,17 +284,16 @@
                 <div id="name-save-result" class="calc-result"></div>
             </div>
         </div>
-
         <div id="section-about" class="page-section">
-            <h2 style="color:var(--primary-color)">🕌 من نحن</h2>
-            <div class="card poetic-text">
+            <h2 style="color:var(--primary-color)" id="txt_about_title">🕌 من نحن</h2>
+            <div class="card poetic-text" id="txt_about_content">
                 نحن حلقات الثريا لتحفيظ القرآن الكريم،<br>
                 حيث لا يُحفظ القرآن بالألسنة فقط،<br>
-                بل تُربّى به القلوب، وتُهذَّب النفوس، وتُبنى الأرواح.<br><br>
+                بل تُربّى به القلوب، وتُبنى الأرواح.<br><br>
                 <span class="quran-verse">﴿ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴾</span><br><br>
                 ومن القرآن… نبدأ، وبه… نرتقي، وعليه… نلقى الله.
             </div>
-            <h2 style="color:var(--primary-color)">📞 تواصل معنا</h2>
+            <h2 style="color:var(--primary-color)" id="txt_contact_title">📞 تواصل معنا</h2>
             <div class="contact-grid">
                 <a href="https://wa.me/967777006546" target="_blank" class="contact-box bg-whatsapp"><span class="contact-icon">💬</span><span>واتساب</span></a>
                 <a href="https://www.instagram.com/pb8.c?igsh=MWJ3YWNobGk1NmdtZQ==" target="_blank" class="contact-box bg-insta"><span class="contact-icon">📸</span><span>انستقرام</span></a>
@@ -297,7 +309,7 @@
 
     </div>
 
-    <footer>جميع الحقوق محفوظة © 2026</footer>
+    <footer id="txt_footer">جميع الحقوق محفوظة © 2026</footer>
 
     <script src="js/data.js"></script>
     <script src="js/storage.js"></script>
@@ -306,7 +318,8 @@
     <script src="js/quran_app.js"></script>
     <script src="js/azkar.js"></script>
     <script src="js/logic.js"></script>
-            <button onclick="openLoginModal()" style="
+
+    <button onclick="openLoginModal()" style="
         position: fixed; bottom: 20px; left: 20px; 
         background: #1e293b; color: white; border: 2px solid var(--primary-color); 
         border-radius: 50%; width: 50px; height: 50px; 
@@ -320,10 +333,8 @@
         <div style="background: white; padding: 30px; border-radius: 15px; width: 300px; text-align: center; border: 2px solid var(--primary-color); box-shadow: 0 0 20px rgba(4, 120, 87, 0.3);">
             <h3 style="margin-top:0; color:#1e293b;">🔐 بوابة الإدارة</h3>
             <p style="font-size:0.8rem; color:gray; margin-bottom:15px;">المنطقة محظورة لغير المصرح لهم</p>
-            
             <input type="text" id="admin-user" placeholder="اسم المستخدم" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align:center;">
             <input type="password" id="admin-pass" placeholder="كلمة المرور" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align:center;">
-            
             <button onclick="secureLogin()" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight:bold; font-size:1rem;">دخول آمن 🚀</button>
             <button onclick="document.getElementById('login-modal').style.display='none'" style="margin-top: 15px; background: none; border: none; color: #ef4444; cursor: pointer; text-decoration: underline;">إلغاء</button>
         </div>
@@ -333,7 +344,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // إعدادات فايربيس
         const firebaseConfig = {
           apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
           authDomain: "quran-app-93e24.firebaseapp.com",
@@ -348,51 +358,71 @@
             const db = firebase.database();
             console.log("✅ تم الاتصال بفايربيس");
 
-            // --- أ. الاستماع للبيانات وتوزيعها على الموقع ---
+            // --- الاستماع للبيانات وتحديث النصوص فوراً ---
             db.ref().on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    // تحديث شريط الأخبار
-                    if (data.news_bar && data.news_bar.text) {
-                        const newsEl = document.getElementById('dynamic-news-bar');
-                        if (newsEl) newsEl.innerText = data.news_bar.text;
+                    
+                    // 1. تحديث الأخبار والسؤال والطالب (كما سبق)
+                    if (data.news_bar) {
+                        const el = document.getElementById('dynamic-news-bar');
+                        if (el) el.innerText = data.news_bar.text;
                     }
-
-                    // تحديث سؤال الأسبوع
                     if (data.weekly_question) {
-                        const qEl = document.getElementById('weekly-question-text');
-                        const wEl = document.getElementById('weekly-winner-text');
-                        if (qEl) qEl.innerHTML = `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`;
-                        if (wEl) wEl.innerText = data.weekly_question.last_winner;
+                        const q = document.getElementById('weekly-question-text');
+                        const w = document.getElementById('weekly-winner-text');
+                        if (q) q.innerHTML = `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`;
+                        if (w) w.innerText = data.weekly_question.last_winner;
+                    }
+                    if (data.top_student) {
+                        const n = document.getElementById('top-student-name');
+                        const d = document.getElementById('top-student-desc');
+                        if (n) n.innerText = data.top_student.name;
+                        if (d) d.innerText = data.top_student.category;
                     }
 
-                    // تحديث الطالب المتميز
-                    if (data.top_student) {
-                        const sName = document.getElementById('top-student-name');
-                        const sDesc = document.getElementById('top-student-desc');
-                        if (sName) sName.innerText = data.top_student.name;
-                        if (sDesc) sDesc.innerText = data.top_student.category;
+                    // 2. 🔥 التحديث الشامل للنصوص (الميزة الجديدة) 🔥
+                    if (data.site_content) {
+                        const c = data.site_content;
+                        // دالة مساعدة لتحديث النص إذا وجد
+                        const updateTxt = (id, txt) => { 
+                            const el = document.getElementById(id);
+                            if(el && txt) el.innerHTML = txt; 
+                        };
+
+                        // تحديث الهيدر
+                        updateTxt('txt_header_title', c.txt_header_title);
+                        updateTxt('txt_header_subtitle', c.txt_header_subtitle);
+                        updateTxt('txt_header_location', c.txt_header_location);
+                        
+                        // تحديث العناوين الفرعية
+                        updateTxt('txt_news_title', c.txt_news_title);
+                        updateTxt('txt_student_title', c.txt_student_title);
+                        updateTxt('txt_question_title', c.txt_question_title);
+
+                        // تحديث "من نحن" والفوتر
+                        updateTxt('txt_about_title', c.txt_about_title);
+                        updateTxt('txt_about_content', c.txt_about_content);
+                        updateTxt('txt_contact_title', c.txt_contact_title);
+                        updateTxt('txt_footer', c.txt_footer);
                     }
                 }
             });
 
-        } catch (error) {
-            console.error("❌ خطأ في الاتصال:", error);
-        }
+        } catch (error) { console.error("Error:", error); }
 
-        // --- ب. وظائف الدخول والقفل ---
         function openLoginModal() {
             document.getElementById('login-modal').style.display = 'flex';
             document.getElementById('admin-user').focus();
         }
 
-                function secureLogin() {
+        function secureLogin() {
             const uInput = document.getElementById('admin-user').value;
             const pInput = document.getElementById('admin-pass').value;
             const btn = document.querySelector('button[onclick="secureLogin()"]');
             
             const oldText = btn.innerText;
-            btn.innerText = "⏳ جاري التحقق...";
+            btn.innerText = "⏳...";
             btn.disabled = true;
 
             const db = firebase.database();
@@ -400,26 +430,20 @@
                 const creds = snapshot.val();
                 let realUser = "admin";
                 let realPass = "12345";
-
                 if (creds) { realUser = creds.username; realPass = creds.password; }
 
-                // مقارنة البيانات
                 if (uInput === realUser && pInput === realPass) {
-                    // ✅ الخطوة الحاسمة: حفظ التذكرة في ذاكرة المتصفح
+                    // ✅ حفظ مفتاح الدخول الآمن
                     localStorage.setItem('admin_token', 'SECRET_PASS_123');
-                    
-                    // تأخير بسيط جداً (جزء من الثانية) لضمان الحفظ قبل الانتقال
-                    setTimeout(() => {
-                        window.location.href = "admin.html";
-                    }, 100);
+                    setTimeout(() => { window.location.href = "admin.html"; }, 200);
                 } else {
-                    alert("⛔ بيانات الدخول خاطئة!");
+                    alert("⛔ خطأ في البيانات!");
                     document.getElementById('admin-pass').value = '';
                     btn.innerText = oldText;
                     btn.disabled = false;
                 }
             }).catch((e) => {
-                alert("تأكد من الإنترنت!");
+                alert("تأكد من الإنترنت");
                 btn.innerText = oldText;
                 btn.disabled = false;
             });
