@@ -17,6 +17,11 @@
     <link rel="stylesheet" href="css/darkmode.css">
 
     <style>
+        /* شاشة التحميل (لمنع الوميض) */
+        #site-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 9999999; display: flex; justify-content: center; align-items: center; flex-direction: column; transition: opacity 0.5s ease; }
+        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #047857; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         /* تنسيق خاص للإشعار المنبثق */
         .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; display: none; justify-content: center; align-items: center; }
         .popup-content { background: white; padding: 30px; border-radius: 15px; max-width: 90%; width: 400px; text-align: center; border: 3px solid var(--accent-color); animation: popUp 0.4s ease; }
@@ -27,6 +32,11 @@
     </style>
 </head>
 <body oncontextmenu="return false;">
+
+    <div id="site-loader">
+        <div class="spinner"></div>
+        <h3 style="color:#047857; font-family:'Amiri';">جاري تجهيز حلقات الثريا...</h3>
+    </div>
 
     <div id="maintenance-mode">
         <h1 style="font-size: 3rem;">🚧</h1>
@@ -73,7 +83,7 @@
         
         <div id="section-home" class="page-section active">
             
-            <div id="block-news">
+            <div id="block-news" style="display:none;">
                 <h2 style="color:var(--primary-color)" id="txt_news_title">📢 آخر الأخبار</h2>
                 <div class="news-ticker" style="background: #f1f5f9; padding: 10px; border-bottom: 2px solid var(--primary-color); border-radius: 8px; margin-bottom: 20px;">
                     <marquee id="dynamic-news-bar" direction="right" scrollamount="6" style="font-weight: bold; color: #333; font-size: 1.1rem;">
@@ -82,7 +92,7 @@
                 </div>
             </div>
 
-            <div id="block-student">
+            <div id="block-student" style="display:none;">
                 <div class="card" style="background: linear-gradient(135deg, #fffbeb 0%, #fff 100%); border: 1px solid #fcd34d;">
                     <div style="text-align:center;">
                         <span style="font-size:2rem;">👑</span>
@@ -93,7 +103,7 @@
                 </div>
             </div>
 
-            <div id="block-question">
+            <div id="block-question" style="display:none;">
                 <h2 style="color:var(--primary-color); margin-top:25px;" id="txt_question_title">❓ السؤال الأسبوعي</h2>
                 <div class="card" style="border-right: 4px solid var(--accent-color);">
                 <h3 id="weekly-question-text" style="color:var(--primary-color); margin-top:0;">...</h3>
@@ -238,7 +248,7 @@
         </div>
 
         <div id="section-schedule" class="page-section">
-            <div id="block-schedule">
+            <div id="block-schedule" style="display:none;">
                 <h2 style="color:var(--primary-color)" id="txt_schedule_title">📅 الجداول الدراسية</h2>
                 <div id="dynamic-schedule-container">
                     <p style="text-align:center; color:gray;">جاري تحميل الجداول...</p>
@@ -256,7 +266,7 @@
         </div>
 
         <div id="section-teachers" class="page-section">
-            <div id="block-teachers">
+            <div id="block-teachers" style="display:none;">
                 <h2 style="color:var(--primary-color)" id="txt_teachers_title">👨‍🏫 المعلمون</h2>
                 <div id="dynamic-teachers-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;">
                     <p style="text-align:center; color:gray; width:100%;">جاري تحميل المعلمين...</p>
@@ -352,18 +362,28 @@
             db.ref().on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    applyContent(data);     // النصوص والأخبار
-                    applySettings(data);    // الإعدادات (فيديو، إظهار/إخفاء، صيانة)
-                    renderTeachers(data.teachers_list); // قائمة المعلمين
-                    renderSchedule(data.schedule_list); // الجداول
+                    // 1. تطبيق الإعدادات أولاً (في الخلفية)
+                    applySettings(data);
+                    
+                    // 2. تطبيق المحتوى والنصوص
+                    applyContent(data);
+                    renderTeachers(data.teachers_list);
+                    renderSchedule(data.schedule_list);
+                    
+                    // 3. ✅ إخفاء شاشة التحميل بعد الانتهاء (تأخير بسيط جداً لضمان السلاسة)
+                    setTimeout(() => {
+                        const loader = document.getElementById('site-loader');
+                        if(loader) {
+                            loader.style.opacity = '0';
+                            setTimeout(() => loader.style.display = 'none', 500);
+                        }
+                    }, 800);
                 }
             });
 
         } catch (error) { console.error(error); }
 
-        // 1. تطبيق النصوص والمحتوى
         function applyContent(data) {
-            // النصوص القديمة
             if(data.news_bar) setTxt('dynamic-news-bar', data.news_bar.text);
             if(data.weekly_question) {
                 setHTML('weekly-question-text', `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`);
@@ -373,7 +393,6 @@
                 setTxt('top-student-name', data.top_student.name);
                 setTxt('top-student-desc', data.top_student.category);
             }
-            // النصوص العامة
             if(data.site_content) {
                 const c = data.site_content;
                 setTxt('txt_header_title', c.txt_header_title);
@@ -391,7 +410,6 @@
             }
         }
 
-        // 2. تطبيق الإعدادات (إظهار/إخفاء، ميديا، صيانة)
         function applySettings(data) {
             if(!data.settings) return;
             const s = data.settings;
@@ -399,8 +417,8 @@
             // وضع الصيانة
             const maint = document.getElementById('maintenance-mode');
             if(s.maintenance_mode === true) {
-                maint.style.display = 'flex'; // إظهار شاشة الصيانة
-                document.querySelector('.container').style.display = 'none'; // إخفاء الموقع
+                maint.style.display = 'flex';
+                document.querySelector('.container').style.display = 'none';
                 document.querySelector('header').style.display = 'none';
             } else {
                 maint.style.display = 'none';
@@ -411,8 +429,6 @@
             // الإشعار المنبثق
             const popup = document.getElementById('site-notification');
             if(s.popup_active === true) {
-                // نظهره مرة واحدة في الجلسة (لعدم الإزعاج) أو دائماً حسب رغبتك
-                // هنا سأجعله يظهر دائماً إذا كان مفعلاً لتراه
                 popup.style.display = 'flex';
                 document.getElementById('notif-title').innerText = s.popup_title || "تنبيه";
                 document.getElementById('notif-body').innerText = s.popup_body || "...";
@@ -420,7 +436,8 @@
                 popup.style.display = 'none';
             }
 
-            // إخفاء/إظهار الأقسام
+            // إخفاء/إظهار الأقسام (Anti-Flicker Logic)
+            // إذا كان true نظهره، إذا كان false نخفيه
             toggleSection('block-news', s.show_news);
             toggleSection('block-student', s.show_student);
             toggleSection('block-question', s.show_question);
@@ -430,59 +447,49 @@
             // تغيير الفيديو
             if(s.video_url) {
                 const vid = document.getElementById('bg-video');
-                // نغير المصدر فقط إذا اختلف لتجنب الوميض
                 if(!vid.src.includes(s.video_url)) vid.src = s.video_url;
             }
         }
 
-        // 3. بناء قائمة المعلمين (ديناميكي)
         function renderTeachers(list) {
             const container = document.getElementById('dynamic-teachers-container');
             if(!container) return;
-            container.innerHTML = ''; // مسح القديم
+            container.innerHTML = '';
             
             if(!list) { container.innerHTML = '<p>لا يوجد معلمون حالياً</p>'; return; }
 
             Object.values(list).forEach(teacher => {
                 const div = document.createElement('div');
                 div.className = 'teacher-card';
-                // إذا لم توجد صورة نضع صورة افتراضية
                 const img = teacher.img || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
                 div.innerHTML = `<img src="${img}" alt="معلم"><p>${teacher.name}</p>`;
                 container.appendChild(div);
             });
         }
 
-        // 4. بناء الجدول (ديناميكي)
         function renderSchedule(list) {
             const container = document.getElementById('dynamic-schedule-container');
             if(!container) return;
             
             if(!list) { container.innerHTML = '<p>الجدول غير متوفر حالياً</p>'; return; }
 
-            // بناء جدول HTML
             let html = '<table class="schedule-table"><thead><tr><th>الحلقة</th><th>الوقت</th><th>المعلم</th></tr></thead><tbody>';
-            
             Object.values(list).forEach(item => {
-                html += `<tr>
-                    <td>${item.ring}</td>
-                    <td>${item.time}</td>
-                    <td>${item.teacher}</td>
-                </tr>`;
+                html += `<tr><td>${item.ring}</td><td>${item.time}</td><td>${item.teacher}</td></tr>`;
             });
             html += '</tbody></table>';
             container.innerHTML = html;
         }
 
-        // دوال مساعدة
         function setTxt(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerText = txt; }
         function setHTML(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerHTML = txt; }
         function toggleSection(id, show) {
             const el = document.getElementById(id);
-            if(el) el.style.display = (show === false) ? 'none' : 'block'; 
+            // ملاحظة: الأقسام الآن تبدأ مخفية (display:none)
+            // لذا نحن نغيرها إلى block فقط إذا كان show == true
+            if(el) el.style.display = (show === true) ? 'block' : 'none'; 
         }
 
-        // دالة الدخول الآمن
         function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
         function secureLogin() {
             const u = document.getElementById('admin-user').value;
