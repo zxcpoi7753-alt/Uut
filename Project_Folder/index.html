@@ -15,16 +15,45 @@
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/darkmode.css">
+
+    <style>
+        /* تنسيق خاص للإشعار المنبثق */
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; display: none; justify-content: center; align-items: center; }
+        .popup-content { background: white; padding: 30px; border-radius: 15px; max-width: 90%; width: 400px; text-align: center; border: 3px solid var(--accent-color); animation: popUp 0.4s ease; }
+        @keyframes popUp { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        /* تنسيق خاص لوضع الصيانة */
+        #maintenance-mode { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e293b; color: white; z-index: 999999; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    </style>
 </head>
 <body oncontextmenu="return false;">
+
+    <div id="maintenance-mode">
+        <h1 style="font-size: 3rem;">🚧</h1>
+        <h2>الموقع تحت الصيانة</h2>
+        <p>نقوم ببعض التحسينات، سنعود قريباً...</p>
+        <button onclick="openLoginModal()" style="margin-top:20px; background: transparent; border: 1px solid white; color: white; padding: 5px 15px; border-radius: 20px; cursor: pointer;">دخول المشرف</button>
+    </div>
+
+    <div id="site-notification" class="popup-overlay">
+        <div class="popup-content">
+            <h3 id="notif-title" style="color:var(--primary-color); margin-top:0;">📢 تنبيه هام</h3>
+            <p id="notif-body" style="font-size:1.1rem; line-height:1.6; color:#333;">...</p>
+            <button onclick="document.getElementById('site-notification').style.display='none'" class="nav-btn active" style="margin-top:15px; width:100%;">حسناً، فهمت ✅</button>
+        </div>
+    </div>
 
     <div id="toast-container" class="toast-container"></div>
 
     <header>
         <button class="theme-circle-btn" onclick="toggleTheme()" id="theme-btn" title="تغيير المظهر">🌙</button>
+        
         <div class="video-container">
-            <video autoplay muted loop playsinline><source src="1768472913710.mp4" type="video/mp4"></video>
+            <video id="bg-video" autoplay muted loop playsinline>
+                <source src="1768472913710.mp4" type="video/mp4">
+            </video>
         </div>
+        
         <h1 id="txt_header_title">حلقات الثريا</h1>
         <p class="header-subtitle" id="txt_header_subtitle">لتعليم القرآن الكريم</p>
         <p class="header-location" id="txt_header_location">حضرموت - غيل باوزير</p>
@@ -43,36 +72,39 @@
     <div class="container">
         
         <div id="section-home" class="page-section active">
-            <div id="home-welcome-msg" class="card" style="display:none; background: rgba(4, 120, 87, 0.1); border: 2px solid var(--primary-color);"></div>
-
-            <h2 style="color:var(--primary-color)" id="txt_news_title">📢 آخر الأخبار</h2>
-            <div class="news-ticker" style="background: #f1f5f9; padding: 10px; border-bottom: 2px solid var(--primary-color); border-radius: 8px; margin-bottom: 20px;">
-                <marquee id="dynamic-news-bar" direction="right" scrollamount="6" style="font-weight: bold; color: #333; font-size: 1.1rem;">
-                    ⏳ جاري تحميل الأخبار...
-                </marquee>
-            </div>
-
-            <div class="card" style="background: linear-gradient(135deg, #fffbeb 0%, #fff 100%); border: 1px solid #fcd34d;">
-                <div style="text-align:center;">
-                    <span style="font-size:2rem;">👑</span>
-                    <h3 style="margin:5px 0; color:#d97706;" id="txt_student_title">نجم الأسبوع</h3>
-                    <h2 id="top-student-name" style="margin: 10px 0; color: var(--primary-color); font-size: 1.5rem;">⏳ جاري التحميل...</h2>
-                    <p id="top-student-desc" style="color: gray; font-size: 0.9rem;">...</p>
+            
+            <div id="block-news">
+                <h2 style="color:var(--primary-color)" id="txt_news_title">📢 آخر الأخبار</h2>
+                <div class="news-ticker" style="background: #f1f5f9; padding: 10px; border-bottom: 2px solid var(--primary-color); border-radius: 8px; margin-bottom: 20px;">
+                    <marquee id="dynamic-news-bar" direction="right" scrollamount="6" style="font-weight: bold; color: #333; font-size: 1.1rem;">
+                        ⏳ جاري التحميل...
+                    </marquee>
                 </div>
             </div>
 
-            <h2 style="color:var(--primary-color); margin-top:25px;" id="txt_question_title">❓ السؤال الأسبوعي</h2>
-            <div class="card" style="border-right: 4px solid var(--accent-color);">
-               <h3 id="weekly-question-text" style="color:var(--primary-color); margin-top:0;">⏳ جاري تحميل السؤال...</h3>
-                
-                <div style="background: rgba(251, 191, 36, 0.1); padding: 10px; border-radius: 8px; margin-top:10px;">
-                    <strong>🏆 الفائز السابق:</strong> 
-                    <span id="weekly-winner-text" style="color: var(--primary-color); font-weight:bold;">...</span>
+            <div id="block-student">
+                <div class="card" style="background: linear-gradient(135deg, #fffbeb 0%, #fff 100%); border: 1px solid #fcd34d;">
+                    <div style="text-align:center;">
+                        <span style="font-size:2rem;">👑</span>
+                        <h3 style="margin:5px 0; color:#d97706;" id="txt_student_title">نجم الأسبوع</h3>
+                        <h2 id="top-student-name" style="margin: 10px 0; color: var(--primary-color); font-size: 1.5rem;">...</h2>
+                        <p id="top-student-desc" style="color: gray; font-size: 0.9rem;">...</p>
+                    </div>
                 </div>
+            </div>
 
-                <button class="nav-btn" style="width:100%; margin-top:15px; border-color:#25D366; color:#25D366; display:flex; align-items:center; justify-content:center; gap:5px;" onclick="sendAnswerViaWhatsapp()">
-                    <span>💬 أرسل الإجابة (واتساب)</span>
-                </button>
+            <div id="block-question">
+                <h2 style="color:var(--primary-color); margin-top:25px;" id="txt_question_title">❓ السؤال الأسبوعي</h2>
+                <div class="card" style="border-right: 4px solid var(--accent-color);">
+                <h3 id="weekly-question-text" style="color:var(--primary-color); margin-top:0;">...</h3>
+                    <div style="background: rgba(251, 191, 36, 0.1); padding: 10px; border-radius: 8px; margin-top:10px;">
+                        <strong>🏆 الفائز السابق:</strong> 
+                        <span id="weekly-winner-text" style="color: var(--primary-color); font-weight:bold;">...</span>
+                    </div>
+                    <button class="nav-btn" style="width:100%; margin-top:15px; border-color:#25D366; color:#25D366; display:flex; align-items:center; justify-content:center; gap:5px;" onclick="sendAnswerViaWhatsapp()">
+                        <span>💬 أرسل الإجابة (واتساب)</span>
+                    </button>
+                </div>
             </div>
         </div>
         <div id="section-student" class="page-section">
@@ -136,22 +168,12 @@
                     <button class="nav-btn active" onclick="setStudyAlarm()">🔔 ضبط</button>
                 </div>
             </div>
-
+            
             <button class="accordion-btn">🚀 خطة ختمي (بناءً على جهدي) <span>▼</span></button>
             <div class="accordion-panel">
                 <div style="padding: 15px 0;">
-                    <div id="calc-step-1">
-                        <p><strong>1️⃣ كم يوماً تحفظ في الأسبوع؟</strong></p>
-                        <div id="days-buttons-container" class="button-grid"></div>
-                    </div>
-                    <div id="calc-step-2" style="display:none;">
-                        <p><strong>2️⃣ كم مقدار الحفظ اليومي؟</strong></p>
-                        <div id="amount-buttons-container" class="button-grid"></div>
-                        <div id="custom-amount-div" style="display:none; margin-top:10px;">
-                            <input type="number" id="custom-pages" class="form-input" placeholder="اكتب عدد الصفحات">
-                            <button class="nav-btn" style="margin-top:10px; width:100%" onclick="calculatePlan(document.getElementById('custom-pages').value)">احسب</button>
-                        </div>
-                    </div>
+                    <div id="calc-step-1"><p><strong>1️⃣ كم يوماً تحفظ في الأسبوع؟</strong></p><div id="days-buttons-container" class="button-grid"></div></div>
+                    <div id="calc-step-2" style="display:none;"><p><strong>2️⃣ كم مقدار الحفظ اليومي؟</strong></p><div id="amount-buttons-container" class="button-grid"></div><div id="custom-amount-div" style="display:none; margin-top:10px;"><input type="number" id="custom-pages" class="form-input" placeholder="اكتب عدد الصفحات"><button class="nav-btn" style="margin-top:10px; width:100%" onclick="calculatePlan(document.getElementById('custom-pages').value)">احسب</button></div></div>
                     <div id="calc-result" class="calc-result"></div>
                     <button id="reset-calc" class="nav-btn" style="display:none; margin-top:10px; width:100%; border-color:#ef4444; color:#ef4444;" onclick="resetCalc()">حساب جديد 🔄</button>
                 </div>
@@ -160,10 +182,7 @@
             <button class="accordion-btn">🧭 دليل الختم (بناءً على وقتي) <span>▼</span></button>
             <div class="accordion-panel">
                 <div style="padding: 15px 0;">
-                    <div class="radio-group">
-                        <label class="radio-label"><input type="radio" name="planType" value="حفظ" checked> 🧠 خطة حفظ</label>
-                        <label class="radio-label"><input type="radio" name="planType" value="قراءة"> 📖 خطة قراءة</label>
-                    </div>
+                    <div class="radio-group"><label class="radio-label"><input type="radio" name="planType" value="حفظ" checked> 🧠 خطة حفظ</label><label class="radio-label"><input type="radio" name="planType" value="قراءة"> 📖 خطة قراءة</label></div>
                     <div class="calc-input-group"><label>🗓️ الختم بالأيام:</label><select id="target-days" class="form-select"></select></div>
                     <div class="calc-input-group"><label>📅 الختم بالأشهر:</label><select id="target-months" class="form-select"></select></div>
                     <div class="calc-input-group"><label>📆 الختم بالسنوات:</label><select id="target-years" class="form-select"></select></div>
@@ -178,16 +197,7 @@
                     <div id="quiz-controls">
                         <div class="calc-input-group"><label>نطاق الاختبار:</label><select id="quiz-juz" class="form-select" onchange="updateQuizSurahs()"></select></div>
                         <div class="calc-input-group"><label>السورة:</label><select id="quiz-surah" class="form-select"></select></div>
-                        <div class="calc-input-group"><label>نوع السؤال:</label>
-                            <select id="quiz-type" class="form-select">
-                                <option value="complete">أكمل الآية</option>
-                                <option value="prev_ayah">الآية السابقة</option>
-                                <option value="next_ayah">الآية التالية</option>
-                                <option value="ayah_num">رقم الآية</option>
-                                <option value="page_num">رقم الصفحة</option>
-                                <option value="surah_name">اسم السورة</option>
-                            </select>
-                        </div>
+                        <div class="calc-input-group"><label>نوع السؤال:</label><select id="quiz-type" class="form-select"><option value="complete">أكمل الآية</option><option value="prev_ayah">الآية السابقة</option><option value="next_ayah">الآية التالية</option><option value="ayah_num">رقم الآية</option><option value="page_num">رقم الصفحة</option><option value="surah_name">اسم السورة</option></select></div>
                         <button class="nav-btn active" style="width:100%;" onclick="startQuiz()">🚀 ابدأ</button>
                     </div>
                     <div id="quiz-area" class="card" style="display:none; margin-top:15px; border:2px dashed var(--primary-color);">
@@ -208,23 +218,11 @@
             <button class="accordion-btn" onclick="openQuranApp()">📖 الختمة (المصحف الشريف) <span>▼</span></button>
             <div id="quran-app-container" class="accordion-panel" style="background: var(--bg-light);">
                 <div style="padding: 15px 0;">
-                    <div class="quran-header-controls">
-                        <input type="text" id="quran-search" class="form-input" placeholder="🔍 ابحث عن سورة..." onkeyup="filterSurahs()">
-                        <button class="nav-btn" onclick="goToBookmark()" style="font-size:0.9rem;">🔖 استكمل</button>
-                    </div>
+                    <div class="quran-header-controls"><input type="text" id="quran-search" class="form-input" placeholder="🔍 ابحث عن سورة..." onkeyup="filterSurahs()"><button class="nav-btn" onclick="goToBookmark()" style="font-size:0.9rem;">🔖 استكمل</button></div>
                     <div id="surah-grid" class="surah-grid-container"></div>
                     <div id="reading-area" style="display:none;">
-                        <div class="reading-header">
-                            <button onclick="closeReading()" class="nav-btn" style="border:none;">🔙</button>
-                            <h3 id="current-surah-title" style="margin:0; color:var(--primary-color); font-size:1rem;"></h3>
-                            <div style="display:flex; gap:5px;">
-                                <button class="font-control-btn" onclick="changeFontSize(1)">A+</button>
-                                <button class="font-control-btn" onclick="changeFontSize(-1)">A-</button>
-                            </div>
-                        </div>
-                        <div id="bookmark-tip" style="text-align:center; font-size:0.8rem; color:gray; margin-bottom:5px; display:none;">
-                             💡 اضغط على العلامة <span style="color:var(--accent-color)">🔖</span> بجانب الآية لحفظ مكانك
-                        </div>
+                        <div class="reading-header"><button onclick="closeReading()" class="nav-btn" style="border:none;">🔙</button><h3 id="current-surah-title" style="margin:0; color:var(--primary-color); font-size:1rem;"></h3><div style="display:flex; gap:5px;"><button class="font-control-btn" onclick="changeFontSize(1)">A+</button><button class="font-control-btn" onclick="changeFontSize(-1)">A-</button></div></div>
+                        <div id="bookmark-tip" style="text-align:center; font-size:0.8rem; color:gray; margin-bottom:5px; display:none;">💡 اضغط على العلامة <span style="color:var(--accent-color)">🔖</span> بجانب الآية لحفظ مكانك</div>
                         <div id="quran-text-display" class="quran-text-content"></div>
                         <button class="nav-btn" style="width:100%; margin-top:30px; border-color:#d97706; color:#d97706;" onclick="showDuaa()">🤲 دعاء الختم</button>
                     </div>
@@ -233,32 +231,39 @@
         </div>
 
         <div id="section-ranks" class="page-section">
-            <h2 style="color:var(--primary-color)">🏆 أوائل الحلقات</h2>
-            <div id="ranks-list" class="ranks-container"></div>
+            <div id="block-ranks">
+                <h2 style="color:var(--primary-color)">🏆 أوائل الحلقات</h2>
+                <div id="ranks-list" class="ranks-container"></div>
+            </div>
         </div>
 
         <div id="section-schedule" class="page-section">
-            <h2 style="color:var(--primary-color)">📅 الجداول الدراسية</h2>
-            <div class="group-title">☀️ حلقات العصر (4:00م - 5:00م)</div>
-            <div id="ring-selectors-afternoon" class="rings-grid"></div>
-            <div class="group-title">🌙 حلقات المغرب</div>
-            <div id="ring-selectors-evening" class="rings-grid"></div>
-            <div id="schedule-display"></div>
-            <h2 style="color:#ef4444; margin-top:25px;">🏖️ الإجازات</h2>
-            <div class="card" style="border-right-color: #ef4444;">
-                <ul style="margin:0; padding-right:20px;">
-                    <li>يوم الجمعة</li>
-                    <li>الأعياد</li>
-                    <li>قبل الاختبارات المدرسية</li>
-                </ul>
+            <div id="block-schedule">
+                <h2 style="color:var(--primary-color)" id="txt_schedule_title">📅 الجداول الدراسية</h2>
+                <div id="dynamic-schedule-container">
+                    <p style="text-align:center; color:gray;">جاري تحميل الجداول...</p>
+                </div>
+                
+                <h2 style="color:#ef4444; margin-top:25px;">🏖️ الإجازات</h2>
+                <div class="card" style="border-right-color: #ef4444;">
+                    <ul style="margin:0; padding-right:20px;">
+                        <li>يوم الجمعة</li>
+                        <li>الأعياد</li>
+                        <li>قبل الاختبارات المدرسية</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
         <div id="section-teachers" class="page-section">
-            <h2 style="color:var(--primary-color)">👨‍🏫 المعلمون</h2>
-            <div id="teachers-list"></div>
+            <div id="block-teachers">
+                <h2 style="color:var(--primary-color)" id="txt_teachers_title">👨‍🏫 المعلمون</h2>
+                <div id="dynamic-teachers-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;">
+                    <p style="text-align:center; color:gray; width:100%;">جاري تحميل المعلمين...</p>
+                </div>
+            </div>
         </div>
-
+        
         <div id="section-myname" class="page-section">
             <h2 style="color:var(--primary-color)">🏷️ بطاقتي</h2>
             <div class="card">
@@ -287,12 +292,9 @@
         <div id="section-about" class="page-section">
             <h2 style="color:var(--primary-color)" id="txt_about_title">🕌 من نحن</h2>
             <div class="card poetic-text" id="txt_about_content">
-                نحن حلقات الثريا لتحفيظ القرآن الكريم،<br>
-                حيث لا يُحفظ القرآن بالألسنة فقط،<br>
-                بل تُربّى به القلوب، وتُبنى الأرواح.<br><br>
-                <span class="quran-verse">﴿ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴾</span><br><br>
-                ومن القرآن… نبدأ، وبه… نرتقي، وعليه… نلقى الله.
+                نحن حلقات الثريا لتحفيظ القرآن الكريم...
             </div>
+            
             <h2 style="color:var(--primary-color)" id="txt_contact_title">📞 تواصل معنا</h2>
             <div class="contact-grid">
                 <a href="https://wa.me/967777006546" target="_blank" class="contact-box bg-whatsapp"><span class="contact-icon">💬</span><span>واتساب</span></a>
@@ -307,9 +309,7 @@
             <div class="card">قريباً بإذن الله...</div>
         </div>
 
-    </div>
-
-    <footer id="txt_footer">جميع الحقوق محفوظة © 2026</footer>
+    </div> <footer id="txt_footer">جميع الحقوق محفوظة © 2026</footer>
 
     <script src="js/data.js"></script>
     <script src="js/storage.js"></script>
@@ -319,23 +319,14 @@
     <script src="js/azkar.js"></script>
     <script src="js/logic.js"></script>
 
-    <button onclick="openLoginModal()" style="
-        position: fixed; bottom: 20px; left: 20px; 
-        background: #1e293b; color: white; border: 2px solid var(--primary-color); 
-        border-radius: 50%; width: 50px; height: 50px; 
-        font-size: 22px; cursor: pointer; z-index: 999999;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.2s;
-    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="دخول المدير">
-        🔒
-    </button>
+    <button onclick="openLoginModal()" style="position: fixed; bottom: 20px; left: 20px; background: #1e293b; color: white; border: 2px solid var(--primary-color); border-radius: 50%; width: 50px; height: 50px; font-size: 22px; cursor: pointer; z-index: 999999; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">🔒</button>
 
     <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-        <div style="background: white; padding: 30px; border-radius: 15px; width: 300px; text-align: center; border: 2px solid var(--primary-color); box-shadow: 0 0 20px rgba(4, 120, 87, 0.3);">
+        <div style="background: white; padding: 30px; border-radius: 15px; width: 300px; text-align: center; border: 2px solid var(--primary-color);">
             <h3 style="margin-top:0; color:#1e293b;">🔐 بوابة الإدارة</h3>
-            <p style="font-size:0.8rem; color:gray; margin-bottom:15px;">المنطقة محظورة لغير المصرح لهم</p>
-            <input type="text" id="admin-user" placeholder="اسم المستخدم" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align:center;">
-            <input type="password" id="admin-pass" placeholder="كلمة المرور" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align:center;">
-            <button onclick="secureLogin()" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight:bold; font-size:1rem;">دخول آمن 🚀</button>
+            <input type="text" id="admin-user" placeholder="اسم المستخدم" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; text-align:center;">
+            <input type="password" id="admin-pass" placeholder="كلمة المرور" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; text-align:center;">
+            <button onclick="secureLogin()" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight:bold;">دخول آمن 🚀</button>
             <button onclick="document.getElementById('login-modal').style.display='none'" style="margin-top: 15px; background: none; border: none; color: #ef4444; cursor: pointer; text-decoration: underline;">إلغاء</button>
         </div>
     </div>
@@ -356,96 +347,159 @@
         try {
             firebase.initializeApp(firebaseConfig);
             const db = firebase.database();
-            console.log("✅ تم الاتصال بفايربيس");
 
-            // --- الاستماع للبيانات وتحديث النصوص فوراً ---
+            // الاستماع للبيانات
             db.ref().on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    
-                    // 1. تحديث الأخبار والسؤال والطالب (كما سبق)
-                    if (data.news_bar) {
-                        const el = document.getElementById('dynamic-news-bar');
-                        if (el) el.innerText = data.news_bar.text;
-                    }
-                    if (data.weekly_question) {
-                        const q = document.getElementById('weekly-question-text');
-                        const w = document.getElementById('weekly-winner-text');
-                        if (q) q.innerHTML = `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`;
-                        if (w) w.innerText = data.weekly_question.last_winner;
-                    }
-                    if (data.top_student) {
-                        const n = document.getElementById('top-student-name');
-                        const d = document.getElementById('top-student-desc');
-                        if (n) n.innerText = data.top_student.name;
-                        if (d) d.innerText = data.top_student.category;
-                    }
-
-                    // 2. 🔥 التحديث الشامل للنصوص (الميزة الجديدة) 🔥
-                    if (data.site_content) {
-                        const c = data.site_content;
-                        // دالة مساعدة لتحديث النص إذا وجد
-                        const updateTxt = (id, txt) => { 
-                            const el = document.getElementById(id);
-                            if(el && txt) el.innerHTML = txt; 
-                        };
-
-                        // تحديث الهيدر
-                        updateTxt('txt_header_title', c.txt_header_title);
-                        updateTxt('txt_header_subtitle', c.txt_header_subtitle);
-                        updateTxt('txt_header_location', c.txt_header_location);
-                        
-                        // تحديث العناوين الفرعية
-                        updateTxt('txt_news_title', c.txt_news_title);
-                        updateTxt('txt_student_title', c.txt_student_title);
-                        updateTxt('txt_question_title', c.txt_question_title);
-
-                        // تحديث "من نحن" والفوتر
-                        updateTxt('txt_about_title', c.txt_about_title);
-                        updateTxt('txt_about_content', c.txt_about_content);
-                        updateTxt('txt_contact_title', c.txt_contact_title);
-                        updateTxt('txt_footer', c.txt_footer);
-                    }
+                    applyContent(data);     // النصوص والأخبار
+                    applySettings(data);    // الإعدادات (فيديو، إظهار/إخفاء، صيانة)
+                    renderTeachers(data.teachers_list); // قائمة المعلمين
+                    renderSchedule(data.schedule_list); // الجداول
                 }
             });
 
-        } catch (error) { console.error("Error:", error); }
+        } catch (error) { console.error(error); }
 
-        function openLoginModal() {
-            document.getElementById('login-modal').style.display = 'flex';
-            document.getElementById('admin-user').focus();
+        // 1. تطبيق النصوص والمحتوى
+        function applyContent(data) {
+            // النصوص القديمة
+            if(data.news_bar) setTxt('dynamic-news-bar', data.news_bar.text);
+            if(data.weekly_question) {
+                setHTML('weekly-question-text', `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`);
+                setTxt('weekly-winner-text', data.weekly_question.last_winner);
+            }
+            if(data.top_student) {
+                setTxt('top-student-name', data.top_student.name);
+                setTxt('top-student-desc', data.top_student.category);
+            }
+            // النصوص العامة
+            if(data.site_content) {
+                const c = data.site_content;
+                setTxt('txt_header_title', c.txt_header_title);
+                setTxt('txt_header_subtitle', c.txt_header_subtitle);
+                setTxt('txt_header_location', c.txt_header_location);
+                setTxt('txt_news_title', c.txt_news_title);
+                setTxt('txt_student_title', c.txt_student_title);
+                setTxt('txt_question_title', c.txt_question_title);
+                setTxt('txt_about_title', c.txt_about_title);
+                setHTML('txt_about_content', c.txt_about_content);
+                setTxt('txt_contact_title', c.txt_contact_title);
+                setTxt('txt_footer', c.txt_footer);
+                if(c.txt_schedule_title) setTxt('txt_schedule_title', c.txt_schedule_title);
+                if(c.txt_teachers_title) setTxt('txt_teachers_title', c.txt_teachers_title);
+            }
         }
 
-        function secureLogin() {
-            const uInput = document.getElementById('admin-user').value;
-            const pInput = document.getElementById('admin-pass').value;
-            const btn = document.querySelector('button[onclick="secureLogin()"]');
+        // 2. تطبيق الإعدادات (إظهار/إخفاء، ميديا، صيانة)
+        function applySettings(data) {
+            if(!data.settings) return;
+            const s = data.settings;
+
+            // وضع الصيانة
+            const maint = document.getElementById('maintenance-mode');
+            if(s.maintenance_mode === true) {
+                maint.style.display = 'flex'; // إظهار شاشة الصيانة
+                document.querySelector('.container').style.display = 'none'; // إخفاء الموقع
+                document.querySelector('header').style.display = 'none';
+            } else {
+                maint.style.display = 'none';
+                document.querySelector('.container').style.display = 'block';
+                document.querySelector('header').style.display = 'block';
+            }
+
+            // الإشعار المنبثق
+            const popup = document.getElementById('site-notification');
+            if(s.popup_active === true) {
+                // نظهره مرة واحدة في الجلسة (لعدم الإزعاج) أو دائماً حسب رغبتك
+                // هنا سأجعله يظهر دائماً إذا كان مفعلاً لتراه
+                popup.style.display = 'flex';
+                document.getElementById('notif-title').innerText = s.popup_title || "تنبيه";
+                document.getElementById('notif-body').innerText = s.popup_body || "...";
+            } else {
+                popup.style.display = 'none';
+            }
+
+            // إخفاء/إظهار الأقسام
+            toggleSection('block-news', s.show_news);
+            toggleSection('block-student', s.show_student);
+            toggleSection('block-question', s.show_question);
+            toggleSection('block-teachers', s.show_teachers);
+            toggleSection('block-schedule', s.show_schedule);
+
+            // تغيير الفيديو
+            if(s.video_url) {
+                const vid = document.getElementById('bg-video');
+                // نغير المصدر فقط إذا اختلف لتجنب الوميض
+                if(!vid.src.includes(s.video_url)) vid.src = s.video_url;
+            }
+        }
+
+        // 3. بناء قائمة المعلمين (ديناميكي)
+        function renderTeachers(list) {
+            const container = document.getElementById('dynamic-teachers-container');
+            if(!container) return;
+            container.innerHTML = ''; // مسح القديم
             
-            const oldText = btn.innerText;
-            btn.innerText = "⏳...";
-            btn.disabled = true;
+            if(!list) { container.innerHTML = '<p>لا يوجد معلمون حالياً</p>'; return; }
 
+            Object.values(list).forEach(teacher => {
+                const div = document.createElement('div');
+                div.className = 'teacher-card';
+                // إذا لم توجد صورة نضع صورة افتراضية
+                const img = teacher.img || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                div.innerHTML = `<img src="${img}" alt="معلم"><p>${teacher.name}</p>`;
+                container.appendChild(div);
+            });
+        }
+
+        // 4. بناء الجدول (ديناميكي)
+        function renderSchedule(list) {
+            const container = document.getElementById('dynamic-schedule-container');
+            if(!container) return;
+            
+            if(!list) { container.innerHTML = '<p>الجدول غير متوفر حالياً</p>'; return; }
+
+            // بناء جدول HTML
+            let html = '<table class="schedule-table"><thead><tr><th>الحلقة</th><th>الوقت</th><th>المعلم</th></tr></thead><tbody>';
+            
+            Object.values(list).forEach(item => {
+                html += `<tr>
+                    <td>${item.ring}</td>
+                    <td>${item.time}</td>
+                    <td>${item.teacher}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // دوال مساعدة
+        function setTxt(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerText = txt; }
+        function setHTML(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerHTML = txt; }
+        function toggleSection(id, show) {
+            const el = document.getElementById(id);
+            if(el) el.style.display = (show === false) ? 'none' : 'block'; 
+        }
+
+        // دالة الدخول الآمن
+        function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
+        function secureLogin() {
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
             const db = firebase.database();
-            db.ref('admin_account').once('value').then((snapshot) => {
-                const creds = snapshot.val();
-                let realUser = "admin";
-                let realPass = "12345";
-                if (creds) { realUser = creds.username; realPass = creds.password; }
-
-                if (uInput === realUser && pInput === realPass) {
-                    // ✅ حفظ مفتاح الدخول الآمن
+            
+            db.ref('admin_account').once('value').then(snap => {
+                const creds = snap.val();
+                let realU = "admin", realP = "12345";
+                if(creds) { realU = creds.username; realP = creds.password; }
+                
+                if(u === realU && p === realP) {
                     localStorage.setItem('admin_token', 'SECRET_PASS_123');
-                    setTimeout(() => { window.location.href = "admin.html"; }, 200);
+                    window.location.href = "admin.html";
                 } else {
-                    alert("⛔ خطأ في البيانات!");
-                    document.getElementById('admin-pass').value = '';
-                    btn.innerText = oldText;
-                    btn.disabled = false;
+                    alert("⛔ خطأ في البيانات");
                 }
-            }).catch((e) => {
-                alert("تأكد من الإنترنت");
-                btn.innerText = oldText;
-                btn.disabled = false;
             });
         }
     </script>
