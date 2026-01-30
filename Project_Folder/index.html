@@ -315,111 +315,6 @@
     " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="دخول المدير">
         🔒
     </button>
-
-    <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-        <div style="background: white; padding: 30px; border-radius: 15px; width: 300px; text-align: center; border: 2px solid var(--primary-color); box-shadow: 0 0 20px rgba(4, 120, 87, 0.3);">
-            <h3 style="margin-top:0; color:#1e293b;">🔐 بوابة الإدارة</h3>
-            <p style="font-size:0.8rem; color:gray; margin-bottom:15px;">المنطقة محظورة لغير المصرح لهم</p>
-            
-            <input type="text" id="admin-user" placeholder="اسم المستخدم" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align:center;">
-            <input type="password" id="admin-pass" placeholder="كلمة المرور" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align:center;">
-            
-            <button onclick="secureLogin()" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight:bold; font-size:1rem;">دخول آمن 🚀</button>
-            <button onclick="document.getElementById('login-modal').style.display='none'" style="margin-top: 15px; background: none; border: none; color: #ef4444; cursor: pointer; text-decoration: underline;">إلغاء</button>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
-    <script>
-        // إعدادات فايربيس الخاصة بك
-        const firebaseConfig = {
-          apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
-          authDomain: "quran-app-93e24.firebaseapp.com",
-          projectId: "quran-app-93e24",
-          storageBucket: "quran-app-93e24.firebasestorage.app",
-          messagingSenderId: "82150677933",
-          appId: "1:82150677933:web:64213e04463c1bb3179524"
-        };
-
-        try {
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.database();
-            console.log("✅ تم الاتصال بفايربيس");
-
-            // --- أ. الاستماع للبيانات وتوزيعها على الموقع ---
-            db.ref().on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    // تحديث شريط الأخبار
-                    if (data.news_bar && data.news_bar.text) {
-                        const newsEl = document.getElementById('dynamic-news-bar');
-                        if (newsEl) newsEl.innerText = data.news_bar.text;
-                    }
-
-                    // تحديث سؤال الأسبوع
-                    if (data.weekly_question) {
-                        const qEl = document.getElementById('weekly-question-text');
-                        const wEl = document.getElementById('weekly-winner-text');
-                        if (qEl) qEl.innerHTML = `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`;
-                        if (wEl) wEl.innerText = data.weekly_question.last_winner;
-                    }
-
-                    // تحديث الطالب المتميز
-                    if (data.top_student) {
-                        const sName = document.getElementById('top-student-name');
-                        const sDesc = document.getElementById('top-student-desc');
-                        if (sName) sName.innerText = data.top_student.name;
-                        if (sDesc) sDesc.innerText = data.top_student.category;
-                    }
-                }
-            });
-
-        } catch (error) {
-            console.error("❌ خطأ في الاتصال:", error);
-        }
-
-        // --- ب. وظائف الدخول والقفل ---
-        function openLoginModal() {
-            document.getElementById('login-modal').style.display = 'flex';
-            document.getElementById('admin-user').focus();
-        }
-
-        function secureLogin() {
-            const uInput = document.getElementById('admin-user').value;
-            const pInput = document.getElementById('admin-pass').value;
-            const btn = document.querySelector('button[onclick="secureLogin()"]');
-            
-            const oldText = btn.innerText;
-            btn.innerText = "⏳ جاري التحقق...";
-            btn.disabled = true;
-
-            // جلب بيانات الدخول الحقيقية من قاعدة البيانات
-            const db = firebase.database();
-            db.ref('admin_account').once('value').then((snapshot) => {
-                const creds = snapshot.val();
-                let realUser = "admin";
-                let realPass = "12345";
-
-                // إذا قام المدير بتغيير كلمة السر، نستخدم الجديدة
-                if (creds) { realUser = creds.username; realPass = creds.password; }
-
-                if (uInput === realUser && pInput === realPass) {
-                    window.location.href = "admin.html";
-                } else {
-                    alert("⛔ بيانات خاطئة!");
-                    document.getElementById('admin-pass').value = '';
-                    btn.innerText = oldText;
-                    btn.disabled = false;
-                }
-            }).catch((e) => {
-                alert("تأكد من الإنترنت!");
-                btn.innerText = oldText;
-                btn.disabled = false;
-            });
-        }
-    </script>
         <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
         <div style="background: white; padding: 30px; border-radius: 15px; width: 300px; text-align: center; border: 2px solid var(--primary-color); box-shadow: 0 0 20px rgba(4, 120, 87, 0.3);">
             <h3 style="margin-top:0; color:#1e293b;">🔐 بوابة الإدارة</h3>
@@ -557,4 +452,4 @@
     ...
 
 </body>
-                                    </html>
+</html>
