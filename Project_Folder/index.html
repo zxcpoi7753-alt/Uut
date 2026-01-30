@@ -386,7 +386,7 @@
             document.getElementById('admin-user').focus();
         }
 
-        function secureLogin() {
+                function secureLogin() {
             const uInput = document.getElementById('admin-user').value;
             const pInput = document.getElementById('admin-pass').value;
             const btn = document.querySelector('button[onclick="secureLogin()"]');
@@ -395,22 +395,25 @@
             btn.innerText = "⏳ جاري التحقق...";
             btn.disabled = true;
 
-            // جلب بيانات الدخول الحقيقية من قاعدة البيانات
             const db = firebase.database();
             db.ref('admin_account').once('value').then((snapshot) => {
                 const creds = snapshot.val();
                 let realUser = "admin";
                 let realPass = "12345";
 
-                // إذا قام المدير بتغيير كلمة السر، نستخدم الجديدة
                 if (creds) { realUser = creds.username; realPass = creds.password; }
 
+                // مقارنة البيانات
                 if (uInput === realUser && pInput === realPass) {
-                     // ✅ كلمة السر صحيحة: نعطيه التذكرة ونرسله للأدمن
+                    // ✅ الخطوة الحاسمة: حفظ التذكرة في ذاكرة المتصفح
                     localStorage.setItem('admin_token', 'SECRET_PASS_123');
-                    window.location.href = "admin.html";
+                    
+                    // تأخير بسيط جداً (جزء من الثانية) لضمان الحفظ قبل الانتقال
+                    setTimeout(() => {
+                        window.location.href = "admin.html";
+                    }, 100);
                 } else {
-                    alert("⛔ بيانات خاطئة!");
+                    alert("⛔ بيانات الدخول خاطئة!");
                     document.getElementById('admin-pass').value = '';
                     btn.innerText = oldText;
                     btn.disabled = false;
