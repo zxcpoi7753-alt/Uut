@@ -306,34 +306,11 @@
     <script src="js/quran_app.js"></script>
     <script src="js/azkar.js"></script>
     <script src="js/logic.js"></script>
-                <button onclick="openLoginModal()" style="
-        position: fixed; bottom: 20px; left: 20px; 
-        background: #1e293b; color: white; border: 2px solid var(--primary-color); 
-        border-radius: 50%; width: 50px; height: 50px; 
-        font-size: 22px; cursor: pointer; z-index: 99999;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.2s;
-    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="دخول المدير">
-        🔒
-    </button>
-
-    <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-        <div style="background: white; padding: 30px; border-radius: 15px; width: 300px; text-align: center; border: 2px solid var(--primary-color); box-shadow: 0 0 20px rgba(4, 120, 87, 0.3);">
-            <h3 style="margin-top:0; color:#1e293b;">🔐 بوابة الإدارة</h3>
-            <p style="font-size:0.8rem; color:gray; margin-bottom:15px;">المنطقة محظورة لغير المصرح لهم</p>
-            
-            <input type="text" id="admin-user" placeholder="اسم المستخدم" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align:center;">
-            <input type="password" id="admin-pass" placeholder="كلمة المرور" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align:center;">
-            
-            <button onclick="secureLogin()" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight:bold; font-size:1rem;">دخول آمن 🚀</button>
-            <button onclick="document.getElementById('login-modal').style.display='none'" style="margin-top: 15px; background: none; border: none; color: #ef4444; cursor: pointer; text-decoration: underline;">إلغاء</button>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // إعدادات فايربيس
+        // 1. إعدادات فايربيس
         const firebaseConfig = {
           apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
           authDomain: "quran-app-93e24.firebaseapp.com",
@@ -342,78 +319,99 @@
           messagingSenderId: "82150677933",
           appId: "1:82150677933:web:64213e04463c1bb3179524"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
 
+        // 2. التهيئة
+        try {
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+            console.log("✅ تم الاتصال بفايربيس");
+
+            // 3. الاستماع للبيانات وتوزيعها
+            db.ref().on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    console.log("📥 البيانات المستلمة:", data); // لرؤية البيانات في الكونسول
+
+                    // --- أ. تحديث شريط الأخبار ---
+                    // نتأكد أولاً هل البيانات موجودة في قاعدة البيانات؟
+                    if (data.news_bar && data.news_bar.text) {
+                        const newsEl = document.getElementById('dynamic-news-bar');
+                        if (newsEl) {
+                            newsEl.innerText = data.news_bar.text;
+                        } else {
+                            console.warn("⚠️ لم أجد العنصر: dynamic-news-bar في الصفحة!");
+                        }
+                    }
+
+                    // --- ب. تحديث سؤال الأسبوع ---
+                    if (data.weekly_question) {
+                        const qEl = document.getElementById('weekly-question-text');
+                        const wEl = document.getElementById('weekly-winner-text');
+                        
+                        if (qEl) qEl.innerHTML = `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`;
+                        if (wEl) wEl.innerText = data.weekly_question.last_winner;
+                    }
+
+                    // --- ج. تحديث الطالب المتميز ---
+                    if (data.top_student) {
+                        const sName = document.getElementById('top-student-name');
+                        const sDesc = document.getElementById('top-student-desc');
+                        
+                        if (sName) sName.innerText = data.top_student.name;
+                        if (sDesc) sDesc.innerText = data.top_student.category;
+                        
+                        // إضافة تأثير بصري عند التحديث
+                        if(sName) {
+                            sName.style.color = "#d97706";
+                            setTimeout(() => sName.style.color = "var(--primary-color)", 1000);
+                        }
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error("❌ خطأ جسيم في الاتصال:", error);
+            alert("هناك مشكلة في الاتصال بقاعدة البيانات، تأكد من الإنترنت.");
+        }
+
+        // --- دالة الدخول (القفل) ---
         function openLoginModal() {
             document.getElementById('login-modal').style.display = 'flex';
             document.getElementById('admin-user').focus();
         }
 
-        // 👇👇 دالة الدخول الجديدة التي تتصل بقاعدة البيانات 👇👇
         function secureLogin() {
             const uInput = document.getElementById('admin-user').value;
             const pInput = document.getElementById('admin-pass').value;
             const btn = document.querySelector('button[onclick="secureLogin()"]');
             
-            // تغيير شكل الزر أثناء التحميل
             const oldText = btn.innerText;
-            btn.innerText = "⏳ جاري التحقق...";
+            btn.innerText = "⏳...";
             btn.disabled = true;
 
-            // جلب كلمة السر الحقيقية من السحابة
+            const db = firebase.database();
             db.ref('admin_account').once('value').then((snapshot) => {
                 const creds = snapshot.val();
-                
-                // القيم الافتراضية (لأول مرة فقط)
                 let realUser = "admin";
                 let realPass = "12345";
 
-                // إذا وجدنا بيانات مخزنة، نستخدمها بدلاً من الافتراضي
-                if (creds) {
-                    realUser = creds.username;
-                    realPass = creds.password;
-                }
+                if (creds) { realUser = creds.username; realPass = creds.password; }
 
-                // التحقق
                 if (uInput === realUser && pInput === realPass) {
                     window.location.href = "admin.html";
                 } else {
-                    alert("⛔ بيانات الدخول غير صحيحة!");
+                    alert("⛔ خطأ في البيانات!");
                     document.getElementById('admin-pass').value = '';
                     btn.innerText = oldText;
                     btn.disabled = false;
                 }
-            }).catch((error) => {
-                alert("❌ تأكد من اتصالك بالإنترنت!");
-                console.error(error);
+            }).catch((e) => {
+                alert("تأكد من الإنترنت");
                 btn.innerText = oldText;
                 btn.disabled = false;
             });
         }
-
-        // الاستماع للتحديثات في الموقع (للأخبار والسؤال)
-        db.ref().on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                if(data.news_bar) {
-                    const el = document.getElementById('dynamic-news-bar');
-                    if(el) el.innerText = data.news_bar.text;
-                }
-                if(data.weekly_question) {
-                    const q = document.getElementById('weekly-question-text');
-                    const w = document.getElementById('weekly-winner-text');
-                    if(q) q.innerHTML = `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`;
-                    if(w) w.innerText = data.weekly_question.last_winner;
-                }
-                if(data.top_student) {
-                    const n = document.getElementById('top-student-name');
-                    const d = document.getElementById('top-student-desc');
-                    if(n) n.innerText = data.top_student.name;
-                    if(d) d.innerText = data.top_student.category;
-                }
-            }
-        });
     </script>
+
 </body>
 </html>
