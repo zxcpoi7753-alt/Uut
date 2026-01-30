@@ -3,609 +3,784 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الشاملة - الثريا V3</title>
+    <title>لوحة التحكم الشاملة V4</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-    <script>
-        const token = localStorage.getItem('admin_token');
-        if (token !== 'SECRET_PASS_123') {
-            window.location.replace("index.html");
-        }
-    </script>
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        :root { --primary: #1e293b; --accent: #3b82f6; --bg: #f1f5f9; --text: #334155; --danger: #ef4444; --success: #10b981; }
-        body { margin: 0; font-family: 'Cairo', sans-serif; background: var(--bg); display: flex; height: 100vh; overflow: hidden; }
+        :root {
+            --primary: #10b981; /* أخضر الهوية */
+            --dark: #1e293b;
+            --light: #f1f5f9;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+        }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #f8fafc;
+            margin: 0;
+            padding: 20px;
+            color: var(--dark);
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        h2, h3 { color: var(--dark); margin-bottom: 15px; }
+        h2 { text-align: center; border-bottom: 2px solid var(--light); padding-bottom: 15px; }
 
-        /* القائمة الجانبية */
-        .sidebar { width: 260px; background: var(--primary); color: white; display: flex; flex-direction: column; transition: 0.3s; z-index: 1000; box-shadow: 4px 0 10px rgba(0,0,0,0.1); }
-        .brand { padding: 20px; font-size: 1.3rem; font-weight: bold; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); }
-        .menu { list-style: none; padding: 0; margin: 0; flex: 1; overflow-y: auto; }
-        .menu li a { display: flex; align-items: center; padding: 14px 20px; color: #cbd5e1; text-decoration: none; transition: 0.2s; border-right: 4px solid transparent; cursor: pointer; font-size: 0.95rem; }
-        .menu li a:hover, .menu li a.active { background: rgba(255,255,255,0.1); color: white; border-right-color: var(--accent); }
-        .menu li a i { margin-left: 10px; width: 20px; text-align: center; }
+        /* Tabs System */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
+        .tab-btn {
+            background: var(--light);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Tajawal';
+            font-weight: bold;
+            white-space: nowrap;
+            transition: 0.3s;
+        }
+        .tab-btn.active { background: var(--primary); color: white; }
+        .content-section { display: none; animation: fadeIn 0.3s; }
+        .content-section.active { display: block; }
 
-        /* المحتوى الرئيسي */
-        .main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        /* Form Elements */
+        .form-group { margin-bottom: 15px; background: #fff; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 0.9rem; }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: 'Tajawal';
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        .btn-danger { background: var(--danger); width: auto; font-size: 0.8rem; padding: 5px 10px; }
+        .btn-warning { background: var(--warning); width: auto; font-size: 0.8rem; padding: 5px 10px; color: #fff; }
+        .btn-secondary { background: #64748b; width: auto; font-size: 0.8rem; padding: 5px 10px; }
+
+        /* Dynamic Lists */
+        .dynamic-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-right: 4px solid var(--primary);
+        }
+        .dynamic-item.hidden-item {
+            opacity: 0.6;
+            border-right-color: #94a3b8;
+            background: #e2e8f0;
+        }
+        .item-actions { display: flex; gap: 5px; }
+
+        /* Toast Notification */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+        .toast {
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideUp 0.3s ease-out;
+        }
+        .toast.success { background: var(--primary); }
+        .toast.error { background: var(--danger); }
+
+        /* Student Corner Toggles */
+        .toggle-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .toggle-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; }
         
-        /* البطاقات والأقسام */
-        .panel { display: none; animation: fadeIn 0.3s ease; }
-        .panel.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        .card h3 { margin-top: 0; border-bottom: 2px solid #f8fafc; padding-bottom: 15px; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem; }
-        
-        /* النماذج */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; color: var(--text); font-size: 0.9rem; }
-        .input-field, select, textarea { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; transition: 0.2s; }
-        .input-field:focus { border-color: var(--accent); outline: none; }
-        
-        /* الأزرار */
-        .btn { padding: 10px 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; }
-        .btn-primary { background: var(--accent); }
-        .btn-success { background: var(--success); }
-        .btn-danger { background: var(--danger); }
-        .btn-warning { background: #f59e0b; color: white; }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-
-        /* القوائم الديناميكية */
-        .dynamic-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px; }
-        .dynamic-item strong { color: var(--primary); }
-
-        /* جداول الإدخال المعقدة */
-        .complex-table-builder { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .complex-table-builder th, .complex-table-builder td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        .complex-table-builder th { background: #f1f5f9; font-size: 0.85rem; }
-        .complex-table-builder input { border: none; background: transparent; width: 100%; text-align: center; }
-
-        /* أزرار التبديل (Toggle) */
-        .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(22px); }
-
-        /* تلوين حواف البطاقات للتمييز */
-        .border-green { border-right: 4px solid var(--success); }
-        .border-blue { border-right: 4px solid var(--accent); }
-        .border-red { border-right: 4px solid var(--danger); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="brand"><i class="fas fa-cogs"></i> لوحة التحكم V3</div>
-        <ul class="menu">
-            <li><a onclick="showTab('tab-general')" class="active"><i class="fas fa-sliders-h"></i> الإعدادات العامة</a></li>
-            <li><a onclick="showTab('tab-sections')"><i class="fas fa-eye"></i> إظهار/إخفاء الأقسام</a></li>
-            <li><a onclick="showTab('tab-cards')"><i class="fas fa-th-large"></i> الأزرار والبطاقات (جديد)</a></li>
-            <li><a onclick="showTab('tab-complex-schedule')"><i class="fas fa-calendar-alt"></i> منشئ الجداول (عصر/مغرب)</a></li>
-            <li><a onclick="showTab('tab-teachers')"><i class="fas fa-chalkboard-teacher"></i> المعلمون</a></li>
-            <li><a onclick="showTab('tab-ranks')"><i class="fas fa-medal"></i> أوائل الحلقات</a></li>
-            <li><a onclick="showTab('tab-holidays')"><i class="fas fa-umbrella-beach"></i> الإجازات</a></li>
-            <li><a onclick="showTab('tab-news')"><i class="fas fa-newspaper"></i> الأخبار ومن نحن</a></li>
-            <li style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1);">
-                <a onclick="logout()" style="color: #fca5a5;"><i class="fas fa-sign-out-alt"></i> خروج</a>
-            </li>
-        </ul>
-    </aside>
 
-    <div class="main">
-        <div class="header">
-            <h2 id="page-title">⚙️ الإعدادات العامة</h2>
-            <a href="index.html" target="_blank" class="btn btn-primary" style="text-decoration:none;">معاينة الموقع <i class="fas fa-external-link-alt"></i></a>
+    <div class="container">
+        <h2>🎛️ لوحة التحكم الشاملة</h2>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tab_settings')">⚙️ الإعدادات والمظهر</button>
+            <button class="tab-btn" onclick="switchTab('tab_content')">📝 المحتوى والأخبار</button>
+            <button class="tab-btn" onclick="switchTab('tab_schedules')">📅 الجداول</button>
+            <button class="tab-btn" onclick="switchTab('tab_people')">👥 المعلمون والأوائل</button>
+            <button class="tab-btn" onclick="switchTab('tab_cards')">🗂️ البطاقات</button>
         </div>
 
-        <div id="tab-general" class="panel active">
+        <div id="tab_settings" class="content-section active">
+            <div class="form-group">
+                <h3>🔌 حالة الموقع</h3>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:10px;">
+                    <input type="checkbox" id="toggle_maint" style="width:auto;">
+                    تفعيل وضع الصيانة (إغلاق الموقع)
+                </label>
+            </div>
+
+            <div class="form-group">
+                <h3>🎨 مظهر الموقع (الألوان)</h3>
+                <label>اختر لون الموقع العام:</label>
+                <select id="site_theme_selector">
+                    <option value="theme-green">🟢 الثريا الأصلي (أخضر)</option>
+                    <option value="theme-blue">🔵 أزرق رسمي</option>
+                    <option value="theme-gold">👑 ذهبي ملكي</option>
+                    <option value="theme-night">🌑 ليلي فاخر</option>
+                    <option value="theme-purple">🟣 بنفسجي مبدع</option>
+                    <option value="theme-red">🔴 أحمر حيوي</option>
+                    <option value="theme-teal">🌊 تركواز هادئ</option>
+                    <option value="theme-brown">🟤 بني كلاسيك</option>
+                    <option value="theme-orange">🟠 برتقالي نشيط</option>
+                    <option value="theme-pink">🌸 وردي لطيف</option>
+                </select>
+                <button onclick="saveThemeSettings()" style="margin-top:10px;">حفظ المظهر</button>
+            </div>
+
+            <div class="form-group">
+                <h3>🎓 التحكم بأزرار "ركن الطالب"</h3>
+                <p style="font-size:0.8rem; color:gray;">اختر الأزرار التي تريد إظهارها في الموقع:</p>
+                <div class="toggle-grid">
+                    <div class="toggle-item"><span>📖 المصحف</span> <input type="checkbox" id="show_btn_quran" style="width:auto;"></div>
+                    <div class="toggle-item"><span>📿 الأذكار</span> <input type="checkbox" id="show_btn_adhkar" style="width:auto;"></div>
+                    <div class="toggle-item"><span>📚 المتون</span> <input type="checkbox" id="show_btn_mutoon" style="width:auto;"></div>
+                    <div class="toggle-item"><span>📝 الاختبارات</span> <input type="checkbox" id="show_btn_exams" style="width:auto;"></div>
+                    <div class="toggle-item"><span>📊 التقارير</span> <input type="checkbox" id="show_btn_reports" style="width:auto;"></div>
+                    <div class="toggle-item"><span>🏆 الخطط</span> <input type="checkbox" id="show_btn_plans" style="width:auto;"></div>
+                </div>
+                <button onclick="saveStudentCorner()" style="margin-top:10px;">حفظ إعدادات الركن</button>
+            </div>
+
+            <div class="form-group">
+                <h3>🎥 وإشعارات</h3>
+                <label>رابط البث (يوتيوب):</label>
+                <input type="text" id="inp_video" placeholder="مثال: dQw4w9WgXcQ">
+                
+                <hr style="margin:15px 0;">
+                
+                <label style="display:flex; align-items:center; gap:5px;">
+                    <input type="checkbox" id="notify_active" style="width:auto;">
+                    تفعيل النافذة المنبثقة
+                </label>
+                <input type="text" id="notify_title" placeholder="عنوان الإشعار">
+                <textarea id="notify_body" placeholder="نص الإشعار"></textarea>
+                <button onclick="saveSettings()">حفظ الإعدادات العامة</button>
+            </div>
+        </div>
+
+        <div id="tab_content" class="content-section">
+            <div class="form-group">
+                <h3>🏠 نصوص الواجهة</h3>
+                <input type="text" id="inp_header_title" placeholder="العنوان الرئيسي (مثال: حلقات الثريا)">
+                <input type="text" id="inp_header_subtitle" placeholder="العنوان الفرعي">
+                <input type="text" id="inp_header_location" placeholder="الموقع (مثال: جامع الثريا)">
+                <button onclick="saveHeaderTxt()">حفظ الواجهة</button>
+            </div>
+
+            <div class="form-group">
+                <h3>📜 من نحن (تنسيق شعري)</h3>
+                <textarea id="inp_about_content" rows="5" placeholder="اكتب كل شطر في سطر منفصل..."></textarea>
+                <button onclick="saveAbout()">حفظ النص</button>
+            </div>
+
+            <div class="form-group">
+                <h3>📰 شريط الأخبار (المتحرك)</h3>
+                <input type="hidden" id="edit_news_key"> <input type="text" id="inp_news_text" placeholder="نص الخبر...">
+                <label style="display:flex; align-items:center; gap:10px; margin:10px 0;">
+                    <input type="checkbox" id="inp_news_marquee" style="width:auto;" checked>
+                    اجعله خبراً متحركاً
+                </label>
+                <label style="display:flex; align-items:center; gap:10px;">
+                    <input type="checkbox" id="inp_news_clickable" style="width:auto;" onchange="document.getElementById('news_details_box').style.display = this.checked ? 'block' : 'none'">
+                    قابل للنقر (يفتح تفاصيل)
+                </label>
+                <div id="news_details_box" style="display:none; margin-top:5px;">
+                    <textarea id="inp_news_details" placeholder="التفاصيل التي تظهر عند النقر..."></textarea>
+                </div>
+                
+                <div style="display:flex; gap:5px; margin-top:10px;">
+                    <button id="btn_add_news" onclick="addNews()">➕ إضافة الخبر</button>
+                    <button id="btn_cancel_news" onclick="resetNewsForm()" style="background:#64748b; display:none;">إلغاء</button>
+                </div>
+                
+                <div id="news-list-admin" style="margin-top:15px;"></div>
+            </div>
             
-            <div class="card border-red">
-                <h3><i class="fas fa-power-off"></i> حالة الموقع (وضع الصيانة)</h3>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <strong>تفعيل وضع الصيانة</strong>
-                        <p style="margin:5px 0 0 0; color:gray; font-size:0.85rem;">عند التفعيل، يغلق الموقع وتظهر رسالة "تحت الصيانة".</p>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle_maint">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="card border-blue">
-                <h3><i class="fas fa-bell"></i> الإشعار المنبثق (Popup)</h3>
-                <div style="margin-bottom:15px; background:#eff6ff; padding:10px; border-radius:5px;">
-                    <label style="display:flex; align-items:center; gap:10px;">
-                        <input type="checkbox" id="notify_active"> <strong>تفعيل الإشعار؟</strong>
-                    </label>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group"><label>العنوان:</label><input type="text" id="notify_title" class="input-field"></div>
-                    <div class="form-group"><label>نص الرسالة:</label><input type="text" id="notify_body" class="input-field"></div>
-                </div>
-                <button onclick="saveNotification()" class="btn btn-primary" style="margin-top:10px;">حفظ الإشعار</button>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-edit"></i> نصوص الهيدر والفيديو</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>العنوان الرئيسي (H1):</label>
-                        <input type="text" id="inp_header_title" class="input-field">
-                    </div>
-                    <div class="form-group">
-                        <label>الوصف الفرعي:</label>
-                        <input type="text" id="inp_header_subtitle" class="input-field">
-                    </div>
-                    <div class="form-group">
-                        <label>الموقع الجغرافي:</label>
-                        <input type="text" id="inp_header_location" class="input-field">
-                    </div>
-                    <div class="form-group">
-                        <label>رابط فيديو الخلفية:</label>
-                        <input type="text" id="inp_video" class="input-field" placeholder="video.mp4">
-                    </div>
-                </div>
-                <button onclick="saveGeneral()" class="btn btn-primary" style="margin-top:15px;">💾 حفظ الإعدادات العامة</button>
+            <div class="form-group">
+                <h3>❓ سؤال الأسبوع</h3>
+                <input type="text" id="inp_q_text" placeholder="نص السؤال">
+                <input type="text" id="inp_q_winner" placeholder="آخر فائز">
+                <button onclick="saveQuestion()">تحديث السؤال</button>
             </div>
         </div>
-        <div id="tab-sections" class="panel">
-            <div class="card">
-                <h3><i class="fas fa-eye"></i> التحكم بظهور الأقسام</h3>
-                <p style="color:gray; font-size:0.9rem;">يمكنك إخفاء أي قسم مؤقتاً من الموقع.</p>
+        <div id="tab_schedules" class="content-section">
+            <div class="form-group">
+                <h3>📅 منشئ الجداول (النسخة الاحترافية)</h3>
+                <input type="hidden" id="edit_sched_key">
+                <input type="hidden" id="edit_sched_parent"> <label>الفترة:</label>
+                <select id="sched_time_select">
+                    <option value="time_1">☀️ حلقات العصر</option>
+                    <option value="time_2">🌙 حلقات المغرب</option>
+                </select>
+
+                <label>اسم الحلقة:</label>
+                <input type="text" id="sched_name" placeholder="مثال: حلقة زيد بن ثابت">
                 
-                <div class="dynamic-item"><span>📢 قسم الأخبار</span><label class="switch"><input type="checkbox" id="show_news"><span class="slider"></span></label></div>
-                <div class="dynamic-item"><span>🎓 قسم نجم الأسبوع</span><label class="switch"><input type="checkbox" id="show_student"><span class="slider"></span></label></div>
-                <div class="dynamic-item"><span>❓ قسم السؤال الأسبوعي</span><label class="switch"><input type="checkbox" id="show_question"><span class="slider"></span></label></div>
-                <div class="dynamic-item"><span>🏆 قسم أوائل الحلقات (جديد)</span><label class="switch"><input type="checkbox" id="show_ranks"><span class="slider"></span></label></div>
-                <div class="dynamic-item"><span>📅 قسم الجداول</span><label class="switch"><input type="checkbox" id="show_schedule"><span class="slider"></span></label></div>
-                <div class="dynamic-item"><span>👨‍🏫 قسم المعلمين</span><label class="switch"><input type="checkbox" id="show_teachers"><span class="slider"></span></label></div>
+                <label>وقت الحضور (جديد):</label>
+                <input type="text" id="sched_real_time" placeholder="مثال: 4:30 م أو 'بعد الصلاة'">
+
+                <div style="background:#f1f5f9; padding:10px; border-radius:8px; margin-bottom:10px;">
+                    <label>السبت:</label> <input type="text" id="day_sat" placeholder="المقرر/النشاط">
+                    <label>الأحد:</label> <input type="text" id="day_sun" placeholder="المقرر/النشاط">
+                    <label>الاثنين:</label> <input type="text" id="day_mon" placeholder="المقرر/النشاط">
+                    <label>الثلاثاء:</label> <input type="text" id="day_tue" placeholder="المقرر/النشاط">
+                    <label>الأربعاء:</label> <input type="text" id="day_wed" placeholder="المقرر/النشاط">
+                </div>
+
+                <div style="display:flex; gap:5px;">
+                    <button onclick="saveScheduleComplex()">💾 حفظ الجدول</button>
+                    <button onclick="resetScheduleForm()" style="background:#64748b;">إلغاء</button>
+                </div>
+            </div>
+
+            <div id="complex-schedule-list-admin"></div>
+        </div>
+
+        <div id="tab_people" class="content-section">
+            <div class="form-group">
+                <h3>👨‍🏫 قائمة المعلمين</h3>
+                <input type="hidden" id="edit_teacher_key">
+                <input type="text" id="t_name_v2" placeholder="اسم المعلم">
+                <input type="text" id="t_role_v2" placeholder="الوصف (مثال: معلم حلقة كذا)">
+                <div style="display:flex; gap:5px;">
+                    <button onclick="saveTeacherV2()">💾 حفظ المعلم</button>
+                    <button onclick="resetTeacherForm()" style="background:#64748b;">إلغاء</button>
+                </div>
+                <div id="teachers-list-v2-admin" style="margin-top:10px;"></div>
+            </div>
+
+            <div class="form-group">
+                <h3>🏆 لوحة الشرف (الأوائل)</h3>
+                <input type="hidden" id="edit_rank_key">
+                <select id="rank_num">
+                    <option value="1">🥇 المركز الأول</option>
+                    <option value="2">🥈 المركز الثاني</option>
+                    <option value="3">🥉 المركز الثالث</option>
+                    <option value="4">🏅 المركز الرابع</option>
+                    <option value="5">🎖️ المركز الخامس</option>
+                    <option value="6">🏵️ المركز السادس</option>
+                    <option value="7">🎗️ المركز السابع</option>
+                    <option value="8">🌟 المركز الثامن</option>
+                    <option value="9">💎 المركز التاسع</option>
+                    <option value="10">👑 المركز العاشر</option>
+                </select>
+                <input type="text" id="rank_name" placeholder="اسم الطالب">
+                <input type="text" id="rank_ring" placeholder="اسم الحلقة">
                 
-                <br>
-                <button onclick="saveSections()" class="btn btn-primary">💾 حفظ حالة الأقسام</button>
+                <div style="display:flex; gap:5px;">
+                    <button onclick="saveRank()">💾 حفظ الطالب</button>
+                    <button onclick="resetRankForm()" style="background:#64748b;">إلغاء</button>
+                </div>
+                <div id="ranks-list-admin" style="margin-top:10px;"></div>
+            </div>
+            
+             <div class="form-group">
+                <h3>🏖️ الإجازات الرسمية</h3>
+                <input type="text" id="holiday_txt" placeholder="نص الإجازة...">
+                <button onclick="addHoliday()">➕ إضافة</button>
+                <div id="holidays-list-admin" style="margin-top:10px;"></div>
             </div>
         </div>
 
-        <div id="tab-cards" class="panel">
-            <div class="card border-blue">
-                <h3><i class="fas fa-plus-circle"></i> إضافة بطاقة جديدة (إعلان، تكريم، دورة...)</h3>
-                <div class="form-grid">
-                    <div class="form-group"><label>العنوان:</label><input type="text" id="card_title" class="input-field" placeholder="مثلاً: تكريم الطلاب المتميزين"></div>
-                    <div class="form-group"><label>لون التمييز:</label><input type="color" id="card_color" class="input-field" style="height:45px;" value="#3b82f6"></div>
-                </div>
-                <div class="form-group">
-                    <label>نص البطاقة:</label>
-                    <textarea id="card_text" class="input-field" rows="3" placeholder="اكتب التفاصيل هنا..."></textarea>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group"><label>نص الزر (اختياري):</label><input type="text" id="card_btn_text" class="input-field" placeholder="مثلاً: مشاهدة الصور"></div>
-                    <div class="form-group"><label>رابط الزر (اختياري):</label><input type="text" id="card_link" class="input-field" placeholder="http://..."></div>
-                </div>
-                <button onclick="addCustomCard()" class="btn btn-success"><i class="fas fa-plus"></i> إضافة البطاقة للموقع</button>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-th-list"></i> البطاقات الحالية</h3>
-                <div id="custom-cards-list-admin">
-                    <p style="color:gray;">جاري التحميل...</p>
-                </div>
-            </div>
-        </div>
-        <div id="tab-complex-schedule" class="panel">
-            <div class="card border-green">
-                <h3><i class="fas fa-calendar-plus"></i> إضافة جدول حلقة جديد</h3>
-                <p style="color:gray; font-size:0.9rem;">أدخل اسم الحلقة، اختر الوقت، ثم املأ الجدول الأسبوعي.</p>
+        <div id="tab_cards" class="content-section">
+            <div class="form-group">
+                <h3>🗂️ البطاقات الإضافية (أكورديون)</h3>
+                <input type="hidden" id="edit_card_key">
+                <input type="text" id="card_title" placeholder="عنوان البطاقة (يظهر دائماً)">
+                <textarea id="card_text" placeholder="المحتوى المخفي (يظهر عند النقر)"></textarea>
+                <label>لون البطاقة:</label>
+                <input type="color" id="card_color" value="#10b981" style="height:40px;">
                 
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>وقت الحلقة:</label>
-                        <select id="comp_sch_time" class="input-field">
-                            <option value="time_1">حلقات العصر ☀️</option>
-                            <option value="time_2">حلقات المغرب 🌙</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>اسم الحلقة:</label>
-                        <input type="text" id="comp_sch_name" class="input-field" placeholder="مثلاً: حلقة أبو بكر الصديق">
-                    </div>
+                <div style="display:flex; gap:5px;">
+                    <button onclick="saveCustomCard()">💾 حفظ البطاقة</button>
+                    <button onclick="resetCardForm()" style="background:#64748b;">إلغاء</button>
                 </div>
-
-                <label style="margin-top:10px; display:block;"><strong>جدول الأسبوع:</strong></label>
-                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
-                    <div class="form-group"><label>السبت:</label><input type="text" id="d_sat" class="input-field" placeholder="مقرر/نشاط"></div>
-                    <div class="form-group"><label>الأحد:</label><input type="text" id="d_sun" class="input-field" placeholder="مقرر/نشاط"></div>
-                    <div class="form-group"><label>الاثنين:</label><input type="text" id="d_mon" class="input-field" placeholder="مقرر/نشاط"></div>
-                    <div class="form-group"><label>الثلاثاء:</label><input type="text" id="d_tue" class="input-field" placeholder="مقرر/نشاط"></div>
-                    <div class="form-group"><label>الأربعاء:</label><input type="text" id="d_wed" class="input-field" placeholder="مقرر/نشاط"></div>
-                    <div class="form-group"><label>الخميس:</label><input type="text" id="d_thu" class="input-field" placeholder="مقرر/نشاط"></div>
-                </div>
-                
-                <button onclick="addComplexSchedule()" class="btn btn-success" style="margin-top:15px;"><i class="fas fa-plus"></i> إضافة الجدول</button>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-list-alt"></i> الجداول الحالية</h3>
-                <div id="complex-schedule-list-admin">
-                    <p style="color:gray;">جاري التحميل...</p>
-                </div>
+                <div id="custom-cards-list-admin" style="margin-top:10px;"></div>
             </div>
         </div>
 
-        <div id="tab-teachers" class="panel">
-            <div class="card border-blue">
-                <h3><i class="fas fa-user-plus"></i> إضافة معلم للقائمة</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>اسم المعلم:</label>
-                        <input type="text" id="t_name_v2" class="input-field" placeholder="أ. فلان الفلاني">
-                    </div>
-                    <div class="form-group">
-                        <label>الوصف / الدور (يظهر تحت الاسم):</label>
-                        <input type="text" id="t_role_v2" class="input-field" placeholder="مثلاً: معلم حلقة زيد بن ثابت">
-                    </div>
-                </div>
-                <button onclick="addTeacherV2()" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة المعلم</button>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-users"></i> قائمة المعلمين</h3>
-                <div id="teachers-list-v2-admin">
-                    <p style="color:gray;">جاري التحميل...</p>
-                </div>
-            </div>
-        </div>
-        <div id="tab-ranks" class="panel">
-            <div class="card border-green">
-                <h3><i class="fas fa-medal"></i> إضافة طالب لقائمة الأوائل</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>المركز:</label>
-                        <select id="rank_num" class="input-field">
-                            <option value="1">الأول 🥇</option>
-                            <option value="2">الثاني 🥈</option>
-                            <option value="3">الثالث 🥉</option>
-                            <option value="4">الرابع</option>
-                            <option value="5">الخامس</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label>اسم الطالب:</label><input type="text" id="rank_name" class="input-field"></div>
-                    <div class="form-group"><label>اسم الحلقة:</label><input type="text" id="rank_ring" class="input-field"></div>
-                </div>
-                <button onclick="addRank()" class="btn btn-success"><i class="fas fa-plus"></i> إضافة للقائمة</button>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-list-ol"></i> قائمة الأوائل الحالية</h3>
-                <div id="ranks-list-admin">
-                    <p style="color:gray;">جاري التحميل...</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-holidays" class="panel">
-            <div class="card border-red">
-                <h3><i class="fas fa-umbrella-beach"></i> إدارة قائمة الإجازات</h3>
-                <p>أضف أيام العطل الرسمية لتظهر في قسم الجداول.</p>
-                
-                <div class="form-group">
-                    <label>نص الإجازة:</label>
-                    <input type="text" id="holiday_txt" class="input-field" placeholder="مثلاً: إجازة عيد الفطر المبارك">
-                </div>
-                <button onclick="addHoliday()" class="btn btn-danger"><i class="fas fa-plus"></i> إضافة للقائمة</button>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-list"></i> الإجازات المسجلة</h3>
-                <div id="holidays-list-admin">
-                    <p style="color:gray;">جاري التحميل...</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-news" class="panel">
-            <div class="card">
-                <h3><i class="fas fa-bullhorn"></i> شريط الأخبار المتحرك</h3>
-                <textarea id="inp_news_bar" class="input-field" rows="3"></textarea>
-                <button onclick="saveNewsBar()" class="btn btn-primary" style="margin-top:10px;">تحديث الشريط</button>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-question-circle"></i> سؤال الأسبوع</h3>
-                <div class="form-group"><label>نص السؤال:</label><textarea id="inp_q_text" class="input-field" rows="2"></textarea></div>
-                <div class="form-group"><label>الفائز السابق:</label><input type="text" id="inp_q_winner" class="input-field"></div>
-                <button onclick="saveQuestion()" class="btn btn-primary">تحديث السؤال</button>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-info-circle"></i> نص "من نحن" (الشعري)</h3>
-                <p style="color:gray; font-size:0.85rem;">يمكنك تعديل الكلمات هنا، وسيتم عرضها بنفس التصميم الجميل في الموقع.</p>
-                <textarea id="inp_about_content" class="input-field" rows="6"></textarea>
-                <button onclick="saveAbout()" class="btn btn-primary" style="margin-top:10px;">حفظ النص</button>
-            </div>
-        </div>
-
-    </div> ```
-        <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    </div> <div id="toast-container"></div>
 
     <script>
+        // ==========================================
+        // 1. إعدادات فايربيس (Firebase Config)
+        // ==========================================
         const firebaseConfig = {
-          apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
-          authDomain: "quran-app-93e24.firebaseapp.com",
-          projectId: "quran-app-93e24",
-          storageBucket: "quran-app-93e24.firebasestorage.app",
-          messagingSenderId: "82150677933",
-          appId: "1:82150677933:web:64213e04463c1bb3179524"
+            apiKey: "AIzaSyB...", // ⚠️ استبدلها ببياناتك الحقيقية
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
         };
-        firebase.initializeApp(firebaseConfig);
+        
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 1. التنقل بين التبويبات
-        function showTab(tabId) {
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        // ==========================================
+        // 2. دوال المساعدة العامة (Tools)
+        // ==========================================
+        function val(id) { return document.getElementById(id).value; }
+        function setVal(id, v) { document.getElementById(id).value = v; }
+        function getEl(id) { return document.getElementById(id); }
+        
+        // التبديل بين التبويبات
+        function switchTab(tabId) {
+            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
-            event.target.closest('a').classList.add('active');
+            event.target.classList.add('active');
         }
 
-        function logout() {
-            if(confirm("تسجيل الخروج؟")) {
-                localStorage.removeItem('admin_token');
-                window.location.replace("index.html");
-            }
-        }
-
-        // ==========================================
-        // 2. دوال الحفظ الأساسية
-        // ==========================================
-
-        function saveGeneral() {
-            db.ref('site_content').update({
-                txt_header_title: val('inp_header_title'),
-                txt_header_subtitle: val('inp_header_subtitle'),
-                txt_header_location: val('inp_header_location')
-            });
-            db.ref('settings').update({
-                video_url: val('inp_video'),
-                maintenance_mode: document.getElementById('toggle_maint').checked
-            }).then(() => alert("✅ تم الحفظ"));
-        }
-
-        function saveSections() {
-            db.ref('settings').update({
-                show_news: isChecked('show_news'),
-                show_student: isChecked('show_student'),
-                show_question: isChecked('show_question'),
-                show_ranks: isChecked('show_ranks'), // جديد
-                show_schedule: isChecked('show_schedule'),
-                show_teachers: isChecked('show_teachers')
-            }).then(() => alert("✅ تم تحديث الأقسام"));
-        }
-
-        function saveNotification() {
-            db.ref('settings').update({
-                popup_active: isChecked('notify_active'),
-                popup_title: val('notify_title'),
-                popup_body: val('notify_body')
-            }).then(() => alert("✅ تم تحديث الإشعار"));
+        // إشعار التوست الاحترافي (بديل الـ Alert)
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = type === 'success' ? `✅ ${message}` : `❌ ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
         }
 
         // ==========================================
-        // 3. دوال البناء المعقدة (الميزات الجديدة)
-        // ==========================================
-
-        // أ. إضافة بطاقة مخصصة (زر جديد)
-        function addCustomCard() {
-            const title = val('card_title');
-            if(!title) return alert("اكتب عنوان البطاقة");
-
-            const cardData = {
-                title: title,
-                text: val('card_text'),
-                color: val('card_color'),
-                btn_text: val('card_btn_text'),
-                link: val('card_link'),
-                active: true
-            };
-
-            db.ref('custom_cards').push(cardData).then(() => {
-                alert("✅ تم إضافة البطاقة");
-                document.getElementById('card_title').value = '';
-                document.getElementById('card_text').value = '';
-            });
-        }
-
-        function deleteCustomCard(key) {
-            if(confirm("حذف هذه البطاقة؟")) db.ref('custom_cards/' + key).remove();
-        }
-
-        // ب. إضافة جدول حلقة (معقد)
-        function addComplexSchedule() {
-            const timeKey = val('comp_sch_time'); // time_1 or time_2
-            const name = val('comp_sch_name');
-            
-            if(!name) return alert("اكتب اسم الحلقة");
-
-            // بيانات الجدول
-            const scheduleData = {
-                name: name,
-                sat: val('d_sat'), sun: val('d_sun'), mon: val('d_mon'),
-                tue: val('d_tue'), wed: val('d_wed'), thu: val('d_thu')
-            };
-
-            // أولاً: نضمن أن عنوان الوقت موجود
-            let timeTitle = (timeKey === 'time_1') ? '☀️ حلقات العصر' : '🌙 حلقات المغرب';
-            db.ref(`schedule_complex/${timeKey}/title`).set(timeTitle);
-
-            // ثانياً: نضيف الحلقة
-            db.ref(`schedule_complex/${timeKey}/rings`).push(scheduleData).then(() => {
-                alert("✅ تم إضافة الحلقة والجدول");
-                document.getElementById('comp_sch_name').value = '';
-                // تفريغ الحقول
-                ['d_sat','d_sun','d_mon','d_tue','d_wed','d_thu'].forEach(id => document.getElementById(id).value = '');
-            });
-        }
-
-        function deleteComplexRing(timeKey, ringKey) {
-            if(confirm("حذف هذه الحلقة وجدولها؟")) {
-                db.ref(`schedule_complex/${timeKey}/rings/${ringKey}`).remove();
-            }
-        }
-        // ج. إضافة معلم (V2 - القائمة النصية الجديدة)
-        function addTeacherV2() {
-            const name = val('t_name_v2');
-            const role = val('t_role_v2');
-            if(!name) return alert("اكتب اسم المعلم");
-
-            db.ref('teachers_list_v2').push({ name: name, role: role })
-            .then(() => {
-                alert("✅ تم إضافة المعلم");
-                document.getElementById('t_name_v2').value = '';
-                document.getElementById('t_role_v2').value = '';
-            });
-        }
-        function deleteTeacherV2(key) { if(confirm("حذف هذا المعلم؟")) db.ref('teachers_list_v2/'+key).remove(); }
-
-        // د. إضافة طالب للأوائل
-        function addRank() {
-            const name = val('rank_name');
-            if(!name) return alert("اكتب اسم الطالب");
-            db.ref('ranks_list').push({
-                rank: val('rank_num'),
-                name: name,
-                ring: val('rank_ring')
-            }).then(() => { 
-                alert("✅ تم إضافة الطالب للقائمة"); 
-                document.getElementById('rank_name').value = ''; 
-            });
-        }
-        function deleteRank(key) { if(confirm("حذف هذا الطالب؟")) db.ref('ranks_list/'+key).remove(); }
-
-        // هـ. إضافة إجازة
-        function addHoliday() {
-            const txt = val('holiday_txt');
-            if(!txt) return alert("اكتب نص الإجازة");
-            db.ref('holidays_list').push({ text: txt }).then(() => { 
-                alert("✅ تم إضافة الإجازة"); 
-                document.getElementById('holiday_txt').value = ''; 
-            });
-        }
-        function deleteHoliday(key) { if(confirm("حذف هذه الإجازة؟")) db.ref('holidays_list/'+key).remove(); }
-
-        // و. حفظ النصوص (الأخبار - السؤال - من نحن)
-        function saveNewsBar() { db.ref('news_bar').set({ text: val('inp_news_bar') }).then(()=>alert("✅ تم تحديث الشريط")); }
-        function saveQuestion() { db.ref('weekly_question').set({ text: val('inp_q_text'), last_winner: val('inp_q_winner') }).then(()=>alert("✅ تم تحديث السؤال")); }
-        function saveAbout() { db.ref('site_content/txt_about_content').set(val('inp_about_content')).then(()=>alert("✅ تم حفظ نص من نحن")); }
-
-        // ==========================================
-        // 4. تحميل وعرض البيانات (Realtime Loading)
+        // 3. إدارة البيانات (تحميل وعرض)
         // ==========================================
         db.ref().on('value', (snapshot) => {
             const d = snapshot.val();
             if(!d) return;
 
-            // أ. تعبئة الإعدادات والنصوص
+            // أ. الإعدادات والثيمات
             if(d.settings) {
-                document.getElementById('toggle_maint').checked = d.settings.maintenance_mode;
-                document.getElementById('inp_video').value = d.settings.video_url || "";
+                getEl('toggle_maint').checked = d.settings.maintenance_mode;
+                getEl('inp_video').checked = d.settings.video_url || "";
+                getEl('site_theme_selector').value = d.settings.theme || "theme-green";
                 
-                // الإشعارات
-                document.getElementById('notify_active').checked = d.settings.popup_active;
-                document.getElementById('notify_title').value = d.settings.popup_title || "";
-                document.getElementById('notify_body').value = d.settings.popup_body || "";
+                // إعدادات الإشعارات
+                getEl('notify_active').checked = d.settings.popup_active;
+                getEl('notify_title').value = d.settings.popup_title || "";
+                getEl('notify_body').value = d.settings.popup_body || "";
                 
-                // الأقسام
-                ['news','student','question','ranks','schedule','teachers'].forEach(k => {
-                    const el = document.getElementById('show_'+k);
-                    if(el) el.checked = d.settings['show_'+k];
+                // ركن الطالب (الأزرار)
+                const sc = d.settings.student_corner || {};
+                ['quran','adhkar','mutoon','exams','reports','plans'].forEach(k => {
+                    if(getEl('show_btn_'+k)) getEl('show_btn_'+k).checked = sc[k] !== false; // الافتراضي مفعل
                 });
             }
-            
-            // تعبئة النصوص
+
+            // ب. المحتوى النصي
             if(d.site_content) {
-                document.getElementById('inp_header_title').value = d.site_content.txt_header_title || "";
-                document.getElementById('inp_header_subtitle').value = d.site_content.txt_header_subtitle || "";
-                document.getElementById('inp_header_location').value = d.site_content.txt_header_location || "";
-                document.getElementById('inp_about_content').value = d.site_content.txt_about_content || "";
+                setVal('inp_header_title', d.site_content.txt_header_title || "");
+                setVal('inp_header_subtitle', d.site_content.txt_header_subtitle || "");
+                setVal('inp_header_location', d.site_content.txt_header_location || "");
+                setVal('inp_about_content', d.site_content.txt_about_content || "");
             }
-            if(d.news_bar) document.getElementById('inp_news_bar').value = d.news_bar.text;
+            
+            // سؤال الأسبوع
             if(d.weekly_question) {
-                document.getElementById('inp_q_text').value = d.weekly_question.text;
-                document.getElementById('inp_q_winner').value = d.weekly_question.last_winner;
+                setVal('inp_q_text', d.weekly_question.text);
+                setVal('inp_q_winner', d.weekly_question.last_winner);
             }
 
-            // ب. رسم القوائم (Render Lists)
-            renderList('custom-cards-list-admin', d.custom_cards, 'card');
-            renderList('teachers-list-v2-admin', d.teachers_list_v2, 'teacher');
-            renderList('ranks-list-admin', d.ranks_list, 'rank');
-            renderList('holidays-list-admin', d.holidays_list, 'holiday');
-            
-            // رسم قائمة الجداول المعقدة
-            renderComplexScheduleAdmin(d.schedule_complex);
+            // ج. رسم القوائم (مع أزرار التعديل والإخفاء)
+            renderNewsList(d.news_list);
+            renderScheduleComplex(d.schedule_complex);
+            renderTeachersV2(d.teachers_list_v2);
+            renderRanks(d.ranks_list);
+            renderCustomCards(d.custom_cards);
+            renderHolidays(d.holidays_list); // كما هي بدون تعديل
         });
 
-        // دوال الرسم المساعدة
-        function renderList(id, data, type) {
-            const el = document.getElementById(id);
-            el.innerHTML = '';
-            if(!data) { el.innerHTML = '<p>لا توجد بيانات.</p>'; return; }
+        // --- دوال الرسم (Render Functions) ---
 
+        // 1. الأخبار
+        function renderNewsList(data) {
+            const el = getEl('news-list-admin');
+            el.innerHTML = '';
+            if(!data) return;
             Object.entries(data).forEach(([key, item]) => {
-                let content = '', func = '';
-                
-                if(type === 'card') {
-                    content = `<strong style="color:${item.color}">${item.title}</strong>`;
-                    func = `deleteCustomCard('${key}')`;
-                } else if(type === 'teacher') {
-                    content = `<strong>${item.name}</strong> <small style="color:gray;">(${item.role})</small>`;
-                    func = `deleteTeacherV2('${key}')`;
-                } else if(type === 'rank') {
-                    content = `Rank ${item.rank}: <strong>${item.name}</strong> <small>(${item.ring})</small>`;
-                    func = `deleteRank('${key}')`;
-                } else if(type === 'holiday') {
-                    content = item.text;
-                    func = `deleteHoliday('${key}')`;
-                }
-                
+                const opacity = item.isHidden ? '0.5' : '1';
+                const statusIcon = item.isHidden ? '👁️‍🗨️' : '👁️';
                 el.innerHTML += `
-                    <div class="dynamic-item">
-                        <div>${content}</div>
-                        <button onclick="${func}" class="btn btn-danger" style="padding:4px 10px; font-size:0.8rem;">حذف</button>
+                    <div class="dynamic-item ${item.isHidden ? 'hidden-item' : ''}" style="opacity:${opacity}">
+                        <div>
+                            ${item.isMarquee ? '🔄' : '📄'} <strong>${item.text}</strong>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn-secondary" onclick="toggleVisibility('news_list/${key}', ${item.isHidden})">${statusIcon}</button>
+                            <button class="btn-warning" onclick="editNews('${key}', '${item.text}', ${item.isMarquee}, ${item.isClickable}, '${item.details || ''}')">✏️</button>
+                            <button class="btn-danger" onclick="deleteItem('news_list/${key}')">🗑️</button>
+                        </div>
                     </div>`;
             });
         }
 
-        // رسم قائمة الجداول في الأدمن (بتنسيق شجري)
-        function renderComplexScheduleAdmin(data) {
-            const el = document.getElementById('complex-schedule-list-admin');
+        // 2. الجداول (المطورة)
+        function renderScheduleComplex(data) {
+            const el = getEl('complex-schedule-list-admin');
             el.innerHTML = '';
-            if(!data) { el.innerHTML = '<p>لا توجد جداول.</p>'; return; }
+            if(!data) return;
 
-            // ترتيب الأوقات (time_1 ثم time_2)
             Object.keys(data).sort().forEach(timeKey => {
                 if(data[timeKey].rings) {
                     const title = (timeKey === 'time_1') ? '☀️ حلقات العصر' : '🌙 حلقات المغرب';
-                    el.innerHTML += `<h4 style="margin:15px 0 5px 0; color:#3b82f6; border-bottom:2px solid #e2e8f0; padding-bottom:5px;">${title}</h4>`;
+                    el.innerHTML += `<h4 style="margin:10px 0; border-bottom:1px solid #ddd;">${title}</h4>`;
                     
                     Object.entries(data[timeKey].rings).forEach(([key, ring]) => {
+                        const opacity = ring.isHidden ? '0.5' : '1';
                         el.innerHTML += `
-                            <div class="dynamic-item">
-                                <div>📖 <strong>${ring.name}</strong></div>
-                                <button onclick="deleteComplexRing('${timeKey}', '${key}')" class="btn btn-danger" style="padding:4px 10px; font-size:0.8rem;">حذف</button>
+                            <div class="dynamic-item ${ring.isHidden ? 'hidden-item' : ''}" style="opacity:${opacity}">
+                                <div>📖 <strong>${ring.name}</strong> <small>(${ring.time || 'لم يحدد'})</small></div>
+                                <div class="item-actions">
+                                    <button class="btn-secondary" onclick="toggleVisibility('schedule_complex/${timeKey}/rings/${key}', ${ring.isHidden})">👁️</button>
+                                    <button class="btn-warning" onclick='editSchedule("${timeKey}", "${key}", ${JSON.stringify(ring)})'>✏️</button>
+                                    <button class="btn-danger" onclick="deleteItem('schedule_complex/${timeKey}/rings/${key}')">🗑️</button>
+                                </div>
                             </div>`;
                     });
                 }
             });
         }
 
-        function val(id) { return document.getElementById(id).value; }
-        function isChecked(id) { return document.getElementById(id).checked; }
+        // 3. المعلمون
+        function renderTeachersV2(data) {
+            const el = getEl('teachers-list-v2-admin');
+            el.innerHTML = '';
+            if(!data) return;
+            Object.entries(data).forEach(([key, item]) => {
+                el.innerHTML += `
+                    <div class="dynamic-item ${item.isHidden ? 'hidden-item' : ''}">
+                        <div>👨‍🏫 <strong>${item.name}</strong></div>
+                        <div class="item-actions">
+                            <button class="btn-secondary" onclick="toggleVisibility('teachers_list_v2/${key}', ${item.isHidden})">👁️</button>
+                            <button class="btn-warning" onclick="editTeacher('${key}', '${item.name}', '${item.role}')">✏️</button>
+                            <button class="btn-danger" onclick="deleteItem('teachers_list_v2/${key}')">🗑️</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // 4. الأوائل
+        function renderRanks(data) {
+            const el = getEl('ranks-list-admin');
+            el.innerHTML = '';
+            if(!data) return;
+            Object.entries(data).forEach(([key, item]) => {
+                el.innerHTML += `
+                    <div class="dynamic-item ${item.isHidden ? 'hidden-item' : ''}">
+                        <div>🏆 #${item.rank} <strong>${item.name}</strong></div>
+                        <div class="item-actions">
+                            <button class="btn-secondary" onclick="toggleVisibility('ranks_list/${key}', ${item.isHidden})">👁️</button>
+                            <button class="btn-warning" onclick="editRank('${key}', '${item.name}', '${item.rank}', '${item.ring}')">✏️</button>
+                            <button class="btn-danger" onclick="deleteItem('ranks_list/${key}')">🗑️</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // 5. البطاقات
+        function renderCustomCards(data) {
+            const el = getEl('custom-cards-list-admin');
+            el.innerHTML = '';
+            if(!data) return;
+            Object.entries(data).forEach(([key, item]) => {
+                el.innerHTML += `
+                    <div class="dynamic-item ${item.isHidden ? 'hidden-item' : ''}" style="border-right-color:${item.color}">
+                        <div>🗂️ ${item.title}</div>
+                        <div class="item-actions">
+                            <button class="btn-secondary" onclick="toggleVisibility('custom_cards/${key}', ${item.isHidden})">👁️</button>
+                            <button class="btn-warning" onclick="editCard('${key}', '${item.title}', '${item.text}', '${item.color}')">✏️</button>
+                            <button class="btn-danger" onclick="deleteItem('custom_cards/${key}')">🗑️</button>
+                        </div>
+                    </div>`;
+            });
+        }
+        
+        // 6. الإجازات (عرض وحذف وإضافة فقط - بدون تعديل كما طلبت)
+        function renderHolidays(data) {
+            const el = getEl('holidays-list-admin');
+            el.innerHTML = '';
+            if(!data) return;
+            Object.entries(data).forEach(([key, item]) => {
+                el.innerHTML += `
+                    <div class="dynamic-item">
+                        <div>🏖️ ${item.text}</div>
+                        <button class="btn-danger" onclick="deleteItem('holidays_list/${key}')">🗑️</button>
+                    </div>`;
+            });
+        }
+
+        // ==========================================
+        // 4. دوال الحفظ والتعديل (Action Functions)
+        // ==========================================
+
+        // أ. حفظ الثيمات والإعدادات العامة
+        function saveThemeSettings() {
+            const theme = val('site_theme_selector');
+            db.ref('settings/theme').set(theme).then(() => showToast('تم تغيير لون الموقع بنجاح'));
+        }
+        function saveStudentCorner() {
+            const config = {
+                quran: getEl('show_btn_quran').checked,
+                adhkar: getEl('show_btn_adhkar').checked,
+                mutoon: getEl('show_btn_mutoon').checked,
+                exams: getEl('show_btn_exams').checked,
+                reports: getEl('show_btn_reports').checked,
+                plans: getEl('show_btn_plans').checked
+            };
+            db.ref('settings/student_corner').set(config).then(() => showToast('تم تحديث أزرار ركن الطالب'));
+        }
+        function saveSettings() {
+            db.ref('settings').update({
+                maintenance_mode: getEl('toggle_maint').checked,
+                video_url: val('inp_video'),
+                popup_active: getEl('notify_active').checked,
+                popup_title: val('notify_title'),
+                popup_body: val('notify_body')
+            }).then(() => showToast('تم حفظ الإعدادات العامة'));
+        }
+        function saveHeaderTxt() {
+            db.ref('site_content').update({
+                txt_header_title: val('inp_header_title'),
+                txt_header_subtitle: val('inp_header_subtitle'),
+                txt_header_location: val('inp_header_location')
+            }).then(() => showToast('تم تحديث الواجهة'));
+        }
+        function saveAbout() {
+             db.ref('site_content/txt_about_content').set(val('inp_about_content'))
+             .then(() => showToast('تم حفظ نص من نحن'));
+        }
+        function saveQuestion() {
+            db.ref('weekly_question').set({ text: val('inp_q_text'), last_winner: val('inp_q_winner') })
+            .then(() => showToast('تم تحديث السؤال'));
+        }
+
+        // ب. إدارة الأخبار (إضافة / تعديل)
+        function addNews() {
+            const txt = val('inp_news_text');
+            if(!txt) return showToast('اكتب الخبر أولاً', 'error');
+            
+            const data = {
+                text: txt,
+                isMarquee: getEl('inp_news_marquee').checked,
+                isClickable: getEl('inp_news_clickable').checked,
+                details: val('inp_news_details'),
+                isHidden: false
+            };
+            
+            const key = val('edit_news_key');
+            if(key) {
+                db.ref('news_list/'+key).update(data).then(() => { showToast('تم تعديل الخبر'); resetNewsForm(); });
+            } else {
+                db.ref('news_list').push(data).then(() => { showToast('تم إضافة الخبر'); resetNewsForm(); });
+            }
+        }
+        function editNews(key, text, isMq, isClk, det) {
+            setVal('edit_news_key', key);
+            setVal('inp_news_text', text);
+            getEl('inp_news_marquee').checked = isMq;
+            getEl('inp_news_clickable').checked = isClk;
+            setVal('inp_news_details', det);
+            getEl('news_details_box').style.display = isClk ? 'block' : 'none';
+            getEl('btn_add_news').innerText = '💾 حفظ التعديل';
+            getEl('btn_cancel_news').style.display = 'inline-block';
+            window.scrollTo(0,0);
+        }
+        function resetNewsForm() {
+            setVal('edit_news_key', '');
+            setVal('inp_news_text', '');
+            getEl('btn_add_news').innerText = '➕ إضافة الخبر';
+            getEl('btn_cancel_news').style.display = 'none';
+        }
+
+        // ج. إدارة الجداول (إضافة / تعديل)
+        function saveScheduleComplex() {
+            const parent = val('sched_time_select');
+            const name = val('sched_name');
+            if(!name) return showToast('اسم الحلقة مطلوب', 'error');
+
+            const data = {
+                name: name,
+                time: val('sched_real_time'),
+                sat: val('day_sat'), sun: val('day_sun'), mon: val('day_mon'),
+                tue: val('day_tue'), wed: val('day_wed')
+            };
+
+            const editKey = val('edit_sched_key');
+            const editParent = val('edit_sched_parent');
+
+            if(editKey) {
+                // إذا كنا نعدل، نحتاج معرفة هل غيرنا الفترة (من عصر لمغرب) أم لا
+                if(editParent !== parent) {
+                    // إذا غير الفترة: نحذف القديم ونضيف الجديد
+                    db.ref(`schedule_complex/${editParent}/rings/${editKey}`).remove();
+                    db.ref(`schedule_complex/${parent}/rings`).push(data);
+                } else {
+                    // تحديث في نفس المكان
+                    db.ref(`schedule_complex/${parent}/rings/${editKey}`).update(data);
+                }
+                showToast('تم تعديل الجدول');
+            } else {
+                db.ref(`schedule_complex/${parent}/rings`).push(data).then(() => showToast('تم إضافة الجدول'));
+            }
+            resetScheduleForm();
+        }
+        function editSchedule(parent, key, data) {
+            setVal('edit_sched_key', key);
+            setVal('edit_sched_parent', parent);
+            setVal('sched_time_select', parent);
+            setVal('sched_name', data.name);
+            setVal('sched_real_time', data.time || "");
+            setVal('day_sat', data.sat); setVal('day_sun', data.sun);
+            setVal('day_mon', data.mon); setVal('day_tue', data.tue);
+            setVal('day_wed', data.wed);
+            
+            getEl('tab_schedules').scrollIntoView(); // الانتقال للنموذج
+        }
+        function resetScheduleForm() {
+            setVal('edit_sched_key', '');
+            setVal('sched_name', '');
+            setVal('sched_real_time', '');
+            ['sat','sun','mon','tue','wed'].forEach(d => setVal('day_'+d, ''));
+        }
+
+        // د. المعلمون والأوائل والبطاقات والإجازات
+        function saveTeacherV2() {
+            const name = val('t_name_v2');
+            if(!name) return showToast('الاسم مطلوب', 'error');
+            const data = { name: name, role: val('t_role_v2') };
+            const key = val('edit_teacher_key');
+            
+            if(key) db.ref('teachers_list_v2/'+key).update(data).then(()=>showToast('تم التعديل'));
+            else db.ref('teachers_list_v2').push(data).then(()=>showToast('تمت الإضافة'));
+            resetTeacherForm();
+        }
+        function editTeacher(key, name, role) {
+            setVal('edit_teacher_key', key);
+            setVal('t_name_v2', name);
+            setVal('t_role_v2', role);
+        }
+        function resetTeacherForm() {
+            setVal('edit_teacher_key', '');
+            setVal('t_name_v2', '');
+            setVal('t_role_v2', '');
+        }
+
+        function saveRank() {
+            const name = val('rank_name');
+            if(!name) return showToast('اسم الطالب مطلوب', 'error');
+            const data = { name: name, rank: val('rank_num'), ring: val('rank_ring') };
+            const key = val('edit_rank_key');
+            
+            if(key) db.ref('ranks_list/'+key).update(data).then(()=>showToast('تم التعديل'));
+            else db.ref('ranks_list').push(data).then(()=>showToast('تمت الإضافة'));
+            resetRankForm();
+        }
+        function editRank(key, name, rank, ring) {
+            setVal('edit_rank_key', key);
+            setVal('rank_name', name);
+            setVal('rank_num', rank);
+            setVal('rank_ring', ring);
+        }
+        function resetRankForm() {
+            setVal('edit_rank_key', '');
+            setVal('rank_name', '');
+            setVal('rank_ring', '');
+        }
+
+        function saveCustomCard() {
+            const title = val('card_title');
+            if(!title) return showToast('العنوان مطلوب', 'error');
+            const data = { title: title, text: val('card_text'), color: val('card_color') };
+            const key = val('edit_card_key');
+            
+            if(key) db.ref('custom_cards/'+key).update(data).then(()=>showToast('تم التعديل'));
+            else db.ref('custom_cards').push(data).then(()=>showToast('تمت الإضافة'));
+            resetCardForm();
+        }
+        function editCard(key, title, text, color) {
+            setVal('edit_card_key', key);
+            setVal('card_title', title);
+            setVal('card_text', text);
+            setVal('card_color', color);
+        }
+        function resetCardForm() {
+            setVal('edit_card_key', '');
+            setVal('card_title', '');
+            setVal('card_text', '');
+            setVal('card_color', '#10b981');
+        }
+
+        // الإجازات (القديمة - بدون تعديل)
+        function addHoliday() {
+            const txt = val('holiday_txt');
+            if(!txt) return showToast('اكتب النص', 'error');
+            db.ref('holidays_list').push({ text: txt }).then(() => {
+                showToast('تم إضافة الإجازة');
+                setVal('holiday_txt', '');
+            });
+        }
+
+        // --- دوال عامة (حذف وتفعيل) ---
+        function deleteItem(path) {
+            if(confirm("هل أنت متأكد من الحذف؟")) {
+                db.ref(path).remove().then(() => showToast('تم الحذف بنجاح', 'success'));
+            }
+        }
+        function toggleVisibility(path, currentStatus) {
+            // إذا كان true نجعله false والعكس
+            // ملاحظة: إذا لم يكن الحقل موجوداً (undefined)، نعتبره false (ظاهر) ونحوله لـ true (مخفي)
+            const newStatus = !currentStatus; 
+            db.ref(path).update({ isHidden: newStatus }).then(() => {
+                const msg = newStatus ? 'تم إخفاء العنصر' : 'تم تفعيل العنصر';
+                showToast(msg);
+            });
+        }
 
     </script>
 </body>
