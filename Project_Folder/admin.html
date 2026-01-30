@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة القيادة - حلقات الثريا</title>
+    
+    <script>
+        // هذا الكود يعمل قبل تحميل الصفحة
+        // يفحص هل يوجد "تصريح دخول" في المتصفح أم لا
+        const token = localStorage.getItem('admin_token');
+        
+        // إذا لم يجد التصريح الصحيح، يطرد المستخدم فوراً
+        if (token !== 'access_granted_secure_v2') {
+            window.location.href = "index.html"; 
+        }
+    </script>
     <link rel="stylesheet" href="css/main.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
@@ -11,7 +22,6 @@
         :root { --sidebar-width: 260px; --header-height: 70px; }
         body { background-color: #f3f4f6; overflow-x: hidden; margin: 0; display: flex; font-family: 'Cairo', sans-serif; }
 
-        /* تنسيقات القائمة والهيكل */
         .sidebar { width: var(--sidebar-width); height: 100vh; background: #1e293b; color: white; position: fixed; right: 0; top: 0; display: flex; flex-direction: column; z-index: 1000; transition: 0.3s; }
         .brand { padding: 25px; font-size: 1.4rem; font-weight: bold; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
         .menu { list-style: none; padding: 20px 0; margin: 0; }
@@ -50,9 +60,8 @@
             <li><a onclick="switchTab('tab-news', this)"><i class="fas fa-newspaper"></i> شريط الأخبار</a></li>
             <li><a onclick="switchTab('tab-students', this)"><i class="fas fa-user-graduate"></i> الطلاب المتميزون</a></li>
             <li><a onclick="switchTab('tab-settings', this)"><i class="fas fa-cog"></i> إعدادات الأدمن</a></li>
-            
             <li style="margin-top: 30px; border-top: 1px solid #334155; padding-top: 10px;">
-                <a href="index.html" target="_blank"><i class="fas fa-external-link-alt"></i> زيارة الموقع</a>
+                <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
             </li>
         </ul>
     </aside>
@@ -92,19 +101,11 @@
             </div>
 
             <div id="tab-settings" class="card-panel">
-                <h3 style="margin-top:0; color:#333;">🔐 تغيير اسم المستخدم وكلمة المرور</h3>
-                <p style="color:gray;">هنا يمكنك تغيير بيانات الدخول للوحة التحكم.</p>
-                
-                <div class="form-group">
-                    <label>اسم المستخدم الجديد:</label>
-                    <input type="text" id="new-admin-user" class="form-input" placeholder="مثال: admin">
-                </div>
-                <div class="form-group">
-                    <label>كلمة المرور الجديدة:</label>
-                    <input type="text" id="new-admin-pass" class="form-input" placeholder="مثال: 123456">
-                </div>
-                
-                <button onclick="saveAdminCreds()" class="btn-submit" style="background-color:#1e293b;">💾 حفظ البيانات الجديدة</button>
+                <h3 style="margin-top:0; color:#333;">🔐 بيانات الدخول</h3>
+                <p style="color:gray;">تغيير اسم المستخدم وكلمة المرور.</p>
+                <div class="form-group"><label>المستخدم الجديد:</label><input type="text" id="new-admin-user" class="form-input"></div>
+                <div class="form-group"><label>كلمة المرور الجديدة:</label><input type="text" id="new-admin-pass" class="form-input"></div>
+                <button onclick="saveAdminCreds()" class="btn-submit" style="background-color:#1e293b;">💾 حفظ التغييرات</button>
                 <div id="msg-admin" class="status-msg"></div>
             </div>
 
@@ -135,56 +136,52 @@
             if(window.innerWidth <= 768) toggleSidebar();
         }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-        function logout() { if(confirm('هل تود الخروج؟')) window.location.href='index.html'; }
+        
+        // دالة الخروج (تحذف التصريح وتطرد المستخدم)
+        function logout() { 
+            if(confirm('هل تود الخروج؟')) {
+                localStorage.removeItem('admin_token'); // حذف المفتاح
+                window.location.href='index.html'; // طرد
+            }
+        }
 
-        // دوال الحفظ القديمة
         function saveQuestion() {
             db.ref('weekly_question').set({ text: document.getElementById('q-text').value, last_winner: document.getElementById('q-winner').value })
-            .then(() => msg('msg-q', '✅ تم الحفظ'))
+            .then(() => msg('msg-q', '✅ تم'))
             .catch(e => msg('msg-q', '❌ خطأ', true));
         }
         function saveNews() {
             db.ref('news_bar').set({ text: document.getElementById('news-content').value })
-            .then(() => msg('msg-news', '✅ تم الحفظ'))
+            .then(() => msg('msg-news', '✅ تم'))
             .catch(e => msg('msg-news', '❌ خطأ', true));
         }
         function saveStudent() {
             db.ref('top_student').set({ name: document.getElementById('std-name').value, category: document.getElementById('std-desc').value })
-            .then(() => msg('msg-std', '✅ تم الحفظ'))
+            .then(() => msg('msg-std', '✅ تم'))
             .catch(e => msg('msg-std', '❌ خطأ', true));
         }
-
-        // 👇 دالة حفظ بيانات الدخول الجديدة 👇
         function saveAdminCreds() {
             const u = document.getElementById('new-admin-user').value;
             const p = document.getElementById('new-admin-pass').value;
-            if(!u || !p) { alert('اكتب البيانات أولاً'); return; }
-            
-            if(confirm("⚠️ هل أنت متأكد؟ ستحتاج لاستخدام هذه البيانات في المرة القادمة.")) {
+            if(!u || !p) { alert('اكتب البيانات'); return; }
+            if(confirm("هل أنت متأكد؟ ستحتاج لتسجيل الدخول بالبيانات الجديدة.")) {
                 db.ref('admin_account').set({ username: u, password: p })
-                .then(() => msg('msg-admin', '✅ تم تغيير كلمة المرور بنجاح!'))
+                .then(() => msg('msg-admin', '✅ تم تغيير البيانات!'))
                 .catch(e => msg('msg-admin', '❌ خطأ', true));
             }
         }
-
         function msg(id, text, isError=false) {
             const el = document.getElementById(id);
-            el.innerHTML = text;
-            el.style.color = isError ? 'red' : 'green';
+            el.innerHTML = text; el.style.color = isError ? 'red' : 'green';
         }
 
-        // جلب البيانات عند الفتح
         db.ref().once('value').then(snap => {
             const d = snap.val();
             if(!d) return;
             if(d.weekly_question) { document.getElementById('q-text').value = d.weekly_question.text; document.getElementById('q-winner').value = d.weekly_question.last_winner; }
             if(d.news_bar) document.getElementById('news-content').value = d.news_bar.text;
             if(d.top_student) { document.getElementById('std-name').value = d.top_student.name; document.getElementById('std-desc').value = d.top_student.category; }
-            // جلب اسم المستخدم الحالي لعرضه
-            if(d.admin_account) {
-                document.getElementById('new-admin-user').value = d.admin_account.username;
-                document.getElementById('new-admin-pass').value = d.admin_account.password;
-            }
+            if(d.admin_account) { document.getElementById('new-admin-user').value = d.admin_account.username; document.getElementById('new-admin-pass').value = d.admin_account.password; }
         });
     </script>
 </body>
