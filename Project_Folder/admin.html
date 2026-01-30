@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة القيادة - حلقات الثريا</title>
+    <title>لوحة القيادة</title>
     
     <script>
-        // هذا الكود يعمل قبل تحميل الصفحة
-        // يفحص هل يوجد "تصريح دخول" في المتصفح أم لا
+        // 1. هل المستخدم دخل من قبل ومعه التذكرة؟
         const token = localStorage.getItem('admin_token');
         
-        // إذا لم يجد التصريح الصحيح، يطرد المستخدم فوراً
-        if (token !== 'access_granted_secure_v2') {
-            window.location.href = "index.html"; 
+        // 2. إذا لم يجد التذكرة، يطرده
+        if (token !== 'SECRET_PASS_123') {
+            // نستخدم replace بدلاً من href لكي لا يستطيع الضغط على زر "رجوع"
+            window.location.replace("index.html"); 
         }
+        // إذا التذكرة موجودة، سيكمل تحميل الصفحة بشكل طبيعي
     </script>
     <link rel="stylesheet" href="css/main.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
