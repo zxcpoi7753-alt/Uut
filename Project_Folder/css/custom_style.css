@@ -1,0 +1,170 @@
+/* ============================================================
+   ملف: css/custom_style.css
+   الوظيفة: تنسيقات خاصة بالواجهة (التحميل، الإشعارات، الجداول)
+   تم فصلها من index.html لتخفيف الكود
+   ============================================================ */
+
+/* --- 1. شاشة التحميل (Loader) --- */
+#site-loader { 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: #ffffff; 
+    z-index: 9999999; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    flex-direction: column; 
+    transition: opacity 0.5s ease; 
+}
+
+.spinner { 
+    border: 5px solid #f3f3f3; 
+    border-top: 5px solid #047857; 
+    border-radius: 50%; 
+    width: 50px; height: 50px; 
+    animation: spin 1s linear infinite; 
+    margin-bottom: 20px; 
+}
+
+@keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+}
+
+/* --- 2. وضع الصيانة --- */
+#maintenance-mode { 
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: #1e293b; 
+    color: white; 
+    z-index: 999999; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    text-align: center; 
+}
+
+/* --- 3. الإشعار المنبثق (Popup) --- */
+.popup-overlay { 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.85); 
+    z-index: 20000; 
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+}
+
+.popup-content { 
+    background: white; 
+    padding: 30px; 
+    border-radius: 15px; 
+    max-width: 90%; width: 400px; 
+    text-align: center; 
+    border: 3px solid var(--accent-color); 
+    animation: popUp 0.4s ease; 
+}
+
+.dont-show-again { 
+    margin-top: 10px; 
+    font-size: 0.8rem; 
+    color: gray; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 5px; 
+}
+
+/* --- 4. تنسيق البطاقات الديناميكية --- */
+.custom-dynamic-card {
+    background: white; 
+    border-radius: 10px; 
+    padding: 15px; 
+    margin-bottom: 15px;
+    border: 1px solid #eee; 
+    border-right-width: 4px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+.custom-dynamic-card h3 { margin-top: 0; margin-bottom: 10px; }
+.custom-dynamic-card:active { transform: scale(0.98); }
+
+/* --- 5. تنسيق الجداول المتقدمة (الأكورديون) --- */
+.time-group-title {
+    background: var(--bg-light); 
+    border-right: 5px solid var(--accent-color);
+    padding: 10px 15px; 
+    margin: 20px 0 10px 0; 
+    font-weight: bold; 
+    color: var(--primary-color);
+    border-radius: 5px; 
+    font-size: 1.1rem;
+}
+
+.ring-accordion-btn {
+    width: 100%; 
+    text-align: right; 
+    background: white; 
+    border: 1px solid #e2e8f0;
+    padding: 15px; 
+    margin-bottom: 5px; 
+    border-radius: 8px; 
+    cursor: pointer;
+    font-weight: bold; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    transition: 0.2s; 
+    color: #334155;
+}
+
+.ring-accordion-btn:hover { background: #f8fafc; border-color: var(--accent-color); }
+.ring-accordion-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+
+.ring-schedule-panel {
+    display: none; 
+    padding: 10px; 
+    background: white; 
+    border: 1px solid #e2e8f0;
+    border-top: none; 
+    border-radius: 0 0 8px 8px; 
+    margin-bottom: 10px; 
+    animation: slideDown 0.3s ease;
+}
+
+.schedule-table-simple { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.schedule-table-simple th, .schedule-table-simple td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+.schedule-table-simple th { background: #f1f5f9; color: var(--primary-color); }
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- 6. تنسيق المعلمين (القائمة الجديدة) --- */
+.teacher-row {
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    padding: 12px;
+    background: white; 
+    border-bottom: 1px solid #eee; 
+    transition: 0.2s;
+}
+.teacher-row:last-child { border-bottom: none; }
+
+.teacher-icon { 
+    font-size: 1.2rem; 
+    color: var(--accent-color); 
+    background: #eff6ff; 
+    width: 35px; height: 35px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    border-radius: 50%; 
+}
+
+.teacher-info h4 { margin: 0; font-size: 1rem; color: #333; }
+.teacher-info p { margin: 2px 0 0 0; font-size: 0.85rem; color: gray; }
