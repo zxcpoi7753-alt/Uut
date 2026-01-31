@@ -3,158 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - الحماية الكاملة 🔐</title>
+    <title>لوحة التحكم الشاملة - الثريا V3</title>
     
     <link rel="stylesheet" href="css/admin_style.css">
-    
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
-
-<body style="display: none;">
+<body>
 
     <aside class="sidebar">
-        <div class="brand"><i class="fas fa-user-shield"></i> لوحة الإدارة الآمنة</div>
+        <div class="brand"><i class="fas fa-cogs"></i> لوحة التحكم V3</div>
         <ul class="menu">
             <li><a onclick="showTab('tab-general')" class="active"><i class="fas fa-sliders-h"></i> الإعدادات العامة</a></li>
             <li><a onclick="showTab('tab-sections')"><i class="fas fa-eye"></i> إظهار/إخفاء الأقسام</a></li>
             <li><a onclick="showTab('tab-cards')"><i class="fas fa-th-large"></i> الأزرار والبطاقات</a></li>
             <li><a onclick="showTab('tab-complex-schedule')"><i class="fas fa-calendar-alt"></i> الجداول الدراسية</a></li>
             <li><a onclick="showTab('tab-teachers')"><i class="fas fa-chalkboard-teacher"></i> المعلمون</a></li>
-            <li><a onclick="showTab('tab-ranks')"><i class="fas fa-trophy"></i> الأوائل</a></li>
+            <li><a onclick="showTab('tab-ranks')"><i class="fas fa-medal"></i> أوائل الحلقات</a></li>
             <li><a onclick="showTab('tab-holidays')"><i class="fas fa-umbrella-beach"></i> الإجازات</a></li>
-            <li><a onclick="showTab('tab-news')"><i class="fas fa-newspaper"></i> الأخبار والمحتوى</a></li>
-            <li style="margin-top:auto;"><a onclick="logout()" style="color:#ef4444; cursor:pointer;"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a></li>
+            <li><a onclick="showTab('tab-news')"><i class="fas fa-newspaper"></i> الأخبار ومن نحن</a></li>
+            <li style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1);">
+                <a onclick="logout()" style="color: #fca5a5;"><i class="fas fa-sign-out-alt"></i> خروج</a>
+            </li>
         </ul>
     </aside>
 
-    <main class="main">
+    <div class="main">
         <div class="header">
-            <h2>أهلاً بك 👋</h2>
-            <div style="font-size:0.9rem; color:gray;" id="admin-email-display">جاري التحقق من الهوية...</div>
+            <h2 id="page-title">⚙️ الإعدادات العامة</h2>
+            <a href="index.html" target="_blank" class="btn btn-primary" style="text-decoration:none;">معاينة الموقع <i class="fas fa-external-link-alt"></i></a>
         </div>
 
         <div id="tab-general" class="panel active">
+            <div class="card border-red">
+                <h3><i class="fas fa-power-off"></i> حالة الموقع</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><strong>تفعيل وضع الصيانة</strong><p style="margin:5px 0 0 0; color:gray; font-size:0.85rem;">يغلق الموقع وتظهر رسالة صيانة.</p></div>
+                    <label class="switch"><input type="checkbox" id="toggle_maint"><span class="slider"></span></label>
+                </div>
+            </div>
             <div class="card border-blue">
-                <h3><i class="fas fa-tools"></i> حالة الموقع</h3>
-                <div class="form-group">
-                    <label class="switch">
-                        <input type="checkbox" id="toggle_maint">
-                        <span class="slider"></span>
-                    </label>
-                    <span style="margin-right:10px; font-weight:bold;">وضع الصيانة (إغلاق الموقع)</span>
-                </div>
-                <div class="form-group">
-                    <label>رابط فيديو الهيدر (MP4):</label>
-                    <input type="text" id="inp_video" class="input-field" placeholder="https://example.com/video.mp4">
-                </div>
-                <button onclick="saveGeneral()" class="btn btn-success">حفظ التغييرات</button>
-            </div>
-
-            <div class="card border-green">
-                <h3><i class="fas fa-heading"></i> نصوص الهيدر</h3>
-                <div class="form-grid">
-                    <div class="form-group"><label>العنوان الكبير:</label><input type="text" id="inp_header_title" class="input-field"></div>
-                    <div class="form-group"><label>العنوان الفرعي:</label><input type="text" id="inp_header_subtitle" class="input-field"></div>
-                    <div class="form-group"><label>الموقع:</label><input type="text" id="inp_header_location" class="input-field"></div>
-                </div>
-                <button onclick="saveGeneral()" class="btn btn-success">تحديث النصوص</button>
-            </div>
-
-            <div class="card">
                 <h3><i class="fas fa-bell"></i> الإشعار المنبثق</h3>
-                <div class="form-group"><label class="switch"><input type="checkbox" id="notify_active"><span class="slider"></span></label> تفعيل</div>
-                <div class="form-group"><label>العنوان:</label><input type="text" id="notify_title" class="input-field"></div>
-                <div class="form-group"><label>النص:</label><textarea id="notify_body" class="input-field" rows="3"></textarea></div>
-                <button onclick="saveNotification()" class="btn btn-primary">حفظ الإشعار</button>
+                <div style="margin-bottom:15px; background:#eff6ff; padding:10px; border-radius:5px;"><label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="notify_active"> <strong>تفعيل الإشعار؟</strong></label></div>
+                <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="notify_title" class="input-field"></div><div class="form-group"><label>النص:</label><input type="text" id="notify_body" class="input-field"></div></div>
+                <button onclick="saveNotification()" class="btn btn-primary" style="margin-top:10px;">حفظ الإشعار</button>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-edit"></i> نصوص الهيدر</h3>
+                <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="inp_header_title" class="input-field"></div><div class="form-group"><label>الوصف:</label><input type="text" id="inp_header_subtitle" class="input-field"></div><div class="form-group"><label>الموقع:</label><input type="text" id="inp_header_location" class="input-field"></div><div class="form-group"><label>فيديو الخلفية:</label><input type="text" id="inp_video" class="input-field"></div></div>
+                <button onclick="saveGeneral()" class="btn btn-primary" style="margin-top:15px;">💾 حفظ الإعدادات</button>
             </div>
         </div>
 
         <div id="tab-sections" class="panel">
             <div class="card">
-                <h3>التحكم في ظهور الأقسام</h3>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                    <label class="dynamic-item"><input type="checkbox" id="show_news"> شريط الأخبار</label>
-                    <label class="dynamic-item"><input type="checkbox" id="show_question"> سؤال الأسبوع</label>
-                    <label class="dynamic-item"><input type="checkbox" id="show_student"> تسجيل الطالب</label>
-                    <label class="dynamic-item"><input type="checkbox" id="show_ranks"> لوحة الأوائل</label>
-                    <label class="dynamic-item"><input type="checkbox" id="show_schedule"> الجداول الدراسية</label>
-                    <label class="dynamic-item"><input type="checkbox" id="show_teachers"> المعلمين</label>
-                </div>
-                <br>
-                <button onclick="saveSections()" class="btn btn-primary">تحديث الواجهة</button>
+                <h3><i class="fas fa-eye"></i> التحكم بظهور الأقسام</h3>
+                <div class="dynamic-item"><span>📢 الأخبار</span><label class="switch"><input type="checkbox" id="show_news"><span class="slider"></span></label></div>
+                <div class="dynamic-item"><span>🎓 نجم الأسبوع</span><label class="switch"><input type="checkbox" id="show_student"><span class="slider"></span></label></div>
+                <div class="dynamic-item"><span>❓ السؤال الأسبوعي</span><label class="switch"><input type="checkbox" id="show_question"><span class="slider"></span></label></div>
+                <div class="dynamic-item"><span>🏆 أوائل الحلقات</span><label class="switch"><input type="checkbox" id="show_ranks"><span class="slider"></span></label></div>
+                <div class="dynamic-item"><span>📅 الجداول</span><label class="switch"><input type="checkbox" id="show_schedule"><span class="slider"></span></label></div>
+                <div class="dynamic-item"><span>👨‍🏫 المعلمون</span><label class="switch"><input type="checkbox" id="show_teachers"><span class="slider"></span></label></div>
+                <button onclick="saveSections()" class="btn btn-primary">💾 حفظ الحالة</button>
             </div>
         </div>
 
         <div id="tab-cards" class="panel">
-            <div class="card">
-                <h3><i class="fas fa-plus-circle"></i> إضافة زر جديد</h3>
-                <div class="form-grid">
-                    <div class="form-group"><label>العنوان:</label><input type="text" id="card_title" class="input-field"></div>
-                    <div class="form-group"><label>اللون:</label><input type="color" id="card_color" class="input-field" value="#047857" style="height:40px;"></div>
-                    <div class="form-group"><label>النص:</label><input type="text" id="card_text" class="input-field"></div>
-                    <div class="form-group"><label>نص الزر:</label><input type="text" id="card_btn_text" class="input-field" value="اضغط هنا"></div>
-                    <div class="form-group"><label>الرابط:</label><input type="text" id="card_link" class="input-field"></div>
-                </div>
-                <button onclick="addCustomCard()" class="btn btn-success">إضافة</button>
+            <div class="card border-blue">
+                <h3><i class="fas fa-plus-circle"></i> إضافة بطاقة جديدة</h3>
+                <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="card_title" class="input-field"></div><div class="form-group"><label>اللون:</label><input type="color" id="card_color" class="input-field" style="height:45px;" value="#3b82f6"></div></div>
+                <div class="form-group"><label>النص:</label><textarea id="card_text" class="input-field" rows="3"></textarea></div>
+                <div class="form-grid"><div class="form-group"><label>نص الزر:</label><input type="text" id="card_btn_text" class="input-field"></div><div class="form-group"><label>الرابط:</label><input type="text" id="card_link" class="input-field"></div></div>
+                <button onclick="addCustomCard()" class="btn btn-success"><i class="fas fa-plus"></i> إضافة</button>
             </div>
-            <div class="card">
-                <h3>الأزرار الحالية</h3>
-                <div id="custom-cards-list-admin"></div>
-            </div>
+            <div class="card"><h3><i class="fas fa-th-list"></i> البطاقات الحالية</h3><div id="custom-cards-list-admin"></div></div>
         </div>
 
         <div id="tab-complex-schedule" class="panel">
-            <div class="card">
-                <h3><i class="fas fa-clock"></i> إضافة جدول لحلقة</h3>
-                <div class="form-grid">
-                    <div class="form-group"><label>الفترة:</label><select id="comp_sch_time"><option value="time_1">عصراً</option><option value="time_2">مغرباً</option></select></div>
-                    <div class="form-group"><label>اسم الحلقة:</label><input type="text" id="comp_sch_name" class="input-field"></div>
-                </div>
-                <table class="complex-table-builder">
-                    <tr><th>السبت</th><th>الأحد</th><th>الاثنين</th></tr>
-                    <tr><td><input id="d_sat" placeholder="-"></td><td><input id="d_sun" placeholder="-"></td><td><input id="d_mon" placeholder="-"></td></tr>
-                    <tr><th>الثلاثاء</th><th>الأربعاء</th><th>الخميس</th></tr>
-                    <tr><td><input id="d_tue" placeholder="-"></td><td><input id="d_wed" placeholder="-"></td><td><input id="d_thu" placeholder="-"></td></tr>
-                </table>
-                <button onclick="addComplexSchedule()" class="btn btn-primary" style="margin-top:10px;">حفظ الجدول</button>
+            <div class="card border-green">
+                <h3><i class="fas fa-calendar-plus"></i> إضافة حلقة</h3>
+                <div class="form-grid"><div class="form-group"><label>الوقت:</label><select id="comp_sch_time" class="input-field"><option value="time_1">☀️ عصر</option><option value="time_2">🌙 مغرب</option></select></div><div class="form-group"><label>الاسم:</label><input type="text" id="comp_sch_name" class="input-field"></div></div>
+                <div class="form-grid" style="background:#f8fafc; padding:15px; margin-top:10px;"><div class="form-group"><label>السبت:</label><input type="text" id="d_sat" class="input-field"></div><div class="form-group"><label>الأحد:</label><input type="text" id="d_sun" class="input-field"></div><div class="form-group"><label>الاثنين:</label><input type="text" id="d_mon" class="input-field"></div><div class="form-group"><label>الثلاثاء:</label><input type="text" id="d_tue" class="input-field"></div><div class="form-group"><label>الأربعاء:</label><input type="text" id="d_wed" class="input-field"></div><div class="form-group"><label>الخميس:</label><input type="text" id="d_thu" class="input-field"></div></div>
+                <button onclick="addComplexSchedule()" class="btn btn-success" style="margin-top:15px;"><i class="fas fa-plus"></i> إضافة</button>
             </div>
-            <div class="card"><h3>الجداول الحالية</h3><div id="complex-schedule-list-admin"></div></div>
+            <div class="card"><h3><i class="fas fa-list-alt"></i> الجداول الحالية</h3><div id="complex-schedule-list-admin"></div></div>
         </div>
 
         <div id="tab-teachers" class="panel">
-            <div class="card">
-                <h3>إضافة معلم</h3>
-                <div class="form-grid">
-                    <div class="form-group"><label>الاسم:</label><input type="text" id="t_name_v2" class="input-field"></div>
-                    <div class="form-group"><label>الدور/الحلقة:</label><input type="text" id="t_role_v2" class="input-field"></div>
-                </div>
-                <button onclick="addTeacherV2()" class="btn btn-primary">إضافة</button>
+            <div class="card border-blue">
+                <h3><i class="fas fa-user-plus"></i> إضافة معلم</h3>
+                <div class="form-grid"><div class="form-group"><label>الاسم:</label><input type="text" id="t_name_v2" class="input-field"></div><div class="form-group"><label>الدور:</label><input type="text" id="t_role_v2" class="input-field"></div></div>
+                <button onclick="addTeacherV2()" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة</button>
             </div>
-            <div class="card"><h3>قائمة المعلمين</h3><div id="teachers-list-v2-admin"></div></div>
+            <div class="card"><h3><i class="fas fa-users"></i> القائمة</h3><div id="teachers-list-v2-admin"></div></div>
         </div>
 
         <div id="tab-ranks" class="panel">
-            <div class="card">
-                <h3>إضافة طالب متميز</h3>
-                <div class="form-grid">
-                    <div class="form-group"><label>الترتيب:</label><select id="rank_num"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-                    <div class="form-group"><label>اسم الطالب:</label><input type="text" id="rank_name" class="input-field"></div>
-                    <div class="form-group"><label>الحلقة:</label><input type="text" id="rank_ring" class="input-field"></div>
-                </div>
-                <button onclick="addRank()" class="btn btn-primary">إضافة</button>
+            <div class="card border-green">
+                <h3><i class="fas fa-medal"></i> إضافة طالب</h3>
+                <div class="form-grid"><div class="form-group"><label>المركز:</label><select id="rank_num" class="input-field"><option value="1">1 🥇</option><option value="2">2 🥈</option><option value="3">3 🥉</option><option value="4">4</option><option value="5">5</option></select></div><div class="form-group"><label>الطالب:</label><input type="text" id="rank_name" class="input-field"></div><div class="form-group"><label>الحلقة:</label><input type="text" id="rank_ring" class="input-field"></div></div>
+                <button onclick="addRank()" class="btn btn-success"><i class="fas fa-plus"></i> إضافة</button>
             </div>
-            <div class="card"><h3>قائمة الأوائل</h3><div id="ranks-list-admin"></div></div>
+            <div class="card"><h3><i class="fas fa-list-ol"></i> القائمة</h3><div id="ranks-list-admin"></div></div>
         </div>
 
         <div id="tab-holidays" class="panel">
-            <div class="card">
-                <h3>إضافة إجازة/مناسبة</h3>
-                <div class="form-group"><label>النص:</label><input type="text" id="holiday_txt" class="input-field" placeholder="مثال: إجازة عيد الفطر"></div>
+            <div class="card border-red">
+                <h3><i class="fas fa-umbrella-beach"></i> إضافة إجازة</h3>
+                <div class="form-group"><label>النص:</label><input type="text" id="holiday_txt" class="input-field"></div>
                 <button onclick="addHoliday()" class="btn btn-danger"><i class="fas fa-plus"></i> إضافة</button>
             </div>
             <div class="card"><h3><i class="fas fa-list"></i> القائمة</h3><div id="holidays-list-admin"></div></div>
@@ -165,8 +122,11 @@
             <div class="card"><h3><i class="fas fa-question-circle"></i> السؤال</h3><div class="form-group"><label>السؤال:</label><textarea id="inp_q_text" class="input-field" rows="2"></textarea></div><div class="form-group"><label>الفائز:</label><input type="text" id="inp_q_winner" class="input-field"></div><button onclick="saveQuestion()" class="btn btn-primary">تحديث</button></div>
             <div class="card"><h3><i class="fas fa-info-circle"></i> من نحن</h3><textarea id="inp_about_content" class="input-field" rows="6"></textarea><button onclick="saveAbout()" class="btn btn-primary" style="margin-top:10px;">حفظ</button></div>
         </div>
-    </main>
+    </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
     <script src="js/admin_logic.js"></script>
 
 </body>
