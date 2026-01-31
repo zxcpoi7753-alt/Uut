@@ -29,74 +29,17 @@ try {
         const data = snapshot.val();
         if (data) {
             console.log("🔄 تحديث البيانات من السيرفر...");
+            
             // تحديث الكاش
             localStorage.setItem('site_cache_v3', JSON.stringify(data));
+            
             // تحديث الواجهة
             applyAllData(data);
-
-
-// ==========================================
-// 🎉 منطق الترحيب الذكي (نسخة الفحص - Debug)
-// ==========================================
-function handleSmartWelcome(settings) {
-    console.log("🔎 فحص الترحيب الذكي...");
-
-    // 1. التحقق من وجود الإعدادات في قاعدة البيانات
-    if (!settings || !settings.welcome_screen) {
-        console.warn("⚠️ لم يتم العثور على إعدادات الترحيب في قاعدة البيانات. (الرجاء الحفظ من لوحة التحكم)");
-        return;
-    }
-
-    // 2. التحقق هل هي مفعلة أم لا
-    if (settings.welcome_screen.active !== true) {
-        console.log("ℹ️ الترحيب معطل من لوحة التحكم.");
-        return;
-    }
-
-    // 3. التحقق من الوقت (12 ساعة)
-    const lastSeen = localStorage.getItem('welcome_last_seen_time');
-    const now = new Date().getTime();
-    const hours = 12; 
-    const diff = now - (lastSeen || 0);
-
-    console.log(`🕒 الوقت المنقضي منذ آخر ظهور: ${(diff / (1000 * 60)).toFixed(1)} دقيقة`);
-
-    // الشرط: إذا مر الوقت المحدد
-    if (diff > (hours * 60 * 60 * 1000)) {
-        console.log("✅ الشروط تحققت! جاري إظهار الترحيب.");
-        showWelcomeOverlay(settings.welcome_screen);
-        localStorage.setItem('welcome_last_seen_time', now);
-    } else {
-        console.log("⏳ لم يحن الوقت بعد للظهور مرة أخرى.");
-    }
-}
-
-function showWelcomeOverlay(config) {
-    const overlay = document.getElementById('welcome-overlay');
-    if(!overlay) return console.error("❌ عنصر welcome-overlay غير موجود في HTML");
-
-    const titleEl = document.getElementById('welcome-title');
-    const msgEl = document.getElementById('welcome-text');
-    
-    // جلب اسم الطالب
-    let studentName = localStorage.getItem('studentName') || "يا بطل";
-    
-    // النصوص
-    titleEl.innerText = config.title || "أهلاً بك";
-    let message = config.message || "نورتنا يا {name}";
-    message = message.replace("{name}", studentName);
-    msgEl.innerText = message;
-
-    // إظهار
-    overlay.style.display = 'flex';
-    
-    // إخفاء تلقائي
-    setTimeout(() => {
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.style.display = 'none', 500);
-    }, 2500); // يظهر لمدة 2.5 ثانية
-}
-
+            
+            // تشغيل منطق الترحيب الذكي
+            handleSmartWelcome(data.settings);
+        }
+    });
 
 } catch (error) { console.error("Firebase Error:", error); }
 
@@ -116,35 +59,52 @@ function applyAllData(data) {
 
 
 // ==========================================
-// 🎉 منطق الترحيب الذكي
+// 🎉 منطق الترحيب الذكي (نسخة الفحص - Debug)
 // ==========================================
 function handleSmartWelcome(settings) {
-    if (!settings || !settings.welcome_screen || settings.welcome_screen.active === false) return;
+    console.log("🔎 فحص الترحيب الذكي...");
 
+    // 1. التحقق من وجود الإعدادات
+    if (!settings || !settings.welcome_screen) {
+        console.warn("⚠️ لم يتم العثور على إعدادات الترحيب (يرجى الحفظ من لوحة التحكم)");
+        return;
+    }
+
+    // 2. التحقق هل هي مفعلة
+    if (settings.welcome_screen.active !== true) {
+        console.log("ℹ️ الترحيب معطل من لوحة التحكم.");
+        return;
+    }
+
+    // 3. التحقق من الوقت (12 ساعة)
     const lastSeen = localStorage.getItem('welcome_last_seen_time');
     const now = new Date().getTime();
-    const hours = 12; // ⏳ عدد الساعات قبل الظهور مرة أخرى
+    const hours = 12; 
     const diff = now - (lastSeen || 0);
 
-    // إذا مر 12 ساعة أو أول مرة
+    console.log(`🕒 الوقت المنقضي: ${(diff / (1000 * 60)).toFixed(1)} دقيقة`);
+
     if (diff > (hours * 60 * 60 * 1000)) {
+        console.log("✅ الشروط تحققت! جاري الإظهار.");
         showWelcomeOverlay(settings.welcome_screen);
         localStorage.setItem('welcome_last_seen_time', now);
+    } else {
+        console.log("⏳ لم يحن الوقت بعد.");
     }
 }
 
 function showWelcomeOverlay(config) {
     const overlay = document.getElementById('welcome-overlay');
+    if(!overlay) return;
+
     const titleEl = document.getElementById('welcome-title');
     const msgEl = document.getElementById('welcome-text');
     
-    // جلب اسم الطالب المحفوظ
+    // جلب اسم الطالب
     let studentName = localStorage.getItem('studentName') || "يا بطل";
     
-    // إعداد النصوص
+    // النصوص
     titleEl.innerText = config.title || "أهلاً بك";
-    
-    // استبدال {name} باسم الطالب الحقيقي
     let message = config.message || "نورتنا يا {name}";
     message = message.replace("{name}", studentName);
     msgEl.innerText = message;
@@ -152,7 +112,7 @@ function showWelcomeOverlay(config) {
     // إظهار
     overlay.style.display = 'flex';
     
-    // إخفاء تلقائي بعد 2.5 ثانية
+    // إخفاء تلقائي
     setTimeout(() => {
         overlay.style.opacity = '0';
         setTimeout(() => overlay.style.display = 'none', 500);
@@ -184,13 +144,15 @@ function applySettings(data) {
     const popup = document.getElementById('site-notification');
     const dontShow = localStorage.getItem('dont_show_popup');
     
-    // يظهر فقط إذا: (مفعل) + (لم يختر عدم الإظهار) + (لم يظهر الترحيب للتو حتى لا تتداخل)
-    // سنجعله يتأخر قليلاً
     if(s.popup_active === true && dontShow !== 'true') {
+        // تأخير بسيط لعدم التداخل مع الترحيب
         setTimeout(() => {
              const overlay = document.getElementById('welcome-overlay');
-             if(overlay.style.display === 'none') popup.style.display = 'flex';
-        }, 3000); // تأخير لضمان عدم التداخل مع الترحيب
+             // يظهر فقط إذا اختفى الترحيب
+             if(overlay.style.display === 'none' || overlay.style.opacity === '0') {
+                 popup.style.display = 'flex';
+             }
+        }, 3000);
         
         document.getElementById('notif-title').innerText = s.popup_title || "تنبيه";
         document.getElementById('notif-body').innerText = s.popup_body || "...";
