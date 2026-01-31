@@ -55,6 +55,27 @@
                 <button onclick="saveGeneral()" class="btn btn-primary" style="margin-top:15px;">💾 حفظ الإعدادات</button>
             </div>
         </div>
+                    <div class="card border-green">
+                <h3><i class="fas fa-hand-sparkles"></i> شاشة الترحيب الذكية</h3>
+                <div style="margin-bottom:15px; background:#f0fdf4; padding:10px; border-radius:5px;">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" id="welcome_active"> 
+                        <strong>تفعيل الترحيب؟</strong>
+                    </label>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>العنوان (مثلاً: أهلاً بك):</label>
+                        <input type="text" id="welcome_title_inp" class="input-field">
+                    </div>
+                    <div class="form-group">
+                        <label>الرسالة (استخدم {name} لاسم الطالب):</label>
+                        <input type="text" id="welcome_msg_inp" class="input-field" placeholder="نورتنا يا {name}">
+                    </div>
+                </div>
+                <button onclick="saveWelcomeSettings()" class="btn btn-success" style="margin-top:10px;">حفظ إعدادات الترحيب</button>
+            </div>
+
 
         <div id="tab-sections" class="panel">
             <div class="card">
