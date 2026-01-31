@@ -218,6 +218,14 @@ db.ref().on('value', (snapshot) => {
         if(document.getElementById('notify_title')) document.getElementById('notify_title').value = d.settings.popup_title || "";
         if(document.getElementById('notify_body')) document.getElementById('notify_body').value = d.settings.popup_body || "";
         
+        // --- (جديد) إعدادات الترحيب الذكي ---
+        if(d.settings.welcome_screen) {
+            const w = d.settings.welcome_screen;
+            if(document.getElementById('welcome_active')) document.getElementById('welcome_active').checked = w.active;
+            if(document.getElementById('welcome_title_inp')) document.getElementById('welcome_title_inp').value = w.title || "";
+            if(document.getElementById('welcome_msg_inp')) document.getElementById('welcome_msg_inp').value = w.message || "";
+        }
+
         ['news','student','question','ranks','schedule','teachers'].forEach(k => {
             const el = document.getElementById('show_'+k);
             if(el) el.checked = d.settings['show_'+k];
@@ -244,6 +252,7 @@ db.ref().on('value', (snapshot) => {
     renderList('holidays-list-admin', d.holidays_list, 'holiday');
     renderComplexScheduleAdmin(d.schedule_complex);
 });
+
 
 // ==========================================
 // 6. دوال الرسم المساعدة
