@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: js/custom_logic.js
-   الوظيفة: جلب البيانات (كاش + مباشر) + الترحيب الذكي
+   الوظيفة: جلب البيانات (كاش + مباشر) + الترحيب الذكي (نسخة الفحص)
    ============================================================ */
 
 const firebaseConfig = {
@@ -16,15 +16,14 @@ try {
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 🚀 1. التحميل الفوري من الكاش (السرعة القصوى)
+    // 🚀 1. التحميل الفوري من الكاش
     const cachedData = localStorage.getItem('site_cache_v3');
     if (cachedData) {
         console.log("⚡ تحميل من الذاكرة المحلية...");
-        const data = JSON.parse(cachedData);
-        applyAllData(data); // عرض الموقع فوراً
+        applyAllData(JSON.parse(cachedData));
     }
 
-    // 🌐 2. الاتصال بفايربيس لجلب التحديثات (في الخلفية)
+    // 🌐 2. الاتصال بفايربيس
     db.ref().on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -36,7 +35,7 @@ try {
             // تحديث الواجهة
             applyAllData(data);
             
-            // تشغيل منطق الترحيب الذكي
+            // تشغيل منطق الترحيب الذكي (استدعاء الدالة)
             handleSmartWelcome(data.settings);
         }
     });
@@ -45,7 +44,7 @@ try {
 
 
 // ==========================================
-// دالة التطبيق الشاملة (تستخدم للكاش وللبيانات الجديدة)
+// دالة التطبيق الشاملة
 // ==========================================
 function applyAllData(data) {
     applySettings(data);
@@ -59,36 +58,55 @@ function applyAllData(data) {
 
 
 // ==========================================
-// 🕵️‍♂️ دالة تشخيص المشكلة (ستظهر رسالة منبثقة تخبرك بالخطأ)
+// 🕵️‍♂️ دالة تشخيص الترحيب (Debug Mode)
 // ==========================================
 function handleSmartWelcome(settings) {
-    // 1. فحص وجود التصميم في الصفحة
+    // 1. فحص وجود التصميم في HTML
     const overlay = document.getElementById('welcome-overlay');
     if (!overlay) {
-        alert("❌ خطأ فادح: كود HTML الخاص بالشاشة غير موجود في ملف index.html! \nتأكد أنك نسخت كود <div id='welcome-overlay'>...");
+        alert("❌ خطأ: كود HTML (welcome-overlay) غير موجود في ملف index.html");
         return;
     }
 
-    // 2. فحص الاتصال بقاعدة البيانات
+    // 2. فحص الإعدادات في قاعدة البيانات
     if (!settings || !settings.welcome_screen) {
-        alert("⚠️ تنبيه: لم يتم العثور على الإعدادات في Firebase. \nالحل: اذهب لصفحة الأدمن > الإعدادات العامة > واضغط 'حفظ إعدادات الترحيب'.");
+        alert("⚠️ تنبيه: إعدادات الترحيب غير موجودة في قاعدة البيانات.\nالحل: اذهب للأدمن > الإعدادات العامة > اضغط 'حفظ إعدادات الترحيب'.");
         return;
     }
 
-    // 3. فحص زر التفعيل
+    // 3. فحص التفعيل
     if (settings.welcome_screen.active !== true) {
-        alert("ℹ️ معلومة: ميزة الترحيب 'معطلة' من لوحة التحكم. \nالحل: فعل خيار 'تفعيل الترحيب' في الأدمن واضغط حفظ.");
+        alert("ℹ️ تنبيه: الترحيب 'معطل' من زر التفعيل في الأدمن.");
         return;
     }
 
-    // 4. إذا وصلنا هنا، فكل شيء سليم! سأجبر الشاشة على الظهور
-    // (ألغيت فحص الوقت مؤقتاً لكي تظهر لك الآن فوراً)
-    console.log("✅ الفحص ناجح. جاري الإظهار...");
-    
-    // إجبار الظهور (تجاوزنا فحص الوقت)
+    // 4. إذا وصلنا هنا، نظهر الشاشة فوراً (تجاوزنا الوقت للتجربة)
     showWelcomeOverlay(settings.welcome_screen);
 }
 
+function showWelcomeOverlay(config) {
+    const overlay = document.getElementById('welcome-overlay');
+    const titleEl = document.getElementById('welcome-title');
+    const msgEl = document.getElementById('welcome-text');
+    
+    // جلب اسم الطالب
+    let studentName = localStorage.getItem('studentName') || "يا بطل";
+    
+    // النصوص
+    titleEl.innerText = config.title || "أهلاً بك";
+    let message = config.message || "نورتنا يا {name}";
+    message = message.replace("{name}", studentName);
+    msgEl.innerText = message;
+
+    // إظهار
+    overlay.style.display = 'flex';
+    
+    // إخفاء تلقائي بعد 3 ثواني
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 500);
+    }, 3000);
+}
 
 
 // ==========================================
@@ -116,14 +134,13 @@ function applySettings(data) {
     const dontShow = localStorage.getItem('dont_show_popup');
     
     if(s.popup_active === true && dontShow !== 'true') {
-        // تأخير بسيط لعدم التداخل مع الترحيب
         setTimeout(() => {
              const overlay = document.getElementById('welcome-overlay');
-             // يظهر فقط إذا اختفى الترحيب
+             // يظهر فقط إذا اختفت شاشة الترحيب
              if(overlay.style.display === 'none' || overlay.style.opacity === '0') {
                  popup.style.display = 'flex';
              }
-        }, 3000);
+        }, 3500);
         
         document.getElementById('notif-title').innerText = s.popup_title || "تنبيه";
         document.getElementById('notif-body').innerText = s.popup_body || "...";
