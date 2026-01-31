@@ -1,4 +1,5 @@
-/* css/darkmode.css - ألوان الوضع الليلي فقط */
+/* css/darkmode.css - تحسينات شاملة للوضع الليلي */
+
 body.dark-mode {
     --primary-color: #34d399; 
     --text-dark: #f9fafb;
@@ -7,5 +8,42 @@ body.dark-mode {
     --border-color: #374151;
 }
 
-body.dark-mode th { color: #111827; }
-body.dark-mode .nav-btn.active { color: #111827; font-weight: 800; }
+/* إصلاح اختفاء النصوص في الجداول */
+body.dark-mode th { 
+    color: #111827; /* لون غامق للنص داخل الهيدر الأخضر الفاتح */
+}
+
+/* إصلاح الحقول (input, select, textarea) لتكون مقروءة */
+body.dark-mode input, 
+body.dark-mode select, 
+body.dark-mode textarea {
+    background-color: #374151; /* خلفية رمادية غامقة */
+    color: white; /* نص أبيض */
+    border-color: #4b5563;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+    color: #9ca3af; /* لون النص التوضيحي */
+}
+
+/* تحسين أزرار القوائم النشطة */
+body.dark-mode .nav-btn.active { 
+    color: #111827; 
+    font-weight: 800; 
+}
+
+/* تحسين خلفية المودال (النافذة المنبثقة) */
+body.dark-mode .popup-content,
+body.dark-mode .welcome-card {
+    background-color: #1f2937;
+    color: white;
+    border-color: #374151;
+}
+
+body.dark-mode .welcome-title {
+    color: #34d399;
+}
+body.dark-mode .welcome-text {
+    color: #d1d5db;
+}
