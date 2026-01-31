@@ -1,27 +1,8 @@
 /* ============================================================
    ملف: js/admin_logic.js
-   الوظيفة: جميع العمليات البرمجية للوحة التحكم (حفظ، حذف، جلب)
+   الوظيفة: المنطق البرمجي للوحة التحكم (محمي بنظام Auth)
    ============================================================ */
 
-// ==========================================
-// 1. نظام الحماية والتوثيق
-// ==========================================
-const token = localStorage.getItem('admin_token');
-if (token !== 'SECRET_PASS_123') {
-    // إذا لم يكن المدير، طرده للصفحة الرئيسية
-    window.location.replace("index.html");
-}
-
-function logout() {
-    if(confirm("هل أنت متأكد من تسجيل الخروج؟")) {
-        localStorage.removeItem('admin_token');
-        window.location.replace("index.html");
-    }
-}
-
-// ==========================================
-// 2. إعدادات فايربيس (Firebase Config)
-// ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
     authDomain: "quran-app-93e24.firebaseapp.com",
@@ -34,42 +15,57 @@ const firebaseConfig = {
 // تهيئة الاتصال
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const auth = firebase.auth();
 
 // ==========================================
-// 3. أدوات التحكم بالواجهة (UI Helpers)
+// 1. نظام الحماية (The Gatekeeper)
+// ==========================================
+// يتم التحقق عند تحميل الصفحة
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        // المستخدم مسجل دخول كمدير - مرحباً به
+        console.log("Admin Logged in:", user.email);
+        // يمكنك هنا إظهار اسم المدير في القائمة إذا أردت
+    } else {
+        // لا يوجد مستخدم - طرد فوراً
+        console.warn("Unauthorized access attempt.");
+        window.location.replace("index.html");
+    }
+});
+
+function logout() {
+    if(confirm("هل أنت متأكد من تسجيل الخروج؟")) {
+        auth.signOut().then(() => {
+            window.location.replace("index.html");
+        }).catch((error) => {
+            console.error("Logout Error:", error);
+            alert("حدث خطأ أثناء الخروج");
+        });
+    }
+}
+
+// ==========================================
+// 2. أدوات التحكم بالواجهة (UI Helpers)
 // ==========================================
 
-// التنقل بين التبويبات (Tabs)
 function showTab(tabId) {
-    // إخفاء كل الأقسام
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    // إظهار القسم المطلوب
     document.getElementById(tabId).classList.add('active');
     
-    // تحديث القائمة الجانبية (active class)
     document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
-    // تحديد الزر الذي تم ضغطه (محاولة الوصول للأب a)
     if(event && event.target) {
         let target = event.target.closest('a');
         if(target) target.classList.add('active');
     }
 }
 
-// دوال مساعدة لاختصار الكود
-function val(id) { 
-    const el = document.getElementById(id);
-    return el ? el.value : ''; 
-}
-function isChecked(id) { 
-    const el = document.getElementById(id);
-    return el ? el.checked : false; 
-}
+function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function isChecked(id) { const el = document.getElementById(id); return el ? el.checked : false; }
 
 // ==========================================
-// 4. عمليات الحفظ (Save Operations)
+// 3. عمليات الحفظ (Save Operations)
 // ==========================================
 
-// أ. حفظ الإعدادات العامة
 function saveGeneral() {
     db.ref('site_content').update({
         txt_header_title: val('inp_header_title'),
@@ -82,7 +78,6 @@ function saveGeneral() {
     }).then(() => alert("✅ تم حفظ الإعدادات العامة"));
 }
 
-// ب. حفظ حالة الأقسام (إخفاء/إظهار)
 function saveSections() {
     db.ref('settings').update({
         show_news: isChecked('show_news'),
@@ -94,7 +89,6 @@ function saveSections() {
     }).then(() => alert("✅ تم تحديث ظهور الأقسام"));
 }
 
-// ج. حفظ الإشعار المنبثق
 function saveNotification() {
     db.ref('settings').update({
         popup_active: isChecked('notify_active'),
@@ -103,7 +97,6 @@ function saveNotification() {
     }).then(() => alert("✅ تم تحديث الإشعار"));
 }
 
-// د. حفظ النصوص (أخبار، سؤال، من نحن)
 function saveNewsBar() { 
     db.ref('news_bar').set({ text: val('inp_news_bar') }).then(()=>alert("✅ تم تحديث شريط الأخبار")); 
 }
@@ -115,7 +108,7 @@ function saveAbout() {
 }
 
 // ==========================================
-// 5. دوال الإضافة والحذف (CRUD)
+// 4. دوال الإضافة والحذف (CRUD)
 // ==========================================
 
 // --- البطاقات المخصصة ---
@@ -134,7 +127,6 @@ function addCustomCard() {
 
     db.ref('custom_cards').push(cardData).then(() => {
         alert("✅ تمت إضافة البطاقة");
-        // تفريغ الحقول
         document.getElementById('card_title').value = '';
         document.getElementById('card_text').value = '';
     });
@@ -143,11 +135,10 @@ function deleteCustomCard(key) {
     if(confirm("حذف هذه البطاقة نهائياً؟")) db.ref('custom_cards/' + key).remove();
 }
 
-// --- الجداول الدراسية (المعقدة) ---
+// --- الجداول الدراسية ---
 function addComplexSchedule() {
     const timeKey = val('comp_sch_time');
     const name = val('comp_sch_name');
-    
     if(!name) return alert("اكتب اسم الحلقة");
 
     const scheduleData = {
@@ -156,11 +147,9 @@ function addComplexSchedule() {
         tue: val('d_tue'), wed: val('d_wed'), thu: val('d_thu')
     };
 
-    // حفظ العنوان الرئيسي للفترة
     let timeTitle = (timeKey === 'time_1') ? '☀️ حلقات العصر' : '🌙 حلقات المغرب';
     db.ref(`schedule_complex/${timeKey}/title`).set(timeTitle);
 
-    // حفظ الحلقة
     db.ref(`schedule_complex/${timeKey}/rings`).push(scheduleData).then(() => {
         alert("✅ تم إضافة الجدول");
         document.getElementById('comp_sch_name').value = '';
@@ -176,10 +165,9 @@ function deleteComplexRing(timeKey, ringKey) {
 // --- المعلمون ---
 function addTeacherV2() {
     const name = val('t_name_v2');
-    const role = val('t_role_v2');
     if(!name) return alert("اكتب اسم المعلم");
 
-    db.ref('teachers_list_v2').push({ name: name, role: role })
+    db.ref('teachers_list_v2').push({ name: name, role: val('t_role_v2') })
     .then(() => {
         alert("✅ تم إضافة المعلم");
         document.getElementById('t_name_v2').value = '';
@@ -216,23 +204,20 @@ function deleteHoliday(key) { if(confirm("حذف الإجازة؟")) db.ref('hol
 
 
 // ==========================================
-// 6. مراقب البيانات (Realtime Listener)
+// 5. مراقب البيانات (Realtime Listener)
 // ==========================================
-// هذه الدالة تعمل تلقائياً عند فتح الصفحة أو عند حدوث أي تغيير في قاعدة البيانات
 db.ref().on('value', (snapshot) => {
     const d = snapshot.val();
     if(!d) return;
 
-    // أ. تعبئة حقول الإعدادات بالقيم الحالية
+    // أ. تعبئة حقول الإعدادات
     if(d.settings) {
         if(document.getElementById('toggle_maint')) document.getElementById('toggle_maint').checked = d.settings.maintenance_mode;
         if(document.getElementById('inp_video')) document.getElementById('inp_video').value = d.settings.video_url || "";
-        
         if(document.getElementById('notify_active')) document.getElementById('notify_active').checked = d.settings.popup_active;
         if(document.getElementById('notify_title')) document.getElementById('notify_title').value = d.settings.popup_title || "";
         if(document.getElementById('notify_body')) document.getElementById('notify_body').value = d.settings.popup_body || "";
         
-        // أزرار الإخفاء والإظهار
         ['news','student','question','ranks','schedule','teachers'].forEach(k => {
             const el = document.getElementById('show_'+k);
             if(el) el.checked = d.settings['show_'+k];
@@ -252,18 +237,16 @@ db.ref().on('value', (snapshot) => {
         if(document.getElementById('inp_q_winner')) document.getElementById('inp_q_winner').value = d.weekly_question.last_winner;
     }
 
-    // ج. رسم القوائم الحالية (للحذف والتعديل)
+    // ج. رسم القوائم الحالية
     renderList('custom-cards-list-admin', d.custom_cards, 'card');
     renderList('teachers-list-v2-admin', d.teachers_list_v2, 'teacher');
     renderList('ranks-list-admin', d.ranks_list, 'rank');
     renderList('holidays-list-admin', d.holidays_list, 'holiday');
-    
-    // د. رسم قائمة الجداول الشجرية
     renderComplexScheduleAdmin(d.schedule_complex);
 });
 
 // ==========================================
-// 7. دوال الرسم المساعدة (Helpers for Render)
+// 6. دوال الرسم المساعدة
 // ==========================================
 
 function renderList(elementId, data, type) {
@@ -275,7 +258,6 @@ function renderList(elementId, data, type) {
 
     Object.entries(data).forEach(([key, item]) => {
         let content = '', func = '';
-        
         if(type === 'card') {
             content = `<strong style="color:${item.color}">${item.title}</strong>`;
             func = `deleteCustomCard('${key}')`;
