@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: js/admin_logic.js
-   الوظيفة: لوحة التحكم (CRUD كامل: إضافة، تعديل، إخفاء، حذف)
+   الوظيفة: لوحة التحكم (CRUD كامل + إصلاح التصميم الجانبي)
    ============================================================ */
 
 const firebaseConfig = {
@@ -16,21 +16,18 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 
-// متغيرات لتخزين "مفتاح" العنصر الذي يتم تعديله حالياً
-let editKeys = {
-    card: null,
-    teacher: null,
-    rank: null,
-    holiday: null,
-    complex: null
-};
+let editKeys = { card: null, teacher: null, rank: null, holiday: null, complex: null };
 
 // ==========================================
-// 1. نظام الحماية
+// 1. نظام الحماية (تم الإصلاح هنا) 🛠️
 // ==========================================
 auth.onAuthStateChanged((user) => {
-    if (user) { document.body.style.display = 'block'; }
-    else { window.location.replace("index.html"); }
+    if (user) {
+        // هنا كان الخطأ: غيرنا block إلى flex لكي تظهر القائمة بجانب المحتوى
+        document.body.style.display = 'flex'; 
+    } else {
+        window.location.replace("index.html");
+    }
 });
 
 function logout() {
@@ -57,20 +54,14 @@ function addCustomCard() {
     if(!title) return showToast("العنوان مطلوب", "error");
 
     const data = {
-        title: title,
-        text: val('card_text'),
-        color: val('card_color'),
-        btn_text: val('card_btn_text'),
-        link: val('card_link'),
-        active: true // مفعل افتراضياً
+        title: title, text: val('card_text'), color: val('card_color'),
+        btn_text: val('card_btn_text'), link: val('card_link'), active: true
     };
 
     if (editKeys.card) {
-        // وضع التعديل
         db.ref('custom_cards/' + editKeys.card).update(data)
             .then(() => { showToast("تم حفظ التعديلات"); resetForm('card'); });
     } else {
-        // وضع الإضافة
         db.ref('custom_cards').push(data)
             .then(() => { showToast("تمت الإضافة"); resetForm('card'); });
     }
@@ -80,15 +71,11 @@ function addCustomCard() {
 function addTeacherV2() {
     const name = val('t_name_v2');
     if(!name) return showToast("الاسم مطلوب", "error");
-    
     const data = { name: name, role: val('t_role_v2'), active: true };
-
     if(editKeys.teacher) {
-        db.ref('teachers_list_v2/' + editKeys.teacher).update(data)
-          .then(() => { showToast("تم تعديل المعلم"); resetForm('teacher'); });
+        db.ref('teachers_list_v2/' + editKeys.teacher).update(data).then(() => { showToast("تم التعديل"); resetForm('teacher'); });
     } else {
-        db.ref('teachers_list_v2').push(data)
-          .then(() => { showToast("تم إضافة المعلم"); resetForm('teacher'); });
+        db.ref('teachers_list_v2').push(data).then(() => { showToast("تمت الإضافة"); resetForm('teacher'); });
     }
 }
 
@@ -96,15 +83,11 @@ function addTeacherV2() {
 function addRank() {
     const name = val('rank_name');
     if(!name) return showToast("الاسم مطلوب", "error");
-
     const data = { rank: val('rank_num'), name: name, ring: val('rank_ring'), active: true };
-
     if(editKeys.rank) {
-        db.ref('ranks_list/' + editKeys.rank).update(data)
-          .then(() => { showToast("تم تعديل الطالب"); resetForm('rank'); });
+        db.ref('ranks_list/' + editKeys.rank).update(data).then(() => { showToast("تم التعديل"); resetForm('rank'); });
     } else {
-        db.ref('ranks_list').push(data)
-          .then(() => { showToast("تم إضافة الطالب"); resetForm('rank'); });
+        db.ref('ranks_list').push(data).then(() => { showToast("تمت الإضافة"); resetForm('rank'); });
     }
 }
 
@@ -112,36 +95,24 @@ function addRank() {
 function addHoliday() {
     const txt = val('holiday_txt');
     if(!txt) return showToast("النص مطلوب", "error");
-
     const data = { text: txt, active: true };
-
     if(editKeys.holiday) {
-        db.ref('holidays_list/' + editKeys.holiday).update(data)
-          .then(() => { showToast("تم التعديل"); resetForm('holiday'); });
+        db.ref('holidays_list/' + editKeys.holiday).update(data).then(() => { showToast("تم التعديل"); resetForm('holiday'); });
     } else {
-        db.ref('holidays_list').push(data)
-          .then(() => { showToast("تمت الإضافة"); resetForm('holiday'); });
+        db.ref('holidays_list').push(data).then(() => { showToast("تمت الإضافة"); resetForm('holiday'); });
     }
 }
 
-// --- هـ. الجداول المعقدة ---
-// (ملاحظة: الجداول معقدة قليلاً في التعديل، سنكتفي بالإضافة والحذف حالياً لتجنب الأخطاء، أو يمكننا إضافة التعديل لاحقاً)
+// --- هـ. الجداول ---
 function addComplexSchedule() {
     const timeKey = val('comp_sch_time');
     const name = val('comp_sch_name');
     if(!name) return showToast("اسم الحلقة مطلوب", "error");
-
-    const data = {
-        name: name,
-        sat: val('d_sat'), sun: val('d_sun'), mon: val('d_mon'),
-        tue: val('d_tue'), wed: val('d_wed'), thu: val('d_thu')
-    };
-
+    const data = { name: name, sat: val('d_sat'), sun: val('d_sun'), mon: val('d_mon'), tue: val('d_tue'), wed: val('d_wed'), thu: val('d_thu') };
     let timeTitle = (timeKey === 'time_1') ? '☀️ حلقات العصر' : '🌙 حلقات المغرب';
     db.ref(`schedule_complex/${timeKey}/title`).set(timeTitle);
-
     db.ref(`schedule_complex/${timeKey}/rings`).push(data).then(() => {
-        showToast("تمت إضافة الجدول");
+        showToast("تمت الإضافة");
         document.getElementById('comp_sch_name').value = '';
         ['d_sat','d_sun','d_mon','d_tue','d_wed','d_thu'].forEach(id => document.getElementById(id).value = '');
     });
@@ -150,13 +121,11 @@ function deleteComplexRing(timeKey, ringKey) {
     if(confirm("حذف الجدول؟")) db.ref(`schedule_complex/${timeKey}/rings/${ringKey}`).remove();
 }
 
-
 // ==========================================
 // 3. دوال التحكم (تعديل - إخفاء - حذف)
 // ==========================================
 
 function prepareEdit(type, key, item) {
-    // 1. ملء الحقول بالبيانات القديمة
     if(type === 'card') {
         fill('card_title', item.title); fill('card_text', item.text); fill('card_color', item.color);
         fill('card_btn_text', item.btn_text); fill('card_link', item.link);
@@ -171,27 +140,18 @@ function prepareEdit(type, key, item) {
         fill('holiday_txt', item.text);
         changeBtnText('addHoliday', '💾 حفظ التعديلات');
     }
-
-    // 2. حفظ المفتاح وتغيير الوضع
     editKeys[type] = key;
-    
-    // 3. الصعود للأعلى
     document.querySelector('.panel.active').scrollIntoView({ behavior: 'smooth' });
 }
 
 function toggleVisibility(path, currentStatus) {
-    // عكس الحالة (إذا كان true يصبح false والعكس)
-    db.ref(path).update({ active: !currentStatus })
-      .then(() => showToast(currentStatus ? "تم الإخفاء 👁️‍🗨️" : "تم الإظهار 👁️"));
+    db.ref(path).update({ active: !currentStatus }).then(() => showToast(currentStatus ? "تم الإخفاء" : "تم الإظهار"));
 }
 
 function deleteItem(path) {
-    if(confirm("هل أنت متأكد من الحذف النهائي؟")) {
-        db.ref(path).remove().then(() => showToast("تم الحذف 🗑️"));
-    }
+    if(confirm("حذف نهائي؟")) db.ref(path).remove().then(() => showToast("تم الحذف 🗑️"));
 }
 
-// مساعدة: إعادة النموذج لوضع "الإضافة"
 function resetForm(type) {
     editKeys[type] = null;
     if(type === 'card') {
@@ -216,7 +176,6 @@ db.ref().on('value', (snapshot) => {
     const d = snapshot.val();
     if(!d) return;
 
-    // الإعدادات العامة
     if(d.settings) {
         if(d.settings.welcome_screen) {
             const w = d.settings.welcome_screen;
@@ -224,7 +183,6 @@ db.ref().on('value', (snapshot) => {
             if(document.getElementById('welcome_title_inp')) document.getElementById('welcome_title_inp').value = w.title || "";
             if(document.getElementById('welcome_msg_inp')) document.getElementById('welcome_msg_inp').value = w.message || "";
         }
-        // ... (باقي الإعدادات)
         if(document.getElementById('toggle_maint')) document.getElementById('toggle_maint').checked = d.settings.maintenance_mode;
         if(document.getElementById('notify_active')) document.getElementById('notify_active').checked = d.settings.popup_active;
         if(document.getElementById('notify_title')) document.getElementById('notify_title').value = d.settings.popup_title || "";
@@ -235,7 +193,6 @@ db.ref().on('value', (snapshot) => {
         });
     }
 
-    // النصوص
     if(d.site_content) {
         if(document.getElementById('inp_header_title')) document.getElementById('inp_header_title').value = d.site_content.txt_header_title || "";
         if(document.getElementById('inp_header_subtitle')) document.getElementById('inp_header_subtitle').value = d.site_content.txt_header_subtitle || "";
@@ -248,7 +205,6 @@ db.ref().on('value', (snapshot) => {
         if(document.getElementById('inp_q_winner')) document.getElementById('inp_q_winner').value = d.weekly_question.last_winner;
     }
 
-    // الرسم
     renderList('custom-cards-list-admin', d.custom_cards, 'card');
     renderList('teachers-list-v2-admin', d.teachers_list_v2, 'teacher');
     renderList('ranks-list-admin', d.ranks_list, 'rank');
@@ -257,9 +213,8 @@ db.ref().on('value', (snapshot) => {
 });
 
 // ==========================================
-// 5. دوال الرسم (Render) - التصميم الجديد
+// 5. دوال الرسم
 // ==========================================
-
 function renderList(elementId, data, type) {
     const el = document.getElementById(elementId);
     if(!el) return;
@@ -268,22 +223,18 @@ function renderList(elementId, data, type) {
     if(!data) { el.innerHTML = '<p style="color:gray; text-align:center;">لا توجد بيانات.</p>'; return; }
 
     Object.entries(data).forEach(([key, item]) => {
-        const isActive = item.active !== false; // افتراضياً مفعل إذا لم يحدد العكس
+        const isActive = item.active !== false;
         const opacityClass = isActive ? '' : 'hidden-item';
         const eyeIcon = isActive ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
         const eyeColorClass = isActive ? 'active' : '';
-
-        // تجهيز بيانات التعديل كنص JSON آمن
         const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
         
-        // المحتوى النصي حسب النوع
         let content = '';
         if(type === 'card') content = `<strong style="color:${item.color}">${item.title}</strong>`;
         else if(type === 'teacher') content = `<strong>${item.name}</strong> <small>(${item.role})</small>`;
         else if(type === 'rank') content = `#${item.rank} <strong>${item.name}</strong>`;
         else if(type === 'holiday') content = item.text;
 
-        // مسار قاعدة البيانات للإخفاء والحذف
         let dbPath = '';
         if(type === 'card') dbPath = 'custom_cards/'+key;
         else if(type === 'teacher') dbPath = 'teachers_list_v2/'+key;
@@ -328,18 +279,13 @@ function renderComplexScheduleAdmin(data) {
     });
 }
 
-// Helpers بسيطة
+// Helpers
 function showTab(tabId) { document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); document.getElementById(tabId).classList.add('active'); }
 function val(id) { return document.getElementById(id) ? document.getElementById(id).value : ''; }
 function fill(id, v) { if(document.getElementById(id)) document.getElementById(id).value = v || ''; }
 function changeBtnText(funcName, txt) { 
-    // نبحث عن الزر الذي يحمل دالة onclick مطابقة
     const btns = document.getElementsByTagName('button');
-    for(let b of btns) {
-        if(b.getAttribute('onclick') && b.getAttribute('onclick').includes(funcName)) {
-            b.innerHTML = txt;
-        }
-    }
+    for(let b of btns) { if(b.getAttribute('onclick') && b.getAttribute('onclick').includes(funcName)) { b.innerHTML = txt; } }
 }
 function saveGeneral() { db.ref('site_content').update({txt_header_title:val('inp_header_title'), txt_header_subtitle:val('inp_header_subtitle'), txt_header_location:val('inp_header_location')}); db.ref('settings').update({video_url:val('inp_video'), maintenance_mode:document.getElementById('toggle_maint').checked}).then(()=>showToast("تم الحفظ")); }
 function saveSections() { db.ref('settings').update({show_news:document.getElementById('show_news').checked, show_student:document.getElementById('show_student').checked, show_question:document.getElementById('show_question').checked, show_ranks:document.getElementById('show_ranks').checked, show_schedule:document.getElementById('show_schedule').checked, show_teachers:document.getElementById('show_teachers').checked}).then(()=>showToast("تم الحفظ")); }
