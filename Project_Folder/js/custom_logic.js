@@ -1,9 +1,8 @@
 /* ============================================================
    ملف: js/custom_logic.js
-   الوظيفة: تشغيل الصفحة الرئيسية + تسجيل الدخول الآمن
+   الوظيفة: جلب البيانات من فايربيس وعرضها في الصفحة الرئيسية
    ============================================================ */
 
-// 1. إعدادات فايربيس (نفس الإعدادات الجديدة بالضبط)
 const firebaseConfig = {
   apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
   authDomain: "quran-app-93e24.firebaseapp.com",
@@ -13,193 +12,324 @@ const firebaseConfig = {
   appId: "1:82150677933:web:64213e04463c1bb3179524"
 };
 
-// تهيئة فايربيس
-if (!firebase.apps.length) {
+try {
     firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.database();
-const auth = firebase.auth();
+    const db = firebase.database();
 
-// ==========================================
-// 2. كود جلب البيانات للصفحة الرئيسية (للزوار)
-// ==========================================
-const elements = {
-    headerTitle: document.getElementById('header-title'),
-    headerSubtitle: document.getElementById('header-subtitle'),
-    headerLocation: document.getElementById('header-location'),
-    videoSource: document.getElementById('video-source'),
-    bgVideo: document.getElementById('bg-video'),
-    newsText: document.getElementById('news-text'),
-    qText: document.getElementById('question-text'),
-    qWinner: document.getElementById('winner-name'),
-    aboutContent: document.getElementById('about-content'),
-    btnsContainer: document.getElementById('dynamic-btns-container'),
-    teachersList: document.getElementById('teachers-list-v2'),
-    ranksList: document.getElementById('ranks-list'),
-    scheduleList: document.getElementById('complex-schedule-container'),
-    holidaysList: document.getElementById('holidays-ticker')
-};
-
-// الاستماع للبيانات الحية
-db.ref().on('value', (snapshot) => {
-    const d = snapshot.val();
-    if (!d) return;
-
-    // النصوص الأساسية
-    if (d.site_content) {
-        if (elements.headerTitle) elements.headerTitle.innerText = d.site_content.txt_header_title || "حلقات النور";
-        if (elements.headerSubtitle) elements.headerSubtitle.innerText = d.site_content.txt_header_subtitle || "لتعليم القرآن الكريم";
-        if (elements.headerLocation) elements.headerLocation.innerText = d.site_content.txt_header_location || "المسجد";
-        if (elements.aboutContent) elements.aboutContent.innerHTML = (d.site_content.txt_about_content || "").replace(/\n/g, '<br>');
-    }
-
-    // الفيديو
-    if (d.settings && d.settings.video_url && elements.videoSource) {
-        if (elements.videoSource.src !== d.settings.video_url) {
-            elements.videoSource.src = d.settings.video_url;
-            elements.bgVideo.load();
-        }
-    }
-
-    // شريط الأخبار والسؤال
-    if (d.news_bar && elements.newsText) elements.newsText.innerText = d.news_bar.text || "أهلاً بكم...";
-    if (d.weekly_question) {
-        if (elements.qText) elements.qText.innerText = d.weekly_question.text || "...";
-        if (elements.qWinner) elements.qWinner.innerText = d.weekly_question.last_winner || "...";
-    }
-
-    // الإشعار المنبثق
-    if(d.settings && d.settings.popup_active) {
-        // يمكنك تفعيل كود الإشعار هنا إذا كان لديك عنصر له في الـ HTML
-    }
-
-    // القوائم (البطاقات، المعلمين، الأوائل)
-    renderHomeList(elements.btnsContainer, d.custom_cards, 'card');
-    renderHomeList(elements.teachersList, d.teachers_list_v2, 'teacher');
-    renderHomeList(elements.ranksList, d.ranks_list, 'rank');
-    renderHomeList(elements.holidaysList, d.holidays_list, 'holiday');
-    renderHomeSchedule(elements.scheduleList, d.schedule_complex);
-    
-    // إخفاء الأقسام حسب الإعدادات
-    if(d.settings) {
-        toggleSection('news-bar', d.settings.show_news);
-        toggleSection('weekly-question', d.settings.show_question);
-        toggleSection('student-registration', d.settings.show_student);
-        toggleSection('top-students', d.settings.show_ranks);
-        toggleSection('schedule-section', d.settings.show_schedule);
-        toggleSection('teachers-section', d.settings.show_teachers);
-    }
-});
-
-// ==========================================
-// 3. كود تسجيل الدخول (الحصري والآمن) 🔐
-// ==========================================
-
-// دالة فتح/غلق نافذة الدخول
-function toggleLoginModal() {
-    const modal = document.getElementById('loginModal');
-    if (modal) {
-        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
-    }
-}
-
-// دالة التحقق من الدخول
-function checkLogin() {
-    const email = document.getElementById('admin_email').value; // تأكد أن الـ ID في الـ HTML هو admin_email
-    const pass = document.getElementById('admin_pass').value;   // تأكد أن الـ ID في الـ HTML هو admin_pass
-    const btn = document.querySelector('.btn-login');
-
-    if(!email || !pass) {
-        alert("الرجاء كتابة البريد وكلمة المرور");
-        return;
-    }
-
-    // تغيير نص الزر ليعرف المستخدم أن شيئاً يحدث
-    const originalText = btn.innerHTML;
-    btn.innerHTML = "جاري التحقق... ⏳";
-
-    // الاتصال بفايربيس
-    auth.signInWithEmailAndPassword(email, pass)
-        .then((userCredential) => {
-            // ✅ نجح الدخول
-            console.log("Logged in:", userCredential.user.email);
-            btn.innerHTML = "✅ تم الدخول!";
-            setTimeout(() => {
-                window.location.href = "admin.html"; // الانتقال لصفحة الأدمن
-            }, 1000);
-        })
-        .catch((error) => {
-            // ❌ فشل الدخول
-            console.error(error);
-            let msg = "خطأ في الدخول!";
-            if(error.code === 'auth/user-not-found') msg = "هذا المستخدم غير موجود";
-            if(error.code === 'auth/wrong-password') msg = "كلمة المرور خاطئة";
-            if(error.code === 'auth/invalid-email') msg = "صيغة البريد غير صحيحة";
+    // الاستماع للبيانات (Realtime)
+    db.ref().on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            // 1. تطبيق الإعدادات (صيانة، فيديو، إخفاء أقسام)
+            applySettings(data);
             
-            alert("⛔ " + msg);
-            btn.innerHTML = originalText; // إعادة الزر كما كان
-        });
+            // 2. تطبيق المحتوى والنصوص
+            applyContent(data);
+            
+            // 3. بناء الأقسام الديناميكية المعقدة
+            renderComplexSchedule(data.schedule_complex); // الجداول القديمة
+            renderTeachers(data.teachers_list_v2);        // المعلمون (نص)
+            renderCustomCards(data.custom_cards);         // الأزرار الإضافية
+            renderRanks(data.ranks_list);                 // أوائل الحلقات
+            renderHolidays(data.holidays_list);           // الإجازات
+
+            // 4. إخفاء شاشة التحميل (Anti-Flicker)
+            setTimeout(() => {
+                const loader = document.getElementById('site-loader');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
+            }, 800);
+        }
+    });
+
+} catch (error) { console.error(error); }
+
+// ==========================================
+// 1. دوال التطبيق الأساسية
+// ==========================================
+
+function applySettings(data) {
+    if(!data.settings) return;
+    const s = data.settings;
+
+    // أ. وضع الصيانة
+    const maint = document.getElementById('maintenance-mode');
+    if(s.maintenance_mode === true) {
+        maint.style.display = 'flex';
+        document.querySelector('.container').style.display = 'none';
+        document.querySelector('header').style.display = 'none';
+    } else {
+        maint.style.display = 'none';
+        document.querySelector('.container').style.display = 'block';
+        document.querySelector('header').style.display = 'block';
+    }
+
+    // ب. الإشعار المنبثق (الذكية)
+    const popup = document.getElementById('site-notification');
+    const dontShow = localStorage.getItem('dont_show_popup');
+    
+    // يظهر فقط إذا: (مفعل من الأدمن) + (المستخدم لم يختر "عدم الإظهار")
+    if(s.popup_active === true && dontShow !== 'true') {
+        popup.style.display = 'flex';
+        document.getElementById('notif-title').innerText = s.popup_title || "تنبيه";
+        document.getElementById('notif-body').innerText = s.popup_body || "...";
+    } else {
+        popup.style.display = 'none';
+    }
+
+    // ج. إخفاء/إظهار الأقسام الرئيسية
+    toggleSection('block-news', s.show_news);
+    toggleSection('block-student', s.show_student);
+    toggleSection('block-question', s.show_question);
+    toggleSection('block-teachers', s.show_teachers);
+    toggleSection('block-schedule', s.show_schedule);
+    toggleSection('block-ranks', s.show_ranks);
+
+    // د. الفيديو
+    if(s.video_url) {
+        const vid = document.getElementById('bg-video');
+        if(!vid.src.includes(s.video_url)) vid.src = s.video_url;
+    }
+}
+
+function applyContent(data) {
+    // شريط الأخبار والسؤال
+    if(data.news_bar) setTxt('dynamic-news-bar', data.news_bar.text);
+    if(data.weekly_question) {
+        setHTML('weekly-question-text', `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`);
+        setTxt('weekly-winner-text', data.weekly_question.last_winner);
+    }
+    if(data.top_student) {
+        setTxt('top-student-name', data.top_student.name);
+        setTxt('top-student-desc', data.top_student.category);
+    }
+    
+    // نصوص الموقع (من نحن، الهيدر، الفوتر)
+    if(data.site_content) {
+        const c = data.site_content;
+        setTxt('txt_header_title', c.txt_header_title);
+        setTxt('txt_header_subtitle', c.txt_header_subtitle);
+        setTxt('txt_header_location', c.txt_header_location);
+        setTxt('txt_news_title', c.txt_news_title);
+        setTxt('txt_student_title', c.txt_student_title);
+        setTxt('txt_question_title', c.txt_question_title);
+        setTxt('txt_about_title', c.txt_about_title);
+        // هنا نستخدم setHTML ليحافظ على تنسيق الأبيات الشعرية
+        setHTML('txt_about_content', c.txt_about_content); 
+        setTxt('txt_contact_title', c.txt_contact_title);
+        setTxt('txt_footer', c.txt_footer);
+        if(c.txt_schedule_title) setTxt('txt_schedule_title', c.txt_schedule_title);
+        if(c.txt_teachers_title) setTxt('txt_teachers_title', c.txt_teachers_title);
+    }
 }
 
 // ==========================================
-// 4. دوال مساعدة للعرض (Render Helpers)
+// 2. دوال بناء المحتوى (Renderers)
 // ==========================================
-function renderHomeList(container, data, type) {
+
+// أ. بناء البطاقات المخصصة
+function renderCustomCards(list) {
+    const container = document.getElementById('dynamic-custom-cards-container');
+    if(!container) return;
+    container.innerHTML = ''; 
+
+    if(!list) return;
+
+    Object.values(list).forEach(card => {
+        if(card.active === false) return;
+
+        const div = document.createElement('div');
+        div.className = 'custom-dynamic-card';
+        div.style.borderRightColor = card.color || '#3b82f6';
+        
+        let html = `<h3 style="color:${card.color || '#333'}">${card.title}</h3>`;
+        html += `<p style="white-space: pre-line;">${card.text}</p>`;
+        
+        if(card.link) {
+            html += `<a href="${card.link}" target="_blank" class="nav-btn" style="margin-top:10px; border-color:${card.color}; color:${card.color}; width:auto; display:inline-block;">${card.btn_text || 'اضغط هنا'}</a>`;
+        }
+
+        div.innerHTML = html;
+        container.appendChild(div);
+    });
+}
+
+// ب. بناء الجدول المعقد
+function renderComplexSchedule(data) {
+    const container = document.getElementById('dynamic-schedule-container');
     if(!container) return;
     container.innerHTML = '';
-    if(!data) return;
 
-    Object.values(data).forEach(item => {
-        if(type === 'card' && item.active) {
-            container.innerHTML += `
-                <a href="${item.link}" class="main-btn" style="background:${item.color}">
-                    <h3>${item.title}</h3>
-                    <p>${item.text}</p>
-                    <span>${item.btn_text} <i class="fas fa-arrow-left"></i></span>
-                </a>`;
-        } else if(type === 'teacher') {
-            container.innerHTML += `
-                <div class="teacher-card">
-                    <div class="icon"><i class="fas fa-user-tie"></i></div>
-                    <h3>${item.name}</h3>
-                    <p>${item.role}</p>
-                </div>`;
-        } else if(type === 'rank') {
-            container.innerHTML += `
-                <div class="rank-card">
-                    <div class="rank-badge">#${item.rank}</div>
-                    <h3>${item.name}</h3>
-                    <p>${item.ring}</p>
-                </div>`;
-        } else if(type === 'holiday') {
-            container.innerHTML += `<div class="ticker-item"><i class="fas fa-star"></i> ${item.text}</div>`;
-        }
+    if(!data) { container.innerHTML = '<p style="text-align:center;">لا توجد جداول حالياً</p>'; return; }
+
+    Object.keys(data).sort().forEach(timeKey => {
+        const timeSection = data[timeKey];
+        if(!timeSection.rings) return;
+
+        const timeHeader = document.createElement('div');
+        timeHeader.className = 'time-group-title';
+        timeHeader.innerText = timeSection.title || "فترة";
+        container.appendChild(timeHeader);
+
+        Object.values(timeSection.rings).forEach(ring => {
+            const btn = document.createElement('div');
+            btn.className = 'ring-accordion-btn';
+            btn.innerHTML = `<span>📖 ${ring.name}</span> <span>▼</span>`;
+            
+            const panel = document.createElement('div');
+            panel.className = 'ring-schedule-panel';
+            
+            let tableHTML = `
+                <table class="schedule-table-simple">
+                    <thead><tr><th>اليوم</th><th>المقرر / النشاط</th></tr></thead>
+                    <tbody>
+                        <tr><td>السبت</td><td>${ring.sat || '-'}</td></tr>
+                        <tr><td>الأحد</td><td>${ring.sun || '-'}</td></tr>
+                        <tr><td>الاثنين</td><td>${ring.mon || '-'}</td></tr>
+                        <tr><td>الثلاثاء</td><td>${ring.tue || '-'}</td></tr>
+                        <tr><td>الأربعاء</td><td>${ring.wed || '-'}</td></tr>
+                        <tr><td>الخميس</td><td>${ring.thu || '-'}</td></tr>
+                    </tbody>
+                </table>
+            `;
+            panel.innerHTML = tableHTML;
+
+            btn.onclick = function() {
+                this.classList.toggle('active');
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                    this.querySelector('span:last-child').innerText = '▼';
+                } else {
+                    panel.style.display = "block";
+                    this.querySelector('span:last-child').innerText = '▲';
+                }
+            };
+
+            container.appendChild(btn);
+            container.appendChild(panel);
+        });
     });
 }
 
-function renderHomeSchedule(container, data) {
-    if(!container || !data) return;
+// ج. بناء قائمة المعلمين
+function renderTeachers(list) {
+    const container = document.getElementById('dynamic-teachers-container');
+    if(!container) return;
     container.innerHTML = '';
     
-    Object.keys(data).sort().forEach(timeKey => {
-        if(data[timeKey].rings) {
-            let html = `<div class="schedule-block"><h3>${data[timeKey].title || 'حلقات'}</h3><div class="table-wrapper"><table><thead><tr><th>الحلقة</th><th>السبت</th><th>الأحد</th><th>الاثنين</th><th>الثلاثاء</th><th>الأربعاء</th><th>الخميس</th></tr></thead><tbody>`;
-            
-            Object.values(data[timeKey].rings).forEach(ring => {
-                html += `<tr>
-                    <td class="ring-name">${ring.name}</td>
-                    <td>${ring.sat || '-'}</td><td>${ring.sun || '-'}</td>
-                    <td>${ring.mon || '-'}</td><td>${ring.tue || '-'}</td>
-                    <td>${ring.wed || '-'}</td><td>${ring.thu || '-'}</td>
-                </tr>`;
-            });
-            html += `</tbody></table></div></div>`;
-            container.innerHTML += html;
-        }
+    if(!list) { container.innerHTML = '<p>لا يوجد معلمون حالياً</p>'; return; }
+
+    Object.values(list).forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'teacher-row';
+        div.innerHTML = `
+            <div class="teacher-icon"><i class="fas fa-user-tie"></i></div>
+            <div class="teacher-info">
+                <h4>${t.name}</h4>
+                <p>${t.role || 'معلم فاضل'}</p>
+            </div>
+        `;
+        container.appendChild(div);
     });
 }
+
+// د. بناء قائمة الأوائل
+function renderRanks(list) {
+    const container = document.getElementById('dynamic-ranks-list');
+    if(!container) return;
+    container.innerHTML = '';
+    
+    if(!list) { container.innerHTML = '<p>لم يتم رفع الأسماء بعد</p>'; return; }
+
+    let html = '<table class="schedule-table-simple" style="width:100%"><thead><tr><th>المركز</th><th>الطالب</th><th>الحلقة</th></tr></thead><tbody>';
+    Object.values(list).forEach(r => {
+        let medal = '';
+        if(r.rank == 1) medal = '🥇';
+        else if(r.rank == 2) medal = '🥈';
+        else if(r.rank == 3) medal = '🥉';
+        
+        html += `<tr>
+            <td>${medal} ${r.rank}</td>
+            <td><strong>${r.name}</strong></td>
+            <td>${r.ring}</td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// هـ. بناء قائمة الإجازات
+function renderHolidays(list) {
+    const ul = document.getElementById('dynamic-holidays-list');
+    if(!ul) return;
+    ul.innerHTML = '';
+    if(!list) { ul.innerHTML = '<li>لا توجد إجازات قريبة</li>'; return; }
+    
+    Object.values(list).forEach(h => {
+        const li = document.createElement('li');
+        li.innerText = h.text;
+        ul.appendChild(li);
+    });
+}
+
+// ==========================================
+// 3. دوال مساعدة (Helpers)
+// ==========================================
+
+function setTxt(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerText = txt; }
+function setHTML(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerHTML = txt; }
 
 function toggleSection(id, show) {
     const el = document.getElementById(id);
-    if(el) el.style.display = show ? 'block' : 'none';
+    if(el) {
+        if(show === true) el.style.display = 'block';
+        else el.style.display = 'none';
+    }
+}
+
+// ==========================================
+// 4. دوال التفاعل (Popup & Login)
+// ==========================================
+
+function closePopup() {
+    document.getElementById('site-notification').style.display = 'none';
+}
+
+function disablePopupForever() {
+    const checkbox = document.getElementById('popup-forever-check');
+    if(checkbox.checked) {
+        localStorage.setItem('dont_show_popup', 'true');
+        alert("تم! لن تظهر لك هذه الرسالة مرة أخرى في هذا الجهاز.");
+        closePopup();
+    }
+}
+
+function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
+
+function secureLogin() {
+    const u = document.getElementById('admin-user').value;
+    const p = document.getElementById('admin-pass').value;
+    const db = firebase.database();
+    
+    db.ref('admin_account').once('value').then(snap => {
+        const creds = snap.val();
+        let realU = "admin", realP = "12345";
+        
+        if(creds) { 
+            realU = creds.username; 
+            realP = creds.password; 
+        }
+        
+        if(u === realU && p === realP) {
+            localStorage.setItem('admin_token', 'SECRET_PASS_123');
+            window.location.href = "admin.html";
+        } else {
+            alert("⛔ خطأ في اسم المستخدم أو كلمة المرور");
+        }
+    }).catch(error => {
+        console.error(error);
+        alert("حدث خطأ في الاتصال، تأكد من الإنترنت.");
+    });
 }
