@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: js/custom_logic.js
-   الوظيفة: جلب البيانات (كاش + مباشر) + الترحيب الذكي (نسخة الفحص)
+   الوظيفة: جلب البيانات + الترحيب الذكي + تصفية العناصر المخفية
    ============================================================ */
 
 const firebaseConfig = {
@@ -28,14 +28,8 @@ try {
         const data = snapshot.val();
         if (data) {
             console.log("🔄 تحديث البيانات من السيرفر...");
-            
-            // تحديث الكاش
             localStorage.setItem('site_cache_v3', JSON.stringify(data));
-            
-            // تحديث الواجهة
             applyAllData(data);
-            
-            // تشغيل منطق الترحيب الذكي (استدعاء الدالة)
             handleSmartWelcome(data.settings);
         }
     });
@@ -58,50 +52,38 @@ function applyAllData(data) {
 
 
 // ==========================================
-// 🕵️‍♂️ دالة تشخيص الترحيب (Debug Mode)
+// 🎉 منطق الترحيب الذكي
 // ==========================================
 function handleSmartWelcome(settings) {
-    // 1. فحص وجود التصميم في HTML
-    const overlay = document.getElementById('welcome-overlay');
-    if (!overlay) {
-        alert("❌ خطأ: كود HTML (welcome-overlay) غير موجود في ملف index.html");
-        return;
-    }
+    // التحقق من وجود الإعدادات
+    if (!settings || !settings.welcome_screen || settings.welcome_screen.active !== true) return;
 
-    // 2. فحص الإعدادات في قاعدة البيانات
-    if (!settings || !settings.welcome_screen) {
-        alert("⚠️ تنبيه: إعدادات الترحيب غير موجودة في قاعدة البيانات.\nالحل: اذهب للأدمن > الإعدادات العامة > اضغط 'حفظ إعدادات الترحيب'.");
-        return;
-    }
+    const lastSeen = localStorage.getItem('welcome_last_seen_time');
+    const now = new Date().getTime();
+    const hours = 12; 
+    const diff = now - (lastSeen || 0);
 
-    // 3. فحص التفعيل
-    if (settings.welcome_screen.active !== true) {
-        alert("ℹ️ تنبيه: الترحيب 'معطل' من زر التفعيل في الأدمن.");
-        return;
+    // إذا مر الوقت المحدد
+    if (diff > (hours * 60 * 60 * 1000)) {
+        showWelcomeOverlay(settings.welcome_screen);
+        localStorage.setItem('welcome_last_seen_time', now);
     }
-
-    // 4. إذا وصلنا هنا، نظهر الشاشة فوراً (تجاوزنا الوقت للتجربة)
-    showWelcomeOverlay(settings.welcome_screen);
 }
 
 function showWelcomeOverlay(config) {
     const overlay = document.getElementById('welcome-overlay');
+    if(!overlay) return;
+
     const titleEl = document.getElementById('welcome-title');
     const msgEl = document.getElementById('welcome-text');
-    
-    // جلب اسم الطالب
     let studentName = localStorage.getItem('studentName') || "يا بطل";
     
-    // النصوص
     titleEl.innerText = config.title || "أهلاً بك";
     let message = config.message || "نورتنا يا {name}";
     message = message.replace("{name}", studentName);
     msgEl.innerText = message;
 
-    // إظهار
     overlay.style.display = 'flex';
-    
-    // إخفاء تلقائي بعد 3 ثواني
     setTimeout(() => {
         overlay.style.opacity = '0';
         setTimeout(() => overlay.style.display = 'none', 500);
@@ -117,7 +99,7 @@ function applySettings(data) {
     if(!data.settings) return;
     const s = data.settings;
 
-    // أ. وضع الصيانة
+    // وضع الصيانة
     const maint = document.getElementById('maintenance-mode');
     if(s.maintenance_mode === true) {
         maint.style.display = 'flex';
@@ -129,26 +111,24 @@ function applySettings(data) {
         document.querySelector('header').style.display = 'block';
     }
 
-    // ب. الإشعار المنبثق
+    // الإشعار المنبثق
     const popup = document.getElementById('site-notification');
     const dontShow = localStorage.getItem('dont_show_popup');
     
     if(s.popup_active === true && dontShow !== 'true') {
         setTimeout(() => {
              const overlay = document.getElementById('welcome-overlay');
-             // يظهر فقط إذا اختفت شاشة الترحيب
              if(overlay.style.display === 'none' || overlay.style.opacity === '0') {
                  popup.style.display = 'flex';
              }
         }, 3500);
-        
         document.getElementById('notif-title').innerText = s.popup_title || "تنبيه";
         document.getElementById('notif-body').innerText = s.popup_body || "...";
     } else {
         popup.style.display = 'none';
     }
 
-    // ج. الأقسام
+    // الأقسام والفيديو
     toggleSection('block-news', s.show_news);
     toggleSection('block-student', s.show_student);
     toggleSection('block-question', s.show_question);
@@ -156,7 +136,6 @@ function applySettings(data) {
     toggleSection('block-schedule', s.show_schedule);
     toggleSection('block-ranks', s.show_ranks);
 
-    // د. الفيديو
     if(s.video_url) {
         const vid = document.getElementById('bg-video');
         if(vid && !vid.src.includes(s.video_url)) vid.src = s.video_url;
@@ -191,8 +170,9 @@ function applyContent(data) {
 }
 
 // ==========================================
-// 2. دوال بناء المحتوى (Renderers)
+// 2. دوال بناء المحتوى (Renderers) - تم إضافة شرط الإخفاء
 // ==========================================
+
 function renderCustomCards(list) {
     const container = document.getElementById('dynamic-custom-cards-container');
     if(!container) return;
@@ -200,7 +180,9 @@ function renderCustomCards(list) {
     if(!list) return;
 
     Object.values(list).forEach(card => {
+        // ⭐ شرط الإخفاء
         if(card.active === false) return;
+
         const div = document.createElement('div');
         div.className = 'custom-dynamic-card';
         div.style.borderRightColor = card.color || '#3b82f6';
@@ -211,6 +193,61 @@ function renderCustomCards(list) {
         }
         div.innerHTML = html;
         container.appendChild(div);
+    });
+}
+
+function renderTeachers(list) {
+    const container = document.getElementById('dynamic-teachers-container');
+    if(!container) return;
+    container.innerHTML = '';
+    if(!list) { container.innerHTML = '<p>لا يوجد معلمون حالياً</p>'; return; }
+    
+    Object.values(list).forEach(t => {
+        // ⭐ شرط الإخفاء (جديد)
+        if(t.active === false) return; 
+
+        const div = document.createElement('div');
+        div.className = 'teacher-row';
+        div.innerHTML = `
+            <div class="teacher-icon"><i class="fas fa-user-tie"></i></div>
+            <div class="teacher-info"><h4>${t.name}</h4><p>${t.role || 'معلم فاضل'}</p></div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function renderRanks(list) {
+    const container = document.getElementById('dynamic-ranks-list');
+    if(!container) return;
+    container.innerHTML = '';
+    if(!list) { container.innerHTML = '<p>لم يتم رفع الأسماء بعد</p>'; return; }
+    
+    let html = '<table class="schedule-table-simple" style="width:100%"><thead><tr><th>المركز</th><th>الطالب</th><th>الحلقة</th></tr></thead><tbody>';
+    Object.values(list).forEach(r => {
+        // ⭐ شرط الإخفاء (جديد)
+        if(r.active === false) return;
+
+        let medal = '';
+        if(r.rank == 1) medal = '🥇'; else if(r.rank == 2) medal = '🥈'; else if(r.rank == 3) medal = '🥉';
+        html += `<tr><td>${medal} ${r.rank}</td><td><strong>${r.name}</strong></td><td>${r.ring}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+function renderHolidays(list) {
+    const ul = document.getElementById('dynamic-holidays-list');
+    if(!ul) return;
+    ul.innerHTML = '';
+    if(!list) { ul.innerHTML = '<li>لا توجد إجازات قريبة</li>'; return; }
+    
+    Object.values(list).forEach(h => {
+        // ⭐ شرط الإخفاء (جديد)
+        if(h.active === false) return;
+
+        const li = document.createElement('li');
+        li.innerText = h.text;
+        ul.appendChild(li);
     });
 }
 
@@ -258,49 +295,6 @@ function renderComplexSchedule(data) {
             container.appendChild(btn);
             container.appendChild(panel);
         });
-    });
-}
-
-function renderTeachers(list) {
-    const container = document.getElementById('dynamic-teachers-container');
-    if(!container) return;
-    container.innerHTML = '';
-    if(!list) { container.innerHTML = '<p>لا يوجد معلمون حالياً</p>'; return; }
-    Object.values(list).forEach(t => {
-        const div = document.createElement('div');
-        div.className = 'teacher-row';
-        div.innerHTML = `
-            <div class="teacher-icon"><i class="fas fa-user-tie"></i></div>
-            <div class="teacher-info"><h4>${t.name}</h4><p>${t.role || 'معلم فاضل'}</p></div>
-        `;
-        container.appendChild(div);
-    });
-}
-
-function renderRanks(list) {
-    const container = document.getElementById('dynamic-ranks-list');
-    if(!container) return;
-    container.innerHTML = '';
-    if(!list) { container.innerHTML = '<p>لم يتم رفع الأسماء بعد</p>'; return; }
-    let html = '<table class="schedule-table-simple" style="width:100%"><thead><tr><th>المركز</th><th>الطالب</th><th>الحلقة</th></tr></thead><tbody>';
-    Object.values(list).forEach(r => {
-        let medal = '';
-        if(r.rank == 1) medal = '🥇'; else if(r.rank == 2) medal = '🥈'; else if(r.rank == 3) medal = '🥉';
-        html += `<tr><td>${medal} ${r.rank}</td><td><strong>${r.name}</strong></td><td>${r.ring}</td></tr>`;
-    });
-    html += '</tbody></table>';
-    container.innerHTML = html;
-}
-
-function renderHolidays(list) {
-    const ul = document.getElementById('dynamic-holidays-list');
-    if(!ul) return;
-    ul.innerHTML = '';
-    if(!list) { ul.innerHTML = '<li>لا توجد إجازات قريبة</li>'; return; }
-    Object.values(list).forEach(h => {
-        const li = document.createElement('li');
-        li.innerText = h.text;
-        ul.appendChild(li);
     });
 }
 
