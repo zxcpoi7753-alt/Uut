@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: js/custom_logic.js
-   الوظيفة: جلب البيانات العامة + تسجيل الدخول الآمن (Auth)
+   الوظيفة: جلب البيانات (كاش + مباشر) + الترحيب الذكي
    ============================================================ */
 
 const firebaseConfig = {
@@ -12,94 +12,104 @@ const firebaseConfig = {
   appId: "1:82150677933:web:64213e04463c1bb3179524"
 };
 
-// تهيئة فايربيس
 try {
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const auth = firebase.auth(); // تفعيل المصادقة
 
-    // الاستماع للبيانات العامة (يقرأها الجميع)
+    // 🚀 1. التحميل الفوري من الكاش (السرعة القصوى)
+    const cachedData = localStorage.getItem('site_cache_v3');
+    if (cachedData) {
+        console.log("⚡ تحميل من الذاكرة المحلية...");
+        const data = JSON.parse(cachedData);
+        applyAllData(data); // عرض الموقع فوراً
+    }
+
+    // 🌐 2. الاتصال بفايربيس لجلب التحديثات (في الخلفية)
     db.ref().on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            // 1. تطبيق الإعدادات
-            applySettings(data);
+            console.log("🔄 تحديث البيانات من السيرفر...");
+            // تحديث الكاش
+            localStorage.setItem('site_cache_v3', JSON.stringify(data));
+            // تحديث الواجهة
+            applyAllData(data);
             
-            // 2. تطبيق المحتوى والنصوص
-            applyContent(data);
-            
-            // 3. بناء الأقسام الديناميكية
-            renderComplexSchedule(data.schedule_complex);
-            renderTeachers(data.teachers_list_v2);
-            renderCustomCards(data.custom_cards);
-            renderRanks(data.ranks_list);
-            renderHolidays(data.holidays_list);
-
-            // 4. إخفاء شاشة التحميل
-            setTimeout(() => {
-                const loader = document.getElementById('site-loader');
-                if(loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 500);
-                }
-            }, 800);
+            // 🎁 3. منطق الترحيب الذكي (يتم فحصه بعد جلب الإعدادات)
+            handleSmartWelcome(data.settings);
         }
     });
 
 } catch (error) { console.error("Firebase Error:", error); }
 
+
 // ==========================================
-// 1. نظام تسجيل الدخول الآمن (New Security)
+// دالة التطبيق الشاملة (تستخدم للكاش وللبيانات الجديدة)
 // ==========================================
-
-function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
-
-function secureLogin() {
-    const email = document.getElementById('admin-user').value;
-    const pass = document.getElementById('admin-pass').value;
-
-    if (!email || !pass) {
-        alert("الرجاء إدخال البريد الإلكتروني وكلمة المرور");
-        return;
-    }
-
-    // إظهار رسالة انتظار بسيطة
-    const btn = event.target; // الزر الذي تم ضغطه
-    const originalText = btn.innerText;
-    btn.innerText = "جاري التحقق...";
-    btn.disabled = true;
-
-    // الاتصال بجوجل للتحقق
-    firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then((userCredential) => {
-            // نجاح الدخول
-            console.log("Login Successful:", userCredential.user.email);
-            window.location.href = "admin.html";
-        })
-        .catch((error) => {
-            // فشل الدخول
-            console.error(error);
-            btn.innerText = originalText;
-            btn.disabled = false;
-            
-            let msg = "خطأ في الدخول";
-            if(error.code === 'auth/user-not-found') msg = "المستخدم غير موجود";
-            else if(error.code === 'auth/wrong-password') msg = "كلمة المرور خاطئة";
-            else if(error.code === 'auth/invalid-email') msg = "صيغة البريد الإلكتروني غير صحيحة";
-            
-            alert("⛔ " + msg);
-        });
+function applyAllData(data) {
+    applySettings(data);
+    applyContent(data);
+    renderComplexSchedule(data.schedule_complex);
+    renderTeachers(data.teachers_list_v2);
+    renderCustomCards(data.custom_cards);
+    renderRanks(data.ranks_list);
+    renderHolidays(data.holidays_list);
 }
 
+
 // ==========================================
-// 2. دوال التطبيق الأساسية (العرض فقط)
+// 🎉 منطق الترحيب الذكي
+// ==========================================
+function handleSmartWelcome(settings) {
+    if (!settings || !settings.welcome_screen || settings.welcome_screen.active === false) return;
+
+    const lastSeen = localStorage.getItem('welcome_last_seen_time');
+    const now = new Date().getTime();
+    const hours = 12; // ⏳ عدد الساعات قبل الظهور مرة أخرى
+    const diff = now - (lastSeen || 0);
+
+    // إذا مر 12 ساعة أو أول مرة
+    if (diff > (hours * 60 * 60 * 1000)) {
+        showWelcomeOverlay(settings.welcome_screen);
+        localStorage.setItem('welcome_last_seen_time', now);
+    }
+}
+
+function showWelcomeOverlay(config) {
+    const overlay = document.getElementById('welcome-overlay');
+    const titleEl = document.getElementById('welcome-title');
+    const msgEl = document.getElementById('welcome-text');
+    
+    // جلب اسم الطالب المحفوظ
+    let studentName = localStorage.getItem('studentName') || "يا بطل";
+    
+    // إعداد النصوص
+    titleEl.innerText = config.title || "أهلاً بك";
+    
+    // استبدال {name} باسم الطالب الحقيقي
+    let message = config.message || "نورتنا يا {name}";
+    message = message.replace("{name}", studentName);
+    msgEl.innerText = message;
+
+    // إظهار
+    overlay.style.display = 'flex';
+    
+    // إخفاء تلقائي بعد 2.5 ثانية
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 500);
+    }, 2500);
+}
+
+
+// ==========================================
+// 1. دوال التطبيق الأساسية
 // ==========================================
 
 function applySettings(data) {
     if(!data.settings) return;
     const s = data.settings;
 
-    // وضع الصيانة
+    // أ. وضع الصيانة
     const maint = document.getElementById('maintenance-mode');
     if(s.maintenance_mode === true) {
         maint.style.display = 'flex';
@@ -111,18 +121,25 @@ function applySettings(data) {
         document.querySelector('header').style.display = 'block';
     }
 
-    // الإشعار المنبثق
+    // ب. الإشعار المنبثق
     const popup = document.getElementById('site-notification');
     const dontShow = localStorage.getItem('dont_show_popup');
+    
+    // يظهر فقط إذا: (مفعل) + (لم يختر عدم الإظهار) + (لم يظهر الترحيب للتو حتى لا تتداخل)
+    // سنجعله يتأخر قليلاً
     if(s.popup_active === true && dontShow !== 'true') {
-        popup.style.display = 'flex';
+        setTimeout(() => {
+             const overlay = document.getElementById('welcome-overlay');
+             if(overlay.style.display === 'none') popup.style.display = 'flex';
+        }, 3000); // تأخير لضمان عدم التداخل مع الترحيب
+        
         document.getElementById('notif-title').innerText = s.popup_title || "تنبيه";
         document.getElementById('notif-body').innerText = s.popup_body || "...";
     } else {
         popup.style.display = 'none';
     }
 
-    // إخفاء/إظهار الأقسام
+    // ج. الأقسام
     toggleSection('block-news', s.show_news);
     toggleSection('block-student', s.show_student);
     toggleSection('block-question', s.show_question);
@@ -130,7 +147,7 @@ function applySettings(data) {
     toggleSection('block-schedule', s.show_schedule);
     toggleSection('block-ranks', s.show_ranks);
 
-    // الفيديو الخلفي
+    // د. الفيديو
     if(s.video_url) {
         const vid = document.getElementById('bg-video');
         if(vid && !vid.src.includes(s.video_url)) vid.src = s.video_url;
@@ -147,7 +164,6 @@ function applyContent(data) {
         setTxt('top-student-name', data.top_student.name);
         setTxt('top-student-desc', data.top_student.category);
     }
-    
     if(data.site_content) {
         const c = data.site_content;
         setTxt('txt_header_title', c.txt_header_title);
@@ -166,9 +182,8 @@ function applyContent(data) {
 }
 
 // ==========================================
-// 3. دوال بناء المحتوى (Renderers)
+// 2. دوال بناء المحتوى (Renderers)
 // ==========================================
-
 function renderCustomCards(list) {
     const container = document.getElementById('dynamic-custom-cards-container');
     if(!container) return;
@@ -199,19 +214,16 @@ function renderComplexSchedule(data) {
     Object.keys(data).sort().forEach(timeKey => {
         const timeSection = data[timeKey];
         if(!timeSection.rings) return;
-
         const timeHeader = document.createElement('div');
         timeHeader.className = 'time-group-title';
         timeHeader.innerText = timeSection.title || "فترة";
         container.appendChild(timeHeader);
-
         Object.values(timeSection.rings).forEach(ring => {
             const btn = document.createElement('div');
             btn.className = 'ring-accordion-btn';
             btn.innerHTML = `<span>📖 ${ring.name}</span> <span>▼</span>`;
             const panel = document.createElement('div');
             panel.className = 'ring-schedule-panel';
-            
             panel.innerHTML = `
                 <table class="schedule-table-simple">
                     <thead><tr><th>اليوم</th><th>المقرر / النشاط</th></tr></thead>
@@ -224,7 +236,6 @@ function renderComplexSchedule(data) {
                         <tr><td>الخميس</td><td>${ring.thu || '-'}</td></tr>
                     </tbody>
                 </table>`;
-
             btn.onclick = function() {
                 this.classList.toggle('active');
                 if (panel.style.display === "block") {
@@ -284,7 +295,7 @@ function renderHolidays(list) {
     });
 }
 
-// helpers
+// Helpers
 function setTxt(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerText = txt; }
 function setHTML(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerHTML = txt; }
 function toggleSection(id, show) {
@@ -298,4 +309,14 @@ function disablePopupForever() {
         alert("تم! لن تظهر لك هذه الرسالة مرة أخرى.");
         closePopup();
     }
+}
+function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
+function secureLogin() {
+    const u = document.getElementById('admin-user').value;
+    const p = document.getElementById('admin-pass').value;
+    if (!u || !p) return alert("أدخل البيانات");
+    
+    firebase.auth().signInWithEmailAndPassword(u, p)
+        .then(() => window.location.href = "admin.html")
+        .catch(e => alert("خطأ في الدخول: " + e.message));
 }
