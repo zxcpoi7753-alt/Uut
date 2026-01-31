@@ -59,65 +59,36 @@ function applyAllData(data) {
 
 
 // ==========================================
-// 🎉 منطق الترحيب الذكي (نسخة الفحص - Debug)
+// 🕵️‍♂️ دالة تشخيص المشكلة (ستظهر رسالة منبثقة تخبرك بالخطأ)
 // ==========================================
 function handleSmartWelcome(settings) {
-    console.log("🔎 فحص الترحيب الذكي...");
-
-    // 1. التحقق من وجود الإعدادات
-    if (!settings || !settings.welcome_screen) {
-        console.warn("⚠️ لم يتم العثور على إعدادات الترحيب (يرجى الحفظ من لوحة التحكم)");
-        return;
-    }
-
-    // 2. التحقق هل هي مفعلة
-    if (settings.welcome_screen.active !== true) {
-        console.log("ℹ️ الترحيب معطل من لوحة التحكم.");
-        return;
-    }
-
-    // 3. التحقق من الوقت (12 ساعة)
-    const lastSeen = localStorage.getItem('welcome_last_seen_time');
-    const now = new Date().getTime();
-    const hours = 12; 
-    const diff = now - (lastSeen || 0);
-
-    console.log(`🕒 الوقت المنقضي: ${(diff / (1000 * 60)).toFixed(1)} دقيقة`);
-
-    if (diff > (hours * 60 * 60 * 1000)) {
-        console.log("✅ الشروط تحققت! جاري الإظهار.");
-        showWelcomeOverlay(settings.welcome_screen);
-        localStorage.setItem('welcome_last_seen_time', now);
-    } else {
-        console.log("⏳ لم يحن الوقت بعد.");
-    }
-}
-
-function showWelcomeOverlay(config) {
+    // 1. فحص وجود التصميم في الصفحة
     const overlay = document.getElementById('welcome-overlay');
-    if(!overlay) return;
+    if (!overlay) {
+        alert("❌ خطأ فادح: كود HTML الخاص بالشاشة غير موجود في ملف index.html! \nتأكد أنك نسخت كود <div id='welcome-overlay'>...");
+        return;
+    }
 
-    const titleEl = document.getElementById('welcome-title');
-    const msgEl = document.getElementById('welcome-text');
-    
-    // جلب اسم الطالب
-    let studentName = localStorage.getItem('studentName') || "يا بطل";
-    
-    // النصوص
-    titleEl.innerText = config.title || "أهلاً بك";
-    let message = config.message || "نورتنا يا {name}";
-    message = message.replace("{name}", studentName);
-    msgEl.innerText = message;
+    // 2. فحص الاتصال بقاعدة البيانات
+    if (!settings || !settings.welcome_screen) {
+        alert("⚠️ تنبيه: لم يتم العثور على الإعدادات في Firebase. \nالحل: اذهب لصفحة الأدمن > الإعدادات العامة > واضغط 'حفظ إعدادات الترحيب'.");
+        return;
+    }
 
-    // إظهار
-    overlay.style.display = 'flex';
+    // 3. فحص زر التفعيل
+    if (settings.welcome_screen.active !== true) {
+        alert("ℹ️ معلومة: ميزة الترحيب 'معطلة' من لوحة التحكم. \nالحل: فعل خيار 'تفعيل الترحيب' في الأدمن واضغط حفظ.");
+        return;
+    }
+
+    // 4. إذا وصلنا هنا، فكل شيء سليم! سأجبر الشاشة على الظهور
+    // (ألغيت فحص الوقت مؤقتاً لكي تظهر لك الآن فوراً)
+    console.log("✅ الفحص ناجح. جاري الإظهار...");
     
-    // إخفاء تلقائي
-    setTimeout(() => {
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.style.display = 'none', 500);
-    }, 2500);
+    // إجبار الظهور (تجاوزنا فحص الوقت)
+    showWelcomeOverlay(settings.welcome_screen);
 }
+
 
 
 // ==========================================
