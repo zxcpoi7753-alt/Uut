@@ -6,13 +6,10 @@
     <title>لوحة التحكم الشاملة - الثريا V3</title>
     
     <link rel="stylesheet" href="css/admin_style.css">
-
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body style="display: none;">
-    <div id="toast-container" class="toast-container"></div>
-
+<body style="display: none;"> <div id="toast-container" class="toast-container"></div>
 
     <aside class="sidebar">
         <div class="brand"><i class="fas fa-cogs"></i> لوحة التحكم V3</div>
@@ -38,6 +35,7 @@
         </div>
 
         <div id="tab-general" class="panel active">
+            
             <div class="card border-red">
                 <h3><i class="fas fa-power-off"></i> حالة الموقع</h3>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -45,19 +43,8 @@
                     <label class="switch"><input type="checkbox" id="toggle_maint"><span class="slider"></span></label>
                 </div>
             </div>
-            <div class="card border-blue">
-                <h3><i class="fas fa-bell"></i> الإشعار المنبثق</h3>
-                <div style="margin-bottom:15px; background:#eff6ff; padding:10px; border-radius:5px;"><label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="notify_active"> <strong>تفعيل الإشعار؟</strong></label></div>
-                <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="notify_title" class="input-field"></div><div class="form-group"><label>النص:</label><input type="text" id="notify_body" class="input-field"></div></div>
-                <button onclick="saveNotification()" class="btn btn-primary" style="margin-top:10px;">حفظ الإشعار</button>
-            </div>
-            <div class="card">
-                <h3><i class="fas fa-edit"></i> نصوص الهيدر</h3>
-                <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="inp_header_title" class="input-field"></div><div class="form-group"><label>الوصف:</label><input type="text" id="inp_header_subtitle" class="input-field"></div><div class="form-group"><label>الموقع:</label><input type="text" id="inp_header_location" class="input-field"></div><div class="form-group"><label>فيديو الخلفية:</label><input type="text" id="inp_video" class="input-field"></div></div>
-                <button onclick="saveGeneral()" class="btn btn-primary" style="margin-top:15px;">💾 حفظ الإعدادات</button>
-            </div>
-        </div>
-                    <div class="card border-green">
+
+            <div class="card border-green">
                 <h3><i class="fas fa-hand-sparkles"></i> شاشة الترحيب الذكية</h3>
                 <div style="margin-bottom:15px; background:#f0fdf4; padding:10px; border-radius:5px;">
                     <label style="display:flex; align-items:center; gap:10px;">
@@ -67,17 +54,30 @@
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>العنوان (مثلاً: أهلاً بك):</label>
-                        <input type="text" id="welcome_title_inp" class="input-field">
+                        <label>العنوان:</label>
+                        <input type="text" id="welcome_title_inp" class="input-field" placeholder="مثلاً: السلام عليكم">
                     </div>
                     <div class="form-group">
                         <label>الرسالة (استخدم {name} لاسم الطالب):</label>
-                        <input type="text" id="welcome_msg_inp" class="input-field" placeholder="نورتنا يا {name}">
+                        <input type="text" id="welcome_msg_inp" class="input-field" placeholder="أنرت حلقات الثريا يا {name}">
                     </div>
                 </div>
                 <button onclick="saveWelcomeSettings()" class="btn btn-success" style="margin-top:10px;">حفظ إعدادات الترحيب</button>
             </div>
 
+            <div class="card border-blue">
+                <h3><i class="fas fa-bell"></i> الإشعار المنبثق</h3>
+                <div style="margin-bottom:15px; background:#eff6ff; padding:10px; border-radius:5px;"><label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="notify_active"> <strong>تفعيل الإشعار؟</strong></label></div>
+                <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="notify_title" class="input-field"></div><div class="form-group"><label>النص:</label><input type="text" id="notify_body" class="input-field"></div></div>
+                <button onclick="saveNotification()" class="btn btn-primary" style="margin-top:10px;">حفظ الإشعار</button>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-edit"></i> نصوص الهيدر</h3>
+                <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="inp_header_title" class="input-field"></div><div class="form-group"><label>الوصف:</label><input type="text" id="inp_header_subtitle" class="input-field"></div><div class="form-group"><label>الموقع:</label><input type="text" id="inp_header_location" class="input-field"></div><div class="form-group"><label>فيديو الخلفية:</label><input type="text" id="inp_video" class="input-field"></div></div>
+                <button onclick="saveGeneral()" class="btn btn-primary" style="margin-top:15px;">💾 حفظ الإعدادات</button>
+            </div>
+        </div>
 
         <div id="tab-sections" class="panel">
             <div class="card">
