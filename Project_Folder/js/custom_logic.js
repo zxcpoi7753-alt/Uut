@@ -33,11 +33,70 @@ try {
             localStorage.setItem('site_cache_v3', JSON.stringify(data));
             // تحديث الواجهة
             applyAllData(data);
-            
-            // 🎁 3. منطق الترحيب الذكي (يتم فحصه بعد جلب الإعدادات)
-            handleSmartWelcome(data.settings);
-        }
-    });
+
+
+// ==========================================
+// 🎉 منطق الترحيب الذكي (نسخة الفحص - Debug)
+// ==========================================
+function handleSmartWelcome(settings) {
+    console.log("🔎 فحص الترحيب الذكي...");
+
+    // 1. التحقق من وجود الإعدادات في قاعدة البيانات
+    if (!settings || !settings.welcome_screen) {
+        console.warn("⚠️ لم يتم العثور على إعدادات الترحيب في قاعدة البيانات. (الرجاء الحفظ من لوحة التحكم)");
+        return;
+    }
+
+    // 2. التحقق هل هي مفعلة أم لا
+    if (settings.welcome_screen.active !== true) {
+        console.log("ℹ️ الترحيب معطل من لوحة التحكم.");
+        return;
+    }
+
+    // 3. التحقق من الوقت (12 ساعة)
+    const lastSeen = localStorage.getItem('welcome_last_seen_time');
+    const now = new Date().getTime();
+    const hours = 12; 
+    const diff = now - (lastSeen || 0);
+
+    console.log(`🕒 الوقت المنقضي منذ آخر ظهور: ${(diff / (1000 * 60)).toFixed(1)} دقيقة`);
+
+    // الشرط: إذا مر الوقت المحدد
+    if (diff > (hours * 60 * 60 * 1000)) {
+        console.log("✅ الشروط تحققت! جاري إظهار الترحيب.");
+        showWelcomeOverlay(settings.welcome_screen);
+        localStorage.setItem('welcome_last_seen_time', now);
+    } else {
+        console.log("⏳ لم يحن الوقت بعد للظهور مرة أخرى.");
+    }
+}
+
+function showWelcomeOverlay(config) {
+    const overlay = document.getElementById('welcome-overlay');
+    if(!overlay) return console.error("❌ عنصر welcome-overlay غير موجود في HTML");
+
+    const titleEl = document.getElementById('welcome-title');
+    const msgEl = document.getElementById('welcome-text');
+    
+    // جلب اسم الطالب
+    let studentName = localStorage.getItem('studentName') || "يا بطل";
+    
+    // النصوص
+    titleEl.innerText = config.title || "أهلاً بك";
+    let message = config.message || "نورتنا يا {name}";
+    message = message.replace("{name}", studentName);
+    msgEl.innerText = message;
+
+    // إظهار
+    overlay.style.display = 'flex';
+    
+    // إخفاء تلقائي
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 500);
+    }, 2500); // يظهر لمدة 2.5 ثانية
+}
+
 
 } catch (error) { console.error("Firebase Error:", error); }
 
