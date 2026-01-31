@@ -1,15 +1,16 @@
 /* ============================================================
-   ملف: js/admin_logic.js (النسخة المحمية V2) 🔐
+   ملف: js/admin_logic.js
+   الوظيفة: حماية لوحة التحكم + إدارة البيانات مع فايربيس
    ============================================================ */
 
-// 1. إعدادات فايربيس (Firebase Config)
+// 1. إعدادات فايربيس (بطاقة الهوية الخاصة بمشروعك)
 const firebaseConfig = {
-    apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
-    authDomain: "quran-app-93e24.firebaseapp.com",
-    projectId: "quran-app-93e24",
-    storageBucket: "quran-app-93e24.firebasestorage.app",
-    messagingSenderId: "82150677933",
-    appId: "1:82150677933:web:64213e04463c1bb3179524"
+  apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
+  authDomain: "quran-app-93e24.firebaseapp.com",
+  projectId: "quran-app-93e24",
+  storageBucket: "quran-app-93e24.firebasestorage.app",
+  messagingSenderId: "82150677933",
+  appId: "1:82150677933:web:64213e04463c1bb3179524"
 };
 
 // تهيئة الاتصال إذا لم يكن مهيأ
@@ -20,20 +21,24 @@ const db = firebase.database();
 const auth = firebase.auth();
 
 // ==========================================
-// 2. نظام الحماية الجديد (الحارس) 👮‍♂️
+// 2. نظام الحماية الصارم (The Security Guard) 👮‍♂️
 // ==========================================
 auth.onAuthStateChanged((user) => {
     if (user) {
-        // ✅ نعم، مسجل دخول: أظهر الصفحة الآن
+        // ✅ نعم، المستخدم مسجل دخول
+        console.log("تم التحقق من المدير:", user.email);
+        
+        // 1. إظهار الصفحة (كانت مخفية)
         document.body.style.display = "flex"; 
         
-        console.log("Admin Logged in:", user.email);
+        // 2. عرض الإيميل في الأعلى
         const emailDisplay = document.getElementById('admin-email-display');
         if(emailDisplay) emailDisplay.innerText = user.email;
         
-        startAdminListener(); // تشغيل دالة جلب البيانات
+        // 3. بدء جلب البيانات
+        startAdminListener(); 
     } else {
-        // ❌ لا، غير مسجل: اطرده فوراً للصفحة الرئيسية
+        // ❌ لا، غير مسجل دخول -> طرد فوري
         window.location.replace("index.html");
     }
 });
@@ -47,13 +52,15 @@ function logout() {
 }
 
 // ==========================================
-// 3. دوال لوحة التحكم (تعمل فقط بعد الدخول)
+// 3. دوال الواجهة (التبويبات)
 // ==========================================
-
-// دوال التنقل (التبويبات)
 function showTab(tabId) {
+    // إخفاء كل الأقسام
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    // إظهار القسم المطلوب
     document.getElementById(tabId).classList.add('active');
+    
+    // تحديث شكل القائمة الجانبية
     document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
     if(event && event.target) {
         let target = event.target.closest('a');
@@ -61,21 +68,23 @@ function showTab(tabId) {
     }
 }
 
-// مراقب البيانات (Realtime Listener)
+// ==========================================
+// 4. مراقب البيانات (جلب وعرض البيانات)
+// ==========================================
 function startAdminListener() {
     db.ref().on('value', (snapshot) => {
         const d = snapshot.val();
         if(!d) return;
 
-        // أ. تعبئة حقول الإعدادات
+        // أ. تعبئة الإعدادات العامة
         if(d.settings) {
             setCheck('toggle_maint', d.settings.maintenance_mode);
             setVal('inp_video', d.settings.video_url);
-            
             setCheck('notify_active', d.settings.popup_active);
             setVal('notify_title', d.settings.popup_title);
             setVal('notify_body', d.settings.popup_body);
             
+            // مربعات الاختيار للأقسام
             ['news','student','question','ranks','schedule','teachers'].forEach(k => {
                 setCheck('show_'+k, d.settings['show_'+k]);
             });
@@ -94,7 +103,7 @@ function startAdminListener() {
             setVal('inp_q_winner', d.weekly_question.last_winner);
         }
 
-        // ج. رسم القوائم
+        // ج. رسم القوائم (البطاقات، المعلمين، إلخ)
         renderList('custom-cards-list-admin', d.custom_cards, 'card');
         renderList('teachers-list-v2-admin', d.teachers_list_v2, 'teacher');
         renderList('ranks-list-admin', d.ranks_list, 'rank');
@@ -103,14 +112,8 @@ function startAdminListener() {
     });
 }
 
-// --- دوال مساعدة للكود (Helpers) ---
-function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
-function isChecked(id) { const el = document.getElementById(id); return el ? el.checked : false; }
-function setVal(id, v) { const el = document.getElementById(id); if(el) el.value = v || ""; }
-function setCheck(id, v) { const el = document.getElementById(id); if(el) el.checked = v; }
-
 // ==========================================
-// 4. عمليات الحفظ (Save Operations)
+// 5. دوال الحفظ (Save Functions)
 // ==========================================
 
 function saveGeneral() {
@@ -144,12 +147,12 @@ function saveNotification() {
     }).then(() => alert("✅ تم تحديث الإشعار"));
 }
 
-function saveNewsBar() { db.ref('news_bar').set({ text: val('inp_news_bar') }).then(()=>alert("✅ تم التحديث")); }
-function saveQuestion() { db.ref('weekly_question').set({ text: val('inp_q_text'), last_winner: val('inp_q_winner') }).then(()=>alert("✅ تم التحديث")); }
-function saveAbout() { db.ref('site_content/txt_about_content').set(val('inp_about_content')).then(()=>alert("✅ تم الحفظ")); }
+function saveNewsBar() { db.ref('news_bar').set({ text: val('inp_news_bar') }).then(()=>alert("✅ تم تحديث الشريط")); }
+function saveQuestion() { db.ref('weekly_question').set({ text: val('inp_q_text'), last_winner: val('inp_q_winner') }).then(()=>alert("✅ تم حفظ السؤال")); }
+function saveAbout() { db.ref('site_content/txt_about_content').set(val('inp_about_content')).then(()=>alert("✅ تم حفظ من نحن")); }
 
 // ==========================================
-// 5. دوال الإضافة والحذف (CRUD)
+// 6. دوال الإضافة والحذف (CRUD)
 // ==========================================
 
 // --- البطاقات ---
@@ -193,7 +196,7 @@ function addTeacherV2() {
 }
 function deleteTeacherV2(key) { if(confirm("حذف؟")) db.ref('teachers_list_v2/'+key).remove(); }
 
-// --- الأوائل والإجازات ---
+// --- الأوائل ---
 function addRank() {
     const name = val('rank_name');
     if(!name) return alert("اكتب الاسم");
@@ -202,6 +205,7 @@ function addRank() {
 }
 function deleteRank(key) { if(confirm("حذف؟")) db.ref('ranks_list/'+key).remove(); }
 
+// --- الإجازات ---
 function addHoliday() {
     const txt = val('holiday_txt');
     if(!txt) return alert("اكتب النص");
@@ -210,8 +214,14 @@ function addHoliday() {
 function deleteHoliday(key) { if(confirm("حذف؟")) db.ref('holidays_list/'+key).remove(); }
 
 // ==========================================
-// 6. دوال الرسم (Render Helpers)
+// 7. أدوات مساعدة (Helpers)
 // ==========================================
+function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function isChecked(id) { const el = document.getElementById(id); return el ? el.checked : false; }
+function setVal(id, v) { const el = document.getElementById(id); if(el) el.value = v || ""; }
+function setCheck(id, v) { const el = document.getElementById(id); if(el) el.checked = v; }
+
+// دالة الرسم (Render)
 function renderList(elId, data, type) {
     const el = document.getElementById(elId);
     if(!el) return;
