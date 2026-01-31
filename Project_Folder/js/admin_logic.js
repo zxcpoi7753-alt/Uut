@@ -18,17 +18,17 @@ const db = firebase.database();
 const auth = firebase.auth();
 
 // ==========================================
-// 1. نظام الحماية (The Gatekeeper)
+// 1. نظام الحماية (The Gatekeeper) - معدل لمنع الوميض
 // ==========================================
-// يتم التحقق عند تحميل الصفحة
 auth.onAuthStateChanged((user) => {
     if (user) {
-        // المستخدم مسجل دخول كمدير - مرحباً به
+        // المستخدم مسجل دخول كمدير - الآن فقط نظهر الصفحة
         console.log("Admin Logged in:", user.email);
-        // يمكنك هنا إظهار اسم المدير في القائمة إذا أردت
+        document.body.style.display = 'flex'; // إعادة إظهار الصفحة (لأنها مخفية في HTML)
     } else {
-        // لا يوجد مستخدم - طرد فوراً
+        // لا يوجد مستخدم - ابقِ الصفحة مخفية واطرد المستخدم
         console.warn("Unauthorized access attempt.");
+        // الصفحة ستبقى (display: none) لذلك لن يرى المستخدم شيئاً
         window.location.replace("index.html");
     }
 });
