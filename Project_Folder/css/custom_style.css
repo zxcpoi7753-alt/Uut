@@ -63,16 +63,22 @@
     50% { transform: translateY(-10px); }
 }
 
-/* --- 2. وضع الصيانة --- */
+/* --- 2. وضع الصيانة (تم الإصلاح ليغطي القوائم) --- */
 #maintenance-mode {
     display: none;
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: #1e293b; color: white;
-    z-index: 999999;
-    flex-direction: column; justify-content: center; align-items: center;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: #1e293b;
+    color: white;
+    /* قيمة عالية جداً لتغطية القائمة العائمة وزر القفل */
+    z-index: 2147483647; 
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     text-align: center;
 }
+
 
 /* --- 3. الإشعار المنبثق (Popup) --- */
 .popup-overlay {
