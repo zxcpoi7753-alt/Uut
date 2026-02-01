@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: css/custom_style.css
-   الوظيفة: تنسيقات الترحيب + التصميم الزجاجي الأخضر للأوائل (V7 Final)
+   الوظيفة: تنسيقات الترحيب + التصميم الزجاجي الأخضر (V7 Final)
    ============================================================ */
 
 /* ==========================================
@@ -88,108 +88,74 @@
 
 
 /* ============================================================
-   🎨 تصميم الأوائل V7 (الأخضر + توسيط العنوان + اليمين لليسار)
+   🎨 تصميم الأوائل V7 (هيكل قابل للتخصيص - الثيم الأخضر)
    ============================================================ */
 
 /* حاوية الحلقة */
 .rank-group-card {
-    background: transparent;
-    margin-bottom: 40px;
-    border: none;
-    box-shadow: none;
+    background: transparent; margin-bottom: 40px; border: none; box-shadow: none;
+    /* الزوم يتم التحكم به من الأدمن */
 }
 
-/* رأس الحلقة (اسم الحلقة) - تم التعديل: أخضر + وسط */
+/* رأس الحلقة (اسم الحلقة) */
 .rank-group-header {
-    text-align: center; /* توسيط العنوان */
-    color: #047857; /* لون أخضر غامق للنص */
-    font-size: 1.6rem;
-    font-weight: 900;
-    margin-bottom: 25px;
+    /* الألوان والأحجام يتم التحكم بها من الأدمن */
+    /* القيم هنا هي قيم احتياطية (Fallback) */
+    text-align: center;
+    color: #064e3b; 
+    font-weight: 900; 
+    margin-bottom: 25px; 
     text-shadow: 0 1px 2px rgba(255,255,255,0.8);
-    border-bottom: 3px solid #10b981; /* خط أخضر فاتح */
-    padding-bottom: 10px;
+    border-bottom: 3px solid #10b981;
+    padding-bottom: 10px; 
     display: block;
-    background: linear-gradient(to right, transparent, rgba(16, 185, 129, 0.1), transparent); /* خلفية خفيفة جداً */
+    background: linear-gradient(to right, transparent, rgba(16, 185, 129, 0.1), transparent);
 }
 
 /* قائمة الطلاب */
-.students-list {
-    display: flex; flex-direction: column; gap: 15px;
-}
+.students-list { display: flex; flex-direction: column; gap: 15px; }
 
 /* سطر الطالب */
 .student-item {
-    display: flex; 
-    align-items: center; 
-    padding: 20px;
+    display: flex; align-items: center; padding: 20px;
     
-    /* عكس الاتجاه ليظهر الاسم يمين والوسام يسار */
-    flex-direction: row-reverse; 
-    
+    /* التصميم الزجاجي */
     background: rgba(255, 255, 255, 0.65);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     
-    border-radius: 20px;
+    border-radius: 20px; 
     border: 1px solid rgba(255, 255, 255, 0.8);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
     
-    position: relative; overflow: hidden;
-    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    
+    position: relative; overflow: hidden; transition: transform 0.2s;
     user-select: none; -webkit-user-select: none;
 }
 
 /* تأثير الضغط المطول */
-.student-item.pressing {
-    transform: scale(0.95);
-    background: rgba(255, 255, 255, 0.9);
-}
+.student-item.pressing { transform: scale(0.95); background: rgba(255, 255, 255, 0.9); }
 
-/* أيقونة المركز */
-.s-rank-icon {
-    font-size: 2.2rem; 
-    margin-right: 20px; /* عكسنا الهامش لأننا عكسنا الاتجاه */
-    width: 50px; text-align: center;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+/* أيقونة الوسام */
+.s-rank-icon { 
+    width: 50px; text-align: center; font-size: 2.2rem; 
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); 
 }
 
 /* اسم الطالب */
 .s-name {
-    font-size: 1.5rem; 
-    font-weight: 800;
-    color: #064e3b; /* أخضر غامق جداً للاسم */
-    flex-grow: 1;
-    text-align: right; /* محاذاة النص لليمين */
+    font-weight: 800; flex-grow: 1;
+    /* اللون والحجم والمحاذاة تأتي من إعدادات الأدمن */
 }
 
-/* التمييز الخفيف للأوائل (ثيم أخضر وذهبي) */
-.student-item.rank-1 {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(254, 243, 199, 0.6));
-    border: 2px solid rgba(251, 191, 36, 0.6);
-}
-.student-item.rank-1 .s-name { color: #b45309; }
+/* خلفيات المراكز (شفافة ومتناسقة) */
+.student-item.rank-1 { background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(254, 243, 199, 0.6)); border: 2px solid rgba(251, 191, 36, 0.6); }
+.student-item.rank-2 { background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(241, 245, 249, 0.6)); border: 2px solid rgba(148, 163, 184, 0.5); }
+.student-item.rank-3 { background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 237, 213, 0.6)); border: 2px solid rgba(253, 186, 116, 0.5); }
 
-.student-item.rank-2 {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(241, 245, 249, 0.6));
-    border: 2px solid rgba(148, 163, 184, 0.5);
-}
-
-.student-item.rank-3 {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 237, 213, 0.6));
-    border: 2px solid rgba(253, 186, 116, 0.5);
-}
-
-/* رسالة التهنئة المنبثقة */
+/* رسالة التهنئة المنبثقة (أخضر غامق فخم) */
 .student-toast {
-    position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
-    background: rgba(6, 78, 59, 0.95); /* خلفية خضراء غامقة جداً */
-    color: white;
-    padding: 30px; border-radius: 20px; text-align: center;
-    z-index: 99999; min-width: 300px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    opacity: 0; pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+    background: rgba(6, 78, 59, 0.95); color: white; padding: 30px; border-radius: 20px;
+    text-align: center; z-index: 99999; min-width: 300px; box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    opacity: 0; pointer-events: none; transition: all 0.3s;
 }
 .student-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
