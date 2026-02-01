@@ -1,6 +1,5 @@
 /* ============================================================
-   ملف: js/custom_logic.js
-   الوظيفة: المحرك الرئيسي (V6 - النسخة النهائية: ضغط مطول + إصلاح الرسائل)
+   ملف: js/custom_logic.js (V7 - تطبيق التصميم الديناميكي + الإصلاحات)
    ============================================================ */
 
 const firebaseConfig = {
@@ -45,7 +44,7 @@ function applyAllData(data) {
     renderComplexSchedule(data.schedule_complex);
     renderTeachers(data.teachers_list_v2, data.settings);
     renderCustomCards(data.custom_cards);
-    renderRanks(data.ranks_list); // 👈 (نظام الضغط المطول)
+    renderRanks(data.ranks_list, data.settings); // 👈 نمرر الإعدادات هنا للتصميم
     renderHolidays(data.holidays_list);
 }
 
@@ -207,8 +206,8 @@ function renderTeachers(list, settings) {
     });
 }
 
-// ⭐ [تحديث الأوائل النهائي: دمج الحلقات + ضغط مطول]
-function renderRanks(list) {
+// ⭐ [تحديث الأوائل V7: تطبيق التصميم من الأدمن]
+function renderRanks(list, settings) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return;
     container.innerHTML = '';
@@ -223,7 +222,16 @@ function renderRanks(list) {
     
     if(!list) { container.innerHTML = '<p style="text-align:center; padding:20px;">لم يتم رفع الأسماء بعد</p>'; return; }
 
-    // 1. تجميع الحلقات (مع حل مشكلة المسافات)
+    // 1. جلب إعدادات التصميم (مع قيم افتراضية خضراء جميلة)
+    const design = (settings && settings.ranks_design) ? settings.ranks_design : {
+        ring_color: '#10b981', // أخضر فاتح للحدود
+        name_color: '#064e3b', // أخضر غامق للنصوص
+        ring_size: '1.6',      // حجم خط الحلقة
+        name_size: '1.5',      // حجم خط الطالب
+        zoom: '100'            // الزوم الطبيعي
+    };
+
+    // 2. تجميع الحلقات
     const groups = {};
     Object.values(list).forEach(r => {
         if(r.active === false) return;
@@ -232,41 +240,59 @@ function renderRanks(list) {
         groups[ringName].push(r);
     });
 
-    // 2. الرسم
+    // 3. الرسم
     Object.keys(groups).sort().forEach(ringName => {
         const students = groups[ringName].sort((a,b) => a.rank - b.rank);
         
         const card = document.createElement('div');
         card.className = 'rank-group-card';
         
-        let html = `<div class="rank-group-header">${ringName}</div><div class="students-list">`;
+        // تطبيق الزوم
+        card.style.zoom = design.zoom + '%';
+        
+        // تطبيق ستايل الحلقة (لون، حجم، توسيط)
+        let html = `
+            <div class="rank-group-header" style="
+                text-align: center;
+                color: ${design.name_color};
+                border-bottom-color: ${design.ring_color};
+                font-size: ${design.ring_size}rem;
+            ">
+                ${ringName}
+            </div>
+            <div class="students-list">`;
         
         students.forEach(s => {
             let rankClass = '';
             let medal = '';
-            
             if(s.rank == 1) { rankClass = 'rank-1'; medal = '🥇'; }
             else if(s.rank == 2) { rankClass = 'rank-2'; medal = '🥈'; }
             else if(s.rank == 3) { rankClass = 'rank-3'; medal = '🥉'; }
             else { rankClass = 'rank-other'; medal = `#${s.rank}`; }
 
-            // تجهيز الرسالة
-            const defaultMsg = "مبارك التفوق والنجاح! 🌟";
-            const msgContent = (s.message && s.message.trim() !== "") ? s.message : defaultMsg;
+            const msgContent = (s.message && s.message.trim() !== "") ? s.message : "مبارك التفوق والنجاح! 🌟";
             const safeMsg = msgContent.replace(/'/g, "\\'");
             const safeName = s.name.replace(/'/g, "\\'");
 
-            // إضافة أحداث الضغط المطول
+            // تطبيق ستايل الطالب (اتجاه معكوس، لون، حجم)
             html += `
                 <div class="student-item ${rankClass}" 
+                     style="flex-direction: row-reverse;" 
                      oncontextmenu="return false;" 
                      ontouchstart="handleTouchStart(this, '${safeName}', '${safeMsg}')" 
                      ontouchend="handleTouchEnd(this)" 
                      onmousedown="handleTouchStart(this, '${safeName}', '${safeMsg}')" 
                      onmouseup="handleTouchEnd(this)">
                      
-                    <div class="s-rank-icon">${medal}</div>
-                    <div class="s-name">${s.name}</div>
+                    <div class="s-rank-icon" style="margin-right:20px; margin-left:0;">${medal}</div>
+                    
+                    <div class="s-name" style="
+                        text-align: right;
+                        color: ${design.name_color};
+                        font-size: ${design.name_size}rem;
+                    ">
+                        ${s.name}
+                    </div>
                 </div>
             `;
         });
@@ -279,7 +305,7 @@ function renderRanks(list) {
 
 // === منطق الضغط المطول ===
 let longPressTimer;
-const LONG_PRESS_DURATION = 700; // المدة: 0.7 ثانية
+const LONG_PRESS_DURATION = 700;
 
 function handleTouchStart(el, name, msg) {
     el.classList.add('pressing'); 
@@ -302,7 +328,6 @@ function showStudentPraise(name, msg) {
     `;
     toast.classList.add('show');
     
-    // إخفاء تلقائي بعد 4 ثواني
     setTimeout(() => {
         toast.classList.remove('show');
     }, 4000);
