@@ -15,11 +15,11 @@
     <link rel="stylesheet" href="css/layout.css">      
     <link rel="stylesheet" href="css/components.css">  
     <link rel="stylesheet" href="css/darkmode.css">    
-    <link rel="stylesheet" href="css/custom_style.css">
+    <link rel="stylesheet" href="css/custom_style.css?v=11">
 </head>
 <body oncontextmenu="return false;">
 
-        <div id="welcome-overlay">
+    <div id="welcome-overlay">
         <div class="welcome-card">
             <span class="welcome-icon">👋</span>
             <h2 id="welcome-title" class="welcome-title">أهلاً بك</h2>
@@ -330,6 +330,18 @@
             <button onclick="document.getElementById('login-modal').style.display='none'" style="margin-top: 15px; background: none; border: none; color: #ef4444; cursor: pointer; text-decoration: underline;">إلغاء</button>
         </div>
     </div>
+    
+    <div id="confirm-modal" class="custom-modal">
+        <div class="custom-modal-content">
+            <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <h3>هل أنت متأكد؟</h3>
+            <p>سيتم حذف هذا العنصر نهائياً ولن تتمكن من استعادته.</p>
+            <div class="modal-actions">
+                <button onclick="confirmAction()" class="btn btn-danger">نعم، احذف</button>
+                <button onclick="closeModal()" class="btn btn-secondary">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -341,7 +353,7 @@
     <script src="js/azkar.js"></script>
     <script src="js/logic.js"></script>
 
-    <script src="js/custom_logic.js"></script>
+    <script src="js/custom_logic.js?v=11"></script>
 
 </body>
 </html>
