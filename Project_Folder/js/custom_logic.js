@@ -154,7 +154,7 @@ function applyContent(data) {
     
     // العنوان الرئيسي
     setSafeTxt('txt_header_title', c.txt_header_title, "حلقات الثريا");
-    applyColor('txt_header_title', c.col_header_title, '#ffffff'); // تطبيق اللون الخاص
+    applyColor('txt_header_title', c.col_header_title, '#ffffff'); // تطبيق اللون الخاص (أبيض افتراضياً)
 
     // الوصف
     setSafeTxt('txt_header_subtitle', c.txt_header_subtitle, "لتعليم القرآن الكريم");
