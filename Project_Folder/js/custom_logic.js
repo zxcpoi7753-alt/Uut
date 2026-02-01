@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: js/custom_logic.js
-   الوظيفة: جلب البيانات + الترحيب الذكي + تطبيق التعديلات (إيموجي ومسافات)
+   الوظيفة: جلب البيانات + الترحيب + التصميم المطور للأوائل (V3)
    ============================================================ */
 
 const firebaseConfig = {
@@ -42,9 +42,9 @@ function applyAllData(data) {
     applySettings(data);
     applyContent(data);
     renderComplexSchedule(data.schedule_complex);
-    renderTeachers(data.teachers_list_v2, data.settings); // مررنا الإعدادات هنا لنعرف المسافة
+    renderTeachers(data.teachers_list_v2, data.settings);
     renderCustomCards(data.custom_cards);
-    renderRanks(data.ranks_list);
+    renderRanks(data.ranks_list); // 👈 هنا التغيير الكبير
     renderHolidays(data.holidays_list);
 }
 
@@ -90,7 +90,6 @@ function showWelcomeOverlay(config) {
 // ==========================================
 // 1. دوال التطبيق الأساسية
 // ==========================================
-
 function applySettings(data) {
     if(!data.settings) return;
     const s = data.settings;
@@ -110,7 +109,6 @@ function applySettings(data) {
     // الإشعار المنبثق
     const popup = document.getElementById('site-notification');
     const dontShow = localStorage.getItem('dont_show_popup');
-    
     if(s.popup_active === true && dontShow !== 'true') {
         setTimeout(() => {
              const overlay = document.getElementById('welcome-overlay');
@@ -124,7 +122,7 @@ function applySettings(data) {
         popup.style.display = 'none';
     }
 
-    // الأقسام والفيديو
+    // الأقسام
     toggleSection('block-news', s.show_news);
     toggleSection('block-student', s.show_student);
     toggleSection('block-question', s.show_question);
@@ -165,6 +163,7 @@ function applyContent(data) {
     }
 }
 
+
 // ==========================================
 // 2. دوال بناء المحتوى (Renderers)
 // ==========================================
@@ -190,58 +189,83 @@ function renderCustomCards(list) {
     });
 }
 
-// ⭐ [تحديث هام]: دعم الإيموجي والمسافات للمعلمين
 function renderTeachers(list, settings) {
     const container = document.getElementById('dynamic-teachers-container');
     if(!container) return;
     container.innerHTML = '';
     
-    // 1. تحديد المسافة من الإعدادات أو استخدام 15px كافتراضي
     const spacing = (settings && settings.teacher_spacing) ? settings.teacher_spacing + 'px' : '15px';
     
     if(!list) { container.innerHTML = '<p>لا يوجد معلمون حالياً</p>'; return; }
     
     Object.values(list).forEach(t => {
         if(t.active === false) return; 
-
-        // 2. التحقق من وجود إيموجي أو استخدام الأيقونة الافتراضية
-        let iconHtml = '';
-        if (t.emoji && t.emoji.trim() !== "") {
-            // إذا يوجد إيموجي، نعرضه بخط كبير وبدون خلفية
-            iconHtml = `<div class="teacher-icon" style="background:transparent; font-size:1.8rem;">${t.emoji}</div>`;
-        } else {
-            // الأيقونة الافتراضية
-            iconHtml = `<div class="teacher-icon"><i class="fas fa-user-tie"></i></div>`;
-        }
+        let iconHtml = t.emoji && t.emoji.trim() !== "" 
+            ? `<div class="teacher-icon" style="background:transparent; font-size:1.8rem;">${t.emoji}</div>`
+            : `<div class="teacher-icon"><i class="fas fa-user-tie"></i></div>`;
 
         const div = document.createElement('div');
         div.className = 'teacher-row';
-        // 3. تطبيق المسافة هنا 👇
         div.style.marginBottom = spacing; 
-        
-        div.innerHTML = `
-            ${iconHtml}
-            <div class="teacher-info"><h4>${t.name}</h4><p>${t.role || 'معلم فاضل'}</p></div>
-        `;
+        div.innerHTML = `${iconHtml}<div class="teacher-info"><h4>${t.name}</h4><p>${t.role || 'معلم فاضل'}</p></div>`;
         container.appendChild(div);
     });
 }
 
+// ⭐ [تحديث ضخم]: فصل الحلقات وتصميم الجداول
 function renderRanks(list) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return;
     container.innerHTML = '';
-    if(!list) { container.innerHTML = '<p>لم يتم رفع الأسماء بعد</p>'; return; }
     
-    let html = '<table class="schedule-table-simple" style="width:100%"><thead><tr><th>المركز</th><th>الطالب</th><th>الحلقة</th></tr></thead><tbody>';
+    if(!list) { container.innerHTML = '<p>لم يتم رفع الأسماء بعد</p>'; return; }
+
+    // 1. تجميع الطلاب حسب اسم الحلقة
+    const groups = {};
     Object.values(list).forEach(r => {
         if(r.active === false) return;
-        let medal = '';
-        if(r.rank == 1) medal = '🥇'; else if(r.rank == 2) medal = '🥈'; else if(r.rank == 3) medal = '🥉';
-        html += `<tr><td>${medal} ${r.rank}</td><td><strong>${r.name}</strong></td><td>${r.ring}</td></tr>`;
+        const ringName = r.ring || "حلقات عامة"; // اسم افتراضي إذا لم يكتب الحلقة
+        if(!groups[ringName]) groups[ringName] = [];
+        groups[ringName].push(r);
     });
-    html += '</tbody></table>';
-    container.innerHTML = html;
+
+    // 2. إنشاء جدول لكل مجموعة
+    Object.keys(groups).sort().forEach(ringName => {
+        // ترتيب الطلاب داخل الحلقة حسب المركز (1 ثم 2 ثم 3...)
+        const students = groups[ringName].sort((a,b) => a.rank - b.rank);
+        
+        // إنشاء البطاقة (HTML)
+        const card = document.createElement('div');
+        card.className = 'rank-group-card'; // الكلاس الجديد من CSS
+        
+        let rowsHTML = '';
+        students.forEach(s => {
+            let rankClass = '';
+            let medal = '';
+            
+            // تلوين الأوائل
+            if(s.rank == 1) { rankClass = 'rank-row-1'; medal = '🥇'; }
+            else if(s.rank == 2) { rankClass = 'rank-row-2'; medal = '🥈'; }
+            else if(s.rank == 3) { rankClass = 'rank-row-3'; medal = '🥉'; }
+            else { medal = '✨'; }
+
+            rowsHTML += `
+                <tr class="${rankClass}">
+                    <td>${medal} <strong>${s.rank}</strong></td>
+                    <td style="font-weight:bold;">${s.name}</td>
+                </tr>`;
+        });
+
+        card.innerHTML = `
+            <div class="rank-group-header">🕌 ${ringName}</div>
+            <table class="schedule-table-simple">
+                <thead><tr><th width="30%">المركز</th><th>الطالب</th></tr></thead>
+                <tbody>${rowsHTML}</tbody>
+            </table>
+        `;
+        
+        container.appendChild(card);
+    });
 }
 
 function renderHolidays(list) {
@@ -273,6 +297,7 @@ function renderComplexSchedule(data) {
         container.appendChild(timeHeader);
         Object.values(timeSection.rings).forEach(ring => {
             const btn = document.createElement('div');
+            // الكلاس الجديد للأزرار البيضاوية موجود في CSS
             btn.className = 'ring-accordion-btn';
             btn.innerHTML = `<span>📖 ${ring.name}</span> <span>▼</span>`;
             const panel = document.createElement('div');
@@ -329,106 +354,4 @@ function secureLogin() {
     firebase.auth().signInWithEmailAndPassword(u, p)
         .then(() => window.location.href = "admin.html")
         .catch(e => alert("خطأ في الدخول: " + e.message));
-}
-
-/* ============================================================
-   🎨 تصميم الجداول المطور (الأوائل + الحلقات) - V3
-   ============================================================ */
-
-/* 1. حاوية مجموعة الأوائل (لكل حلقة جدول منفصل) */
-.rank-group-card {
-    background: white;
-    border-radius: 20px; /* زوايا بيضاوية ناعمة */
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* ظل فخم */
-    margin-bottom: 25px; /* مسافة بين كل حلقة والأخرى */
-    overflow: hidden; /* لضمان عدم خروج المحتوى عن الزوايا */
-    border: 1px solid rgba(0,0,0,0.05);
-    transition: transform 0.3s ease;
-}
-
-.rank-group-card:hover {
-    transform: translateY(-5px); /* حركة خفيفة عند المرور */
-}
-
-/* 2. ترويسة الحلقة (رأس الجدول) */
-.rank-group-header {
-    background: linear-gradient(135deg, var(--primary), #1e293b); /* تدرج لوني فخم */
-    color: white;
-    padding: 15px;
-    text-align: center;
-    font-size: 1.1rem;
-    font-weight: bold;
-    letter-spacing: 0.5px;
-    border-bottom: 3px solid #fbbf24; /* خط ذهبي أسفل العنوان */
-}
-
-/* 3. تنسيق الجدول البيضاوي */
-.schedule-table-simple {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.schedule-table-simple th {
-    background: #f8fafc;
-    color: #475569;
-    padding: 12px;
-    font-size: 0.9rem;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.schedule-table-simple td {
-    padding: 12px;
-    border-bottom: 1px solid #f1f5f9;
-    text-align: center;
-    color: #334155;
-}
-
-/* تمييز المراكز الثلاثة الأولى */
-.rank-row-1 { background: linear-gradient(to left, #fffbeb, #fff); border-right: 4px solid #fbbf24; } /* الأول: ذهبي */
-.rank-row-2 { background: linear-gradient(to left, #f8fafc, #fff); border-right: 4px solid #94a3b8; } /* الثاني: فضي */
-.rank-row-3 { background: linear-gradient(to left, #fff7ed, #fff); border-right: 4px solid #fdba74; } /* الثالث: برونزي */
-
-/* 4. الجداول الدراسية (تصميم بيضاوي للأزرار والمحتوى) */
-.ring-accordion-btn {
-    background: white;
-    padding: 15px 20px;
-    margin-bottom: 10px;
-    border-radius: 50px; /* شكل بيضاوي كامل للأزرار */
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    border: 1px solid #e2e8f0;
-    cursor: pointer;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    transition: 0.3s;
-}
-
-.ring-accordion-btn:hover {
-    background: #f0f9ff;
-    border-color: var(--primary);
-    transform: scale(1.01);
-}
-
-.ring-accordion-btn.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
-}
-
-.ring-schedule-panel {
-    display: none;
-    background: white;
-    border-radius: 20px; /* الحواف الدائرية للجدول */
-    padding: 15px;
-    margin-bottom: 15px;
-    border: 1px solid #e2e8f0;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-    animation: slideDown 0.3s ease-out;
-}
-
-/* أنيميشن للفتح */
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
