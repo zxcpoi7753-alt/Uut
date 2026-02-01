@@ -1,421 +1,185 @@
-/* ============================================================
-   ملف: js/custom_logic.js (V7 - تطبيق التصميم الديناميكي + الإصلاحات)
-   ============================================================ */
+// js/calculator.js - حاسبة الختم الذكية (محدثة الخيارات)
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBm8ML-1EKvQT76FJlzIQf4sn4M-MHhiRk",
-  authDomain: "quran-app-93e24.firebaseapp.com",
-  projectId: "quran-app-93e24",
-  storageBucket: "quran-app-93e24.firebasestorage.app",
-  messagingSenderId: "82150677933",
-  appId: "1:82150677933:web:64213e04463c1bb3179524"
-};
+// متغيرات لحفظ خيارات المستخدم للحاسبة الأولى
+let selectedDaysPerWeek = 0;
+let selectedAmount = 0;
 
-try {
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // 🚀 1. التحميل من الكاش
-    const cachedData = localStorage.getItem('site_cache_v3');
-    if (cachedData) {
-        applyAllData(JSON.parse(cachedData));
-    }
-
-    // 🌐 2. الاتصال بفايربيس
-    db.ref().on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            localStorage.setItem('site_cache_v3', JSON.stringify(data));
-            applyAllData(data);
-            handleSmartWelcome(data.settings);
-        }
-    });
-
-} catch (error) { console.error("Firebase Error:", error); }
-
-
-// ============================================================
-// [SECTION 1]: دالة التطبيق الشاملة
-// ============================================================
-function applyAllData(data) {
-    applySettings(data);
-    applyContent(data);
-    
-    renderComplexSchedule(data.schedule_complex);
-    renderTeachers(data.teachers_list_v2, data.settings);
-    renderCustomCards(data.custom_cards);
-    renderRanks(data.ranks_list, data.settings); // 👈 نمرر الإعدادات هنا للتصميم
-    renderHolidays(data.holidays_list);
-}
-
-
-// ============================================================
-// [SECTION 2]: منطق الترحيب الذكي
-// ============================================================
-function handleSmartWelcome(settings) {
-    if (!settings || !settings.welcome_screen || settings.welcome_screen.active !== true) return;
-
-    const lastSeen = localStorage.getItem('welcome_last_seen_time');
-    const now = new Date().getTime();
-    const hours = 12; 
-    const diff = now - (lastSeen || 0);
-
-    if (diff > (hours * 60 * 60 * 1000)) {
-        showWelcomeOverlay(settings.welcome_screen);
-        localStorage.setItem('welcome_last_seen_time', now);
-    }
-}
-
-function showWelcomeOverlay(config) {
-    const overlay = document.getElementById('welcome-overlay');
-    if(!overlay) return;
-
-    const titleEl = document.getElementById('welcome-title');
-    const msgEl = document.getElementById('welcome-text');
-    let studentName = localStorage.getItem('studentName') || "يا بطل";
-    
-    titleEl.innerText = config.title || "أهلاً بك";
-    let message = config.message || "نورتنا يا {name}";
-    message = message.replace("{name}", studentName);
-    msgEl.innerText = message;
-
-    overlay.style.display = 'flex';
-    setTimeout(() => {
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.style.display = 'none', 500);
-    }, 3000);
-}
-
-
-// ============================================================
-// [SECTION 3]: الإعدادات وتعبئة النصوص
-// ============================================================
-
-function applySettings(data) {
-    if(!data.settings) return;
-    const s = data.settings;
-
-    const maint = document.getElementById('maintenance-mode');
-    if(s.maintenance_mode === true) {
-        maint.style.display = 'flex';
-        document.querySelector('.container').style.display = 'none';
-        document.querySelector('header').style.display = 'none';
-    } else {
-        maint.style.display = 'none';
-        document.querySelector('.container').style.display = 'block';
-        document.querySelector('header').style.display = 'block';
-    }
-
-    const popup = document.getElementById('site-notification');
-    const dontShow = localStorage.getItem('dont_show_popup');
-    if(s.popup_active === true && dontShow !== 'true') {
-        setTimeout(() => {
-             const overlay = document.getElementById('welcome-overlay');
-             if(overlay.style.display === 'none' || overlay.style.opacity === '0') {
-                 popup.style.display = 'flex';
-             }
-        }, 3500);
-        document.getElementById('notif-title').innerText = s.popup_title || "تنبيه";
-        document.getElementById('notif-body').innerText = s.popup_body || "...";
-    } else {
-        popup.style.display = 'none';
-    }
-
-    toggleSection('block-news', s.show_news);
-    toggleSection('block-student', s.show_student);
-    toggleSection('block-question', s.show_question);
-    toggleSection('block-teachers', s.show_teachers);
-    toggleSection('block-schedule', s.show_schedule);
-    toggleSection('block-ranks', s.show_ranks);
-
-    if(s.video_url) {
-        const vid = document.getElementById('bg-video');
-        if(vid && !vid.src.includes(s.video_url)) vid.src = s.video_url;
-    }
-}
-
-function applyContent(data) {
-    if(data.news_bar) setTxt('dynamic-news-bar', data.news_bar.text);
-    if(data.weekly_question) {
-        setHTML('weekly-question-text', `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`);
-        setTxt('weekly-winner-text', data.weekly_question.last_winner);
-    }
-    if(data.top_student) {
-        setTxt('top-student-name', data.top_student.name);
-        setTxt('top-student-desc', data.top_student.category);
-    }
-    if(data.site_content) {
-        const c = data.site_content;
-        setTxt('txt_header_title', c.txt_header_title);
-        setTxt('txt_header_subtitle', c.txt_header_subtitle);
-        setTxt('txt_header_location', c.txt_header_location);
-        setTxt('txt_news_title', c.txt_news_title);
-        setTxt('txt_student_title', c.txt_student_title);
-        setTxt('txt_question_title', c.txt_question_title);
-        setTxt('txt_about_title', c.txt_about_title);
-        setHTML('txt_about_content', c.txt_about_content); 
-        setTxt('txt_contact_title', c.txt_contact_title);
-        setTxt('txt_footer', c.txt_footer);
-        if(c.txt_schedule_title) setTxt('txt_schedule_title', c.txt_schedule_title);
-        if(c.txt_teachers_title) setTxt('txt_teachers_title', c.txt_teachers_title);
-    }
-}
-
-
-// ============================================================
-// [SECTION 4]: دوال الرسم (Renderers)
-// ============================================================
-
-function renderCustomCards(list) {
-    const container = document.getElementById('dynamic-custom-cards-container');
-    if(!container) return; container.innerHTML = ''; if(!list) return;
-
-    Object.values(list).forEach(card => {
-        if(card.active === false) return;
-        const div = document.createElement('div');
-        div.className = 'custom-dynamic-card';
-        div.style.borderRightColor = card.color || '#3b82f6';
-        let html = `<h3 style="color:${card.color || '#333'}">${card.title}</h3>`;
-        html += `<p style="white-space: pre-line;">${card.text}</p>`;
-        if(card.link) {
-            html += `<a href="${card.link}" target="_blank" class="nav-btn" style="margin-top:10px; border-color:${card.color}; color:${card.color}; width:auto; display:inline-block;">${card.btn_text || 'اضغط هنا'}</a>`;
-        }
-        div.innerHTML = html;
-        container.appendChild(div);
-    });
-}
-
-function renderTeachers(list, settings) {
-    const container = document.getElementById('dynamic-teachers-container');
-    if(!container) return; container.innerHTML = '';
-    const spacing = (settings && settings.teacher_spacing) ? settings.teacher_spacing + 'px' : '15px';
-    
-    if(!list) { container.innerHTML = '<p>لا يوجد معلمون حالياً</p>'; return; }
-    
-    Object.values(list).forEach(t => {
-        if(t.active === false) return; 
-        let iconHtml = t.emoji && t.emoji.trim() !== "" 
-            ? `<div class="teacher-icon" style="background:transparent; font-size:1.8rem;">${t.emoji}</div>`
-            : `<div class="teacher-icon"><i class="fas fa-user-tie"></i></div>`;
-
-        const div = document.createElement('div');
-        div.className = 'teacher-row';
-        div.style.marginBottom = spacing;
-        div.innerHTML = `${iconHtml}<div class="teacher-info"><h4>${t.name}</h4><p>${t.role || 'معلم فاضل'}</p></div>`;
-        container.appendChild(div);
-    });
-}
-
-// ⭐ [تحديث الأوائل V7: تطبيق التصميم من الأدمن]
-function renderRanks(list, settings) {
-    const container = document.getElementById('dynamic-ranks-list');
-    if(!container) return;
-    container.innerHTML = '';
-
-    // إنشاء التوست
-    if(!document.getElementById('student-toast-msg')) {
-        const toast = document.createElement('div');
-        toast.id = 'student-toast-msg';
-        toast.className = 'student-toast';
-        document.body.appendChild(toast);
-    }
-    
-    if(!list) { container.innerHTML = '<p style="text-align:center; padding:20px;">لم يتم رفع الأسماء بعد</p>'; return; }
-
-    // 1. جلب إعدادات التصميم (مع قيم افتراضية خضراء جميلة)
-    const design = (settings && settings.ranks_design) ? settings.ranks_design : {
-        ring_color: '#10b981', // أخضر فاتح للحدود
-        name_color: '#064e3b', // أخضر غامق للنصوص
-        ring_size: '1.6',      // حجم خط الحلقة
-        name_size: '1.5',      // حجم خط الطالب
-        zoom: '100'            // الزوم الطبيعي
-    };
-
-    // 2. تجميع الحلقات
-    const groups = {};
-    Object.values(list).forEach(r => {
-        if(r.active === false) return;
-        let ringName = r.ring ? r.ring.trim() : "حلقات عامة"; 
-        if(!groups[ringName]) groups[ringName] = [];
-        groups[ringName].push(r);
-    });
-
-    // 3. الرسم
-    Object.keys(groups).sort().forEach(ringName => {
-        const students = groups[ringName].sort((a,b) => a.rank - b.rank);
-        
-        const card = document.createElement('div');
-        card.className = 'rank-group-card';
-        
-        // تطبيق الزوم
-        card.style.zoom = design.zoom + '%';
-        
-        // تطبيق ستايل الحلقة (لون، حجم، توسيط)
-        let html = `
-            <div class="rank-group-header" style="
-                text-align: center;
-                color: ${design.name_color};
-                border-bottom-color: ${design.ring_color};
-                font-size: ${design.ring_size}rem;
-            ">
-                ${ringName}
-            </div>
-            <div class="students-list">`;
-        
-        students.forEach(s => {
-            let rankClass = '';
-            let medal = '';
-            if(s.rank == 1) { rankClass = 'rank-1'; medal = '🥇'; }
-            else if(s.rank == 2) { rankClass = 'rank-2'; medal = '🥈'; }
-            else if(s.rank == 3) { rankClass = 'rank-3'; medal = '🥉'; }
-            else { rankClass = 'rank-other'; medal = `#${s.rank}`; }
-
-            const msgContent = (s.message && s.message.trim() !== "") ? s.message : "مبارك التفوق والنجاح! 🌟";
-            const safeMsg = msgContent.replace(/'/g, "\\'");
-            const safeName = s.name.replace(/'/g, "\\'");
-
-            // تطبيق ستايل الطالب (اتجاه معكوس، لون، حجم)
-            html += `
-                <div class="student-item ${rankClass}" 
-                     style="flex-direction: row-reverse;" 
-                     oncontextmenu="return false;" 
-                     ontouchstart="handleTouchStart(this, '${safeName}', '${safeMsg}')" 
-                     ontouchend="handleTouchEnd(this)" 
-                     onmousedown="handleTouchStart(this, '${safeName}', '${safeMsg}')" 
-                     onmouseup="handleTouchEnd(this)">
-                     
-                    <div class="s-rank-icon" style="margin-right:20px; margin-left:0;">${medal}</div>
-                    
-                    <div class="s-name" style="
-                        text-align: right;
-                        color: ${design.name_color};
-                        font-size: ${design.name_size}rem;
-                    ">
-                        ${s.name}
-                    </div>
-                </div>
-            `;
+// 1. تهيئة القوائم المنسدلة عند التحميل
+function initCalculator() {
+    // تعبئة أزرار الأيام (الحاسبة الأولى)
+    const daysContainer = document.getElementById('days-buttons-container');
+    if(daysContainer) {
+        daysContainer.innerHTML = '';
+        [1, 2, 3, 4, 5, 6, 7].forEach(d => {
+            daysContainer.innerHTML += `<div class="calc-btn-option" onclick="selectDays(${d}, this)">${d} أيام</div>`;
         });
+    }
+
+    // تعبئة أزرار المقدار (الحاسبة الأولى) - [تم التعديل حسب طلبك]
+    const amountContainer = document.getElementById('amount-buttons-container');
+    if(amountContainer) {
+        amountContainer.innerHTML = '';
+        const amounts = [
+            { label: "نصف صفحة", val: 0.5 },
+            { label: "صفحة واحدة", val: 1 },
+            { label: "صفحتان", val: 2 },
+            { label: "3 صفحات", val: 3 },
+            { label: "4 صفحات", val: 4 },
+            { label: "5 صفحات", val: 5 }
+        ];
         
-        html += '</div>'; 
-        card.innerHTML = html;
-        container.appendChild(card);
-    });
-}
-
-// === منطق الضغط المطول ===
-let longPressTimer;
-const LONG_PRESS_DURATION = 700;
-
-function handleTouchStart(el, name, msg) {
-    el.classList.add('pressing'); 
-    longPressTimer = setTimeout(() => {
-        showStudentPraise(name, msg);
-        if(navigator.vibrate) navigator.vibrate(50); 
-    }, LONG_PRESS_DURATION);
-}
-
-function handleTouchEnd(el) {
-    el.classList.remove('pressing');
-    if(longPressTimer) clearTimeout(longPressTimer);
-}
-
-function showStudentPraise(name, msg) {
-    const toast = document.getElementById('student-toast-msg');
-    toast.innerHTML = `
-        <div style="font-weight:bold; margin-bottom:8px; color:#fbbf24; font-size:1.4rem;">${name}</div>
-        <div style="line-height:1.6; font-size:1.1rem;">${msg}</div>
-    `;
-    toast.classList.add('show');
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 4000);
-}
-
-
-function renderHolidays(list) {
-    const ul = document.getElementById('dynamic-holidays-list');
-    if(!ul) return; ul.innerHTML = '';
-    if(!list) { ul.innerHTML = '<li>لا توجد إجازات قريبة</li>'; return; }
-    Object.values(list).forEach(h => {
-        if(h.active === false) return;
-        const li = document.createElement('li');
-        li.innerText = h.text;
-        ul.appendChild(li);
-    });
-}
-
-function renderComplexSchedule(data) {
-    const container = document.getElementById('dynamic-schedule-container');
-    if(!container) return; container.innerHTML = '';
-    if(!data) { container.innerHTML = '<p style="text-align:center;">لا توجد جداول حالياً</p>'; return; }
-    Object.keys(data).sort().forEach(timeKey => {
-        const timeSection = data[timeKey];
-        if(!timeSection.rings) return;
-        const timeHeader = document.createElement('div');
-        timeHeader.className = 'time-group-title';
-        timeHeader.innerText = timeSection.title || "فترة";
-        container.appendChild(timeHeader);
-        Object.values(timeSection.rings).forEach(ring => {
-            const btn = document.createElement('div');
-            btn.className = 'ring-accordion-btn';
-            btn.innerHTML = `<span>📖 ${ring.name}</span> <span>▼</span>`;
-            const panel = document.createElement('div');
-            panel.className = 'ring-schedule-panel';
-            panel.innerHTML = `
-                <table class="schedule-table-simple">
-                    <thead><tr><th>اليوم</th><th>المقرر / النشاط</th></tr></thead>
-                    <tbody>
-                        <tr><td>السبت</td><td>${ring.sat || '-'}</td></tr>
-                        <tr><td>الأحد</td><td>${ring.sun || '-'}</td></tr>
-                        <tr><td>الاثنين</td><td>${ring.mon || '-'}</td></tr>
-                        <tr><td>الثلاثاء</td><td>${ring.tue || '-'}</td></tr>
-                        <tr><td>الأربعاء</td><td>${ring.wed || '-'}</td></tr>
-                        <tr><td>الخميس</td><td>${ring.thu || '-'}</td></tr>
-                    </tbody>
-                </table>`;
-            btn.onclick = function() {
-                this.classList.toggle('active');
-                if (panel.style.display === "block") {
-                    panel.style.display = "none";
-                    this.querySelector('span:last-child').innerText = '▼';
-                } else {
-                    panel.style.display = "block";
-                    this.querySelector('span:last-child').innerText = '▲';
-                }
-            };
-            container.appendChild(btn);
-            container.appendChild(panel);
+        amounts.forEach(opt => {
+            amountContainer.innerHTML += `<div class="calc-btn-option" onclick="selectAmount(${opt.val}, this)">${opt.label}</div>`;
         });
-    });
+        // زر "محدد" لإظهار حقل الإدخال اليدوي
+        amountContainer.innerHTML += `<div class="calc-btn-option" onclick="showCustomInput(this)">عدد آخر...</div>`;
+    }
+
+    // تعبئة قوائم الوقت (الحاسبة العكسية)
+    populateDropdown('target-days', 0, 30, ' يوم');
+    populateDropdown('target-months', 0, 11, ' شهر');
+    populateDropdown('target-years', 0, 5, ' سنة');
 }
 
-
-// ============================================================
-// [SECTION 5]: دوال مساعدة (Helpers)
-// ============================================================
-function setTxt(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerText = txt; }
-function setHTML(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerHTML = txt; }
-function toggleSection(id, show) {
+function populateDropdown(id, start, end, suffix) {
     const el = document.getElementById(id);
-    if(el) { el.style.display = show === true ? 'block' : 'none'; }
-}
-function closePopup() { document.getElementById('site-notification').style.display = 'none'; }
-function disablePopupForever() {
-    if(document.getElementById('popup-forever-check').checked) {
-        localStorage.setItem('dont_show_popup', 'true');
-        alert("تم! لن تظهر لك هذه الرسالة مرة أخرى.");
-        closePopup();
+    if(!el) return;
+    el.innerHTML = `<option value="0">0${suffix}</option>`;
+    for(let i=1; i<=end; i++) { // بدأنا من 1 لأن 0 مضاف
+        el.innerHTML += `<option value="${i}">${i}${suffix}</option>`;
     }
 }
-function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
-function secureLogin() {
-    const u = document.getElementById('admin-user').value;
-    const p = document.getElementById('admin-pass').value;
-    if (!u || !p) return alert("أدخل البيانات");
+
+
+// --- منطق الحاسبة الأولى (بناءً على الجهد) ---
+
+function selectDays(days, btn) {
+    selectedDaysPerWeek = days;
+    // تلوين الزر المختار
+    document.querySelectorAll('#days-buttons-container .calc-btn-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
     
-    firebase.auth().signInWithEmailAndPassword(u, p)
-        .then(() => window.location.href = "admin.html")
-        .catch(e => alert("خطأ في الدخول: " + e.message));
+    // الانتقال للخطوة 2
+    document.getElementById('calc-step-2').style.display = 'block';
+    // تمرير ناعم
+    document.getElementById('calc-step-2').scrollIntoView({behavior: 'smooth'});
 }
+
+function selectAmount(amount, btn) {
+    selectedAmount = amount;
+    document.getElementById('custom-amount-div').style.display = 'none'; // إخفاء المخصص
+    
+    document.querySelectorAll('#amount-buttons-container .calc-btn-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    
+    calculatePlan(selectedAmount);
+}
+
+function showCustomInput(btn) {
+    document.querySelectorAll('#amount-buttons-container .calc-btn-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('custom-amount-div').style.display = 'block';
+}
+
+function calculatePlan(pagesPerDay) {
+    if(!selectedDaysPerWeek || !pagesPerDay) return;
+    
+    const totalPages = 604;
+    const pagesPerWeek = pagesPerDay * selectedDaysPerWeek;
+    const weeksNeeded = totalPages / pagesPerWeek;
+    const monthsNeeded = weeksNeeded / 4.3;
+    const yearsNeeded = monthsNeeded / 12;
+
+    let timeText = "";
+    if (yearsNeeded >= 1) {
+        const y = Math.floor(yearsNeeded);
+        const m = Math.round((yearsNeeded - y) * 12);
+        timeText = `${y} سنة و ${m} شهر`;
+    } else if (monthsNeeded >= 1) {
+        timeText = `${Math.round(monthsNeeded)} شهر تقريباً`;
+    } else {
+        timeText = `${Math.round(weeksNeeded)} أسبوع تقريباً`;
+    }
+
+    const resDiv = document.getElementById('calc-result');
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = `
+        <h3 style="color:var(--primary-color); margin-top:0;">🎉 خطتك جاهزة!</h3>
+        <p>إذا استمريت بهذا المعدل، ستختم القرآن كاملاً خلال:</p>
+        <p style="font-size:1.5rem; color:var(--accent-color); margin:10px 0;">⏳ ${timeText}</p>
+        <small style="color:gray">بمعدل ${selectedDaysPerWeek} أيام في الأسبوع</small>
+    `;
+    
+    document.getElementById('reset-calc').style.display = 'block';
+    resDiv.scrollIntoView({behavior: 'smooth'});
+}
+
+function resetCalc() {
+    selectedDaysPerWeek = 0;
+    selectedAmount = 0;
+    document.getElementById('calc-step-2').style.display = 'none';
+    document.getElementById('calc-result').style.display = 'none';
+    document.getElementById('reset-calc').style.display = 'none';
+    document.querySelectorAll('.calc-btn-option').forEach(b => b.classList.remove('selected'));
+    document.getElementById('custom-pages').value = '';
+    document.getElementById('custom-amount-div').style.display = 'none';
+    // العودة للأعلى
+    document.getElementById('calc-step-1').scrollIntoView({behavior: 'smooth'});
+}
+
+
+// --- منطق الحاسبة العكسية (بناءً على الوقت) ---
+
+function calculateReversePlan() {
+    // جلب القيم
+    const planTypeInputs = document.getElementsByName('planType');
+    let planType = "حفظ"; // افتراضي
+    for(let r of planTypeInputs) if(r.checked) planType = r.value;
+
+    const d = parseInt(document.getElementById('target-days').value) || 0;
+    const m = parseInt(document.getElementById('target-months').value) || 0;
+    const y = parseInt(document.getElementById('target-years').value) || 0;
+
+    // حساب إجمالي الأيام
+    const totalDaysTarget = d + (m * 30) + (y * 365);
+
+    if (totalDaysTarget === 0) {
+        if(window.showToast) window.showToast("الرجاء تحديد المدة أولاً!", "error");
+        return;
+    }
+
+    const totalPagesQuran = 604;
+    // المعادلة: الكمية اليومية = عدد صفحات المصحف / عدد الأيام المتاحة
+    const pagesPerDay = totalPagesQuran / totalDaysTarget;
+
+    // تنسيق النتيجة للنص
+    let resultAmountText = "";
+    
+    if (pagesPerDay < 1) {
+        // إذا كان أقل من صفحة (مثلاً نصف صفحة)
+        const percent = Math.round(pagesPerDay * 100);
+        resultAmountText = `حوالي <strong>${percent}%</strong> من الصفحة`;
+    } else {
+        resultAmountText = `حوالي <strong>${pagesPerDay.toFixed(1)}</strong> صفحة`;
+    }
+
+    // صياغة الرسالة حسب النوع (حفظ/قراءة)
+    let actionVerb = planType === "حفظ" ? "تحفظ" : "تقرأ";
+    let titleText = planType === "حفظ" ? "🧠 خطة الحفظ المقترحة" : "📖 خطة القراءة المقترحة";
+
+    // عرض النتيجة
+    const resultDiv = document.getElementById('reverse-calc-result');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `
+        <h3 style="color:var(--primary-color); margin-top:0;">${titleText}</h3>
+        <p>لكي تختم القرآن في هذه المدة، عليك أن ${actionVerb} يومياً:</p>
+        <p style="font-size:1.5rem; color:var(--accent-color); margin:10px 0;">${resultAmountText}</p>
+        <div style="font-size:0.9rem; color:gray; border-top:1px solid rgba(0,0,0,0.1); padding-top:5px; margin-top:5px;">
+            المدة المحددة: ${y > 0 ? y + ' سنة ' : ''}${m > 0 ? m + ' شهر ' : ''}${d > 0 ? d + ' يوم' : ''}
+        </div>
+    `;
+    
+    // تمرير للنتيجة
+    resultDiv.scrollIntoView({behavior: 'smooth'});
+}
+
