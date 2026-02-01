@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: js/custom_logic.js
-   الوظيفة: جلب البيانات + الترحيب الذكي + تصفية العناصر المخفية
+   الوظيفة: جلب البيانات + الترحيب الذكي + تطبيق التعديلات (إيموجي ومسافات)
    ============================================================ */
 
 const firebaseConfig = {
@@ -16,10 +16,9 @@ try {
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 🚀 1. التحميل الفوري من الكاش
+    // 🚀 1. التحميل من الكاش
     const cachedData = localStorage.getItem('site_cache_v3');
     if (cachedData) {
-        console.log("⚡ تحميل من الذاكرة المحلية...");
         applyAllData(JSON.parse(cachedData));
     }
 
@@ -27,7 +26,6 @@ try {
     db.ref().on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            console.log("🔄 تحديث البيانات من السيرفر...");
             localStorage.setItem('site_cache_v3', JSON.stringify(data));
             applyAllData(data);
             handleSmartWelcome(data.settings);
@@ -44,7 +42,7 @@ function applyAllData(data) {
     applySettings(data);
     applyContent(data);
     renderComplexSchedule(data.schedule_complex);
-    renderTeachers(data.teachers_list_v2);
+    renderTeachers(data.teachers_list_v2, data.settings); // مررنا الإعدادات هنا لنعرف المسافة
     renderCustomCards(data.custom_cards);
     renderRanks(data.ranks_list);
     renderHolidays(data.holidays_list);
@@ -55,7 +53,6 @@ function applyAllData(data) {
 // 🎉 منطق الترحيب الذكي
 // ==========================================
 function handleSmartWelcome(settings) {
-    // التحقق من وجود الإعدادات
     if (!settings || !settings.welcome_screen || settings.welcome_screen.active !== true) return;
 
     const lastSeen = localStorage.getItem('welcome_last_seen_time');
@@ -63,7 +60,6 @@ function handleSmartWelcome(settings) {
     const hours = 12; 
     const diff = now - (lastSeen || 0);
 
-    // إذا مر الوقت المحدد
     if (diff > (hours * 60 * 60 * 1000)) {
         showWelcomeOverlay(settings.welcome_screen);
         localStorage.setItem('welcome_last_seen_time', now);
@@ -170,7 +166,7 @@ function applyContent(data) {
 }
 
 // ==========================================
-// 2. دوال بناء المحتوى (Renderers) - تم إضافة شرط الإخفاء
+// 2. دوال بناء المحتوى (Renderers)
 // ==========================================
 
 function renderCustomCards(list) {
@@ -180,9 +176,7 @@ function renderCustomCards(list) {
     if(!list) return;
 
     Object.values(list).forEach(card => {
-        // ⭐ شرط الإخفاء
         if(card.active === false) return;
-
         const div = document.createElement('div');
         div.className = 'custom-dynamic-card';
         div.style.borderRightColor = card.color || '#3b82f6';
@@ -196,20 +190,37 @@ function renderCustomCards(list) {
     });
 }
 
-function renderTeachers(list) {
+// ⭐ [تحديث هام]: دعم الإيموجي والمسافات للمعلمين
+function renderTeachers(list, settings) {
     const container = document.getElementById('dynamic-teachers-container');
     if(!container) return;
     container.innerHTML = '';
+    
+    // 1. تحديد المسافة من الإعدادات أو استخدام 15px كافتراضي
+    const spacing = (settings && settings.teacher_spacing) ? settings.teacher_spacing + 'px' : '15px';
+    
     if(!list) { container.innerHTML = '<p>لا يوجد معلمون حالياً</p>'; return; }
     
     Object.values(list).forEach(t => {
-        // ⭐ شرط الإخفاء (جديد)
         if(t.active === false) return; 
+
+        // 2. التحقق من وجود إيموجي أو استخدام الأيقونة الافتراضية
+        let iconHtml = '';
+        if (t.emoji && t.emoji.trim() !== "") {
+            // إذا يوجد إيموجي، نعرضه بخط كبير وبدون خلفية
+            iconHtml = `<div class="teacher-icon" style="background:transparent; font-size:1.8rem;">${t.emoji}</div>`;
+        } else {
+            // الأيقونة الافتراضية
+            iconHtml = `<div class="teacher-icon"><i class="fas fa-user-tie"></i></div>`;
+        }
 
         const div = document.createElement('div');
         div.className = 'teacher-row';
+        // 3. تطبيق المسافة هنا 👇
+        div.style.marginBottom = spacing; 
+        
         div.innerHTML = `
-            <div class="teacher-icon"><i class="fas fa-user-tie"></i></div>
+            ${iconHtml}
             <div class="teacher-info"><h4>${t.name}</h4><p>${t.role || 'معلم فاضل'}</p></div>
         `;
         container.appendChild(div);
@@ -224,9 +235,7 @@ function renderRanks(list) {
     
     let html = '<table class="schedule-table-simple" style="width:100%"><thead><tr><th>المركز</th><th>الطالب</th><th>الحلقة</th></tr></thead><tbody>';
     Object.values(list).forEach(r => {
-        // ⭐ شرط الإخفاء (جديد)
         if(r.active === false) return;
-
         let medal = '';
         if(r.rank == 1) medal = '🥇'; else if(r.rank == 2) medal = '🥈'; else if(r.rank == 3) medal = '🥉';
         html += `<tr><td>${medal} ${r.rank}</td><td><strong>${r.name}</strong></td><td>${r.ring}</td></tr>`;
@@ -242,9 +251,7 @@ function renderHolidays(list) {
     if(!list) { ul.innerHTML = '<li>لا توجد إجازات قريبة</li>'; return; }
     
     Object.values(list).forEach(h => {
-        // ⭐ شرط الإخفاء (جديد)
         if(h.active === false) return;
-
         const li = document.createElement('li');
         li.innerText = h.text;
         ul.appendChild(li);
