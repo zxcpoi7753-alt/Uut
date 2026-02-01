@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: js/custom_logic.js
-   الوظيفة: المحرك الرئيسي (V6 - البطاقات الذكية + الضغط المطول)
+   الوظيفة: المحرك الرئيسي (V6 - النسخة النهائية: ضغط مطول + إصلاح الرسائل)
    ============================================================ */
 
 const firebaseConfig = {
@@ -45,7 +45,7 @@ function applyAllData(data) {
     renderComplexSchedule(data.schedule_complex);
     renderTeachers(data.teachers_list_v2, data.settings);
     renderCustomCards(data.custom_cards);
-    renderRanks(data.ranks_list); // 👈 التصميم الجديد (ضغط مطول)
+    renderRanks(data.ranks_list); // 👈 (نظام الضغط المطول)
     renderHolidays(data.holidays_list);
 }
 
@@ -207,13 +207,13 @@ function renderTeachers(list, settings) {
     });
 }
 
-// ⭐ [START MODIFICATION 5: الضغط المطول وإصلاح الرسائل]
+// ⭐ [تحديث الأوائل النهائي: دمج الحلقات + ضغط مطول]
 function renderRanks(list) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return;
     container.innerHTML = '';
 
-    // إنشاء عنصر التوست
+    // إنشاء التوست
     if(!document.getElementById('student-toast-msg')) {
         const toast = document.createElement('div');
         toast.id = 'student-toast-msg';
@@ -223,15 +223,16 @@ function renderRanks(list) {
     
     if(!list) { container.innerHTML = '<p style="text-align:center; padding:20px;">لم يتم رفع الأسماء بعد</p>'; return; }
 
+    // 1. تجميع الحلقات (مع حل مشكلة المسافات)
     const groups = {};
     Object.values(list).forEach(r => {
         if(r.active === false) return;
-        // تنظيف الاسم لحل مشكلة التكرار
         let ringName = r.ring ? r.ring.trim() : "حلقات عامة"; 
         if(!groups[ringName]) groups[ringName] = [];
         groups[ringName].push(r);
     });
 
+    // 2. الرسم
     Object.keys(groups).sort().forEach(ringName => {
         const students = groups[ringName].sort((a,b) => a.rank - b.rank);
         
@@ -249,13 +250,13 @@ function renderRanks(list) {
             else if(s.rank == 3) { rankClass = 'rank-3'; medal = '🥉'; }
             else { rankClass = 'rank-other'; medal = `#${s.rank}`; }
 
-            // 🛑 إصلاح الرسالة: إذا كانت فارغة نضع نصاً افتراضياً
+            // تجهيز الرسالة
             const defaultMsg = "مبارك التفوق والنجاح! 🌟";
             const msgContent = (s.message && s.message.trim() !== "") ? s.message : defaultMsg;
             const safeMsg = msgContent.replace(/'/g, "\\'");
             const safeName = s.name.replace(/'/g, "\\'");
 
-            // إضافة أحداث الضغط المطول (Touch & Mouse)
+            // إضافة أحداث الضغط المطول
             html += `
                 <div class="student-item ${rankClass}" 
                      oncontextmenu="return false;" 
@@ -278,29 +279,26 @@ function renderRanks(list) {
 
 // === منطق الضغط المطول ===
 let longPressTimer;
-const LONG_PRESS_DURATION = 700; // مدة الضغطة (أقل من ثانية)
+const LONG_PRESS_DURATION = 700; // المدة: 0.7 ثانية
 
 function handleTouchStart(el, name, msg) {
-    el.classList.add('pressing'); // تأثير بصري
-    // بدء المؤقت
+    el.classList.add('pressing'); 
     longPressTimer = setTimeout(() => {
         showStudentPraise(name, msg);
-        // محاولة عمل اهتزاز للهاتف
         if(navigator.vibrate) navigator.vibrate(50); 
     }, LONG_PRESS_DURATION);
 }
 
 function handleTouchEnd(el) {
     el.classList.remove('pressing');
-    // إلغاء المؤقت إذا رفع إصبعه قبل الوقت المحدد
     if(longPressTimer) clearTimeout(longPressTimer);
 }
 
 function showStudentPraise(name, msg) {
     const toast = document.getElementById('student-toast-msg');
     toast.innerHTML = `
-        <div style="font-weight:bold; margin-bottom:8px; color:#fbbf24; font-size:1.2rem;">${name}</div>
-        <div style="line-height:1.6;">${msg}</div>
+        <div style="font-weight:bold; margin-bottom:8px; color:#fbbf24; font-size:1.4rem;">${name}</div>
+        <div style="line-height:1.6; font-size:1.1rem;">${msg}</div>
     `;
     toast.classList.add('show');
     
@@ -309,7 +307,6 @@ function showStudentPraise(name, msg) {
         toast.classList.remove('show');
     }, 4000);
 }
-// [END MODIFICATION]
 
 
 function renderHolidays(list) {
