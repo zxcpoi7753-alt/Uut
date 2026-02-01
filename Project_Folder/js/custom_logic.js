@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/custom_logic.js (V7 - تطبيق التصميم الديناميكي + الإصلاحات)
+   ملف: js/custom_logic.js (V8 - العودة للتصميم الكلاسيكي + التحكم الكامل)
    ============================================================ */
 
 const firebaseConfig = {
@@ -44,7 +44,7 @@ function applyAllData(data) {
     renderComplexSchedule(data.schedule_complex);
     renderTeachers(data.teachers_list_v2, data.settings);
     renderCustomCards(data.custom_cards);
-    renderRanks(data.ranks_list, data.settings); // 👈 نمرر الإعدادات هنا للتصميم
+    renderRanks(data.ranks_list, data.settings); // 👈 نمرر الإعدادات
     renderHolidays(data.holidays_list);
 }
 
@@ -206,13 +206,12 @@ function renderTeachers(list, settings) {
     });
 }
 
-// ⭐ [تحديث الأوائل V7: تطبيق التصميم من الأدمن]
+// ⭐ [تحديث الأوائل V8: تصميم الصناديق الكلاسيكي + التحكم بالألوان]
 function renderRanks(list, settings) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return;
     container.innerHTML = '';
 
-    // إنشاء التوست
     if(!document.getElementById('student-toast-msg')) {
         const toast = document.createElement('div');
         toast.id = 'student-toast-msg';
@@ -222,13 +221,13 @@ function renderRanks(list, settings) {
     
     if(!list) { container.innerHTML = '<p style="text-align:center; padding:20px;">لم يتم رفع الأسماء بعد</p>'; return; }
 
-    // 1. جلب إعدادات التصميم (مع قيم افتراضية خضراء جميلة)
-    const design = (settings && settings.ranks_design) ? settings.ranks_design : {
-        ring_color: '#10b981', // أخضر فاتح للحدود
-        name_color: '#064e3b', // أخضر غامق للنصوص
-        ring_size: '1.6',      // حجم خط الحلقة
-        name_size: '1.5',      // حجم خط الطالب
-        zoom: '100'            // الزوم الطبيعي
+    // 1. جلب إعدادات التصميم (مع القيم الافتراضية للكلاسيك)
+    const design = (settings && settings.ranks_design_v8) ? settings.ranks_design_v8 : {
+        header_bg: '#047857',      // أخضر غامق للخلفية
+        header_text: '#ffffff',    // أبيض للنص
+        student_color: '#333333',  // أسود لاسم الطالب
+        ring_size: '1.2',          // حجم خط الحلقة
+        name_size: '1.0'           // حجم خط الطالب
     };
 
     // 2. تجميع الحلقات
@@ -240,59 +239,53 @@ function renderRanks(list, settings) {
         groups[ringName].push(r);
     });
 
-    // 3. الرسم
+    // 3. الرسم (تصميم الصندوق المغلق)
     Object.keys(groups).sort().forEach(ringName => {
         const students = groups[ringName].sort((a,b) => a.rank - b.rank);
         
         const card = document.createElement('div');
-        card.className = 'rank-group-card';
+        card.className = 'rank-group-card'; // كلاس الصندوق الأبيض
         
-        // تطبيق الزوم
-        card.style.zoom = design.zoom + '%';
-        
-        // تطبيق ستايل الحلقة (لون، حجم، توسيط)
+        // بناء الهيكل: رأس ملون + قائمة بيضاء
         let html = `
             <div class="rank-group-header" style="
-                text-align: center;
-                color: ${design.name_color};
-                border-bottom-color: ${design.ring_color};
+                background-color: ${design.header_bg};
+                color: ${design.header_text};
                 font-size: ${design.ring_size}rem;
+                text-align: center;
             ">
                 ${ringName}
             </div>
             <div class="students-list">`;
         
         students.forEach(s => {
-            let rankClass = '';
             let medal = '';
-            if(s.rank == 1) { rankClass = 'rank-1'; medal = '🥇'; }
-            else if(s.rank == 2) { rankClass = 'rank-2'; medal = '🥈'; }
-            else if(s.rank == 3) { rankClass = 'rank-3'; medal = '🥉'; }
-            else { rankClass = 'rank-other'; medal = `#${s.rank}`; }
+            // أيقونات بسيطة حسب الطلب
+            if(s.rank == 1) medal = '🥇';
+            else if(s.rank == 2) medal = '🥈';
+            else if(s.rank == 3) medal = '🥉';
+            else medal = '🔹';
 
             const msgContent = (s.message && s.message.trim() !== "") ? s.message : "مبارك التفوق والنجاح! 🌟";
             const safeMsg = msgContent.replace(/'/g, "\\'");
             const safeName = s.name.replace(/'/g, "\\'");
 
-            // تطبيق ستايل الطالب (اتجاه معكوس، لون، حجم)
+            // سطر الطالب (تصميم القائمة البسيط)
             html += `
-                <div class="student-item ${rankClass}" 
-                     style="flex-direction: row-reverse;" 
+                <div class="student-list-item" 
+                     style="
+                        color: ${design.student_color};
+                        font-size: ${design.name_size}rem;
+                        text-align: right;
+                     "
                      oncontextmenu="return false;" 
                      ontouchstart="handleTouchStart(this, '${safeName}', '${safeMsg}')" 
                      ontouchend="handleTouchEnd(this)" 
                      onmousedown="handleTouchStart(this, '${safeName}', '${safeMsg}')" 
                      onmouseup="handleTouchEnd(this)">
                      
-                    <div class="s-rank-icon" style="margin-right:20px; margin-left:0;">${medal}</div>
-                    
-                    <div class="s-name" style="
-                        text-align: right;
-                        color: ${design.name_color};
-                        font-size: ${design.name_size}rem;
-                    ">
-                        ${s.name}
-                    </div>
+                    <span class="rank-icon">${medal}</span>
+                    <span class="student-name-text">${s.name}</span>
                 </div>
             `;
         });
@@ -303,9 +296,9 @@ function renderRanks(list, settings) {
     });
 }
 
-// === منطق الضغط المطول ===
+// === منطق الضغط المطول (Toast) ===
 let longPressTimer;
-const LONG_PRESS_DURATION = 700;
+const LONG_PRESS_DURATION = 600;
 
 function handleTouchStart(el, name, msg) {
     el.classList.add('pressing'); 
@@ -323,14 +316,11 @@ function handleTouchEnd(el) {
 function showStudentPraise(name, msg) {
     const toast = document.getElementById('student-toast-msg');
     toast.innerHTML = `
-        <div style="font-weight:bold; margin-bottom:8px; color:#fbbf24; font-size:1.4rem;">${name}</div>
-        <div style="line-height:1.6; font-size:1.1rem;">${msg}</div>
+        <div style="font-weight:bold; margin-bottom:5px; color:#fbbf24; font-size:1.2rem;">${name}</div>
+        <div style="font-size:1rem;">${msg}</div>
     `;
     toast.classList.add('show');
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 4000);
+    setTimeout(() => { toast.classList.remove('show'); }, 4000);
 }
 
 
