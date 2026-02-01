@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/admin_logic.js (V9 - الثيمات + نافذة الحذف المخصصة)
+   ملف: js/admin_logic.js (V10 - إصلاح الثيمات + الحذف + النصوص)
    ============================================================ */
 
 const firebaseConfig = {
@@ -17,7 +17,7 @@ const auth = firebase.auth();
 let editKeys = { card: null, teacher: null, rank: null, holiday: null, complex: null };
 let pendingDeleteAction = null; // لتخزين عملية الحذف المعلقة
 
-// [SECTION 0]: Auth
+// [SECTION 0]: Auth & Toast
 auth.onAuthStateChanged((user) => { if (user) document.body.style.display = 'flex'; else window.location.replace("index.html"); });
 function logout() { if(confirm("خروج؟")) auth.signOut().then(() => window.location.replace("index.html")); }
 function showToast(msg, type='success') {
@@ -26,20 +26,28 @@ function showToast(msg, type='success') {
     t.innerHTML = (type==='success'?'✅ ':'❌ ') + msg; c.appendChild(t); setTimeout(()=>t.remove(),3000);
 }
 
-// [SECTION 1]: General & Theme (تحديث جديد)
+// [SECTION 1]: General & Theme (إصلاح الثيمات)
 function saveGeneral() {
+    // حفظ نصوص الهيدر
     db.ref('site_content').update({ 
         txt_header_title: val('inp_header_title'), 
         txt_header_subtitle: val('inp_header_subtitle'), 
-        txt_header_location: val('inp_header_location') 
+        txt_header_location: val('inp_header_location'),
+        txt_about_content: val('inp_about_content') // حفظ "من نحن" أيضاً هنا
     });
     
-    // حفظ إعدادات الثيم والحالة
+    // حفظ إعدادات الثيم والحالة والفيديو
     db.ref('settings').update({ 
         video_url: val('inp_video'), 
         maintenance_mode: document.getElementById('toggle_maint').checked,
-        theme_color: val('main_theme_color') // 🎨 حفظ اللون الرئيسي
+        theme_color: val('main_theme_color') // حفظ اللون المختار
     }).then(() => showToast("تم حفظ الإعدادات والثيم"));
+}
+
+// زر استعادة الثيم الأصلي
+function resetTheme() {
+    document.getElementById('main_theme_color').value = "#047857"; // اللون الأصلي
+    db.ref('settings/theme_color').set("#047857").then(() => showToast("تمت استعادة الثيم الأصلي 🎨"));
 }
 
 function saveWelcomeSettings() { db.ref('settings/welcome_screen').update({ active: document.getElementById('welcome_active').checked, title: val('welcome_title_inp'), message: val('welcome_msg_inp') }).then(()=>showToast("تم الحفظ")); }
@@ -60,7 +68,7 @@ function addComplexSchedule() {
     db.ref(`schedule_complex/${k}/title`).set(k==='time_1'?'☀️ عصر':'🌙 مغرب');
     db.ref(`schedule_complex/${k}/rings`).push({name:val('comp_sch_name'),sat:val('d_sat'),sun:val('d_sun'),mon:val('d_mon'),tue:val('d_tue'),wed:val('d_wed'),thu:val('d_thu')}).then(()=>{showToast("تمت الإضافة"); document.getElementById('comp_sch_name').value='';});
 }
-// تحديث الحذف لاستخدام النافذة الجديدة
+// الحذف باستخدام النافذة الجديدة
 function deleteComplexRing(t,k) { 
     pendingDeleteAction = () => db.ref(`schedule_complex/${t}/rings/${k}`).remove().then(()=>showToast("تم الحذف"));
     document.getElementById('confirm-modal').style.display = 'flex';
@@ -72,14 +80,14 @@ function addTeacherV2() {
     else db.ref('teachers_list_v2').push(d).then(()=>{showToast("تمت الإضافة");resetForm('teacher');});
 }
 
-// [SECTION 6]: Ranks V8
+// [SECTION 6]: Ranks (الألوان والتصميم)
 function saveRankDesign() {
     const design = {
         header_bg: val('d_header_bg'), header_text: val('d_header_text'),
         student_color: val('d_student_color'),
         ring_size: val('d_ring_size'), name_size: val('d_name_size')
     };
-    db.ref('settings/ranks_design_v8').set(design).then(() => showToast("تم حفظ التصميم 🎨"));
+    db.ref('settings/ranks_design_v8').set(design).then(() => showToast("تم حفظ تصميم الأوائل 🎨"));
 }
 function addRank() {
     const name = val('rank_name'); if(!name) return showToast("الاسم مطلوب","error");
@@ -96,6 +104,7 @@ function addHoliday() {
 }
 function saveNewsBar(){ db.ref('news_bar').set({text:val('inp_news_bar')}).then(()=>showToast("تم")); }
 function saveQuestion(){ db.ref('weekly_question').set({text:val('inp_q_text'),last_winner:val('inp_q_winner')}).then(()=>showToast("تم")); }
+// دالة حفظ من نحن (مدمجة مع saveGeneral لكن تركتها للزر المنفصل أيضاً)
 function saveAbout(){ db.ref('site_content/txt_about_content').set(val('inp_about_content')).then(()=>showToast("تم")); }
 
 // === منطق النافذة المنبثقة للحذف (Modal Logic) ===
@@ -112,13 +121,13 @@ function closeModal() {
     pendingDeleteAction = null;
 }
 
-// Helpers
+// Helpers (تم إصلاح fill لمنع undefined)
 function showTab(id) { document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 function val(id) { return document.getElementById(id)?document.getElementById(id).value:''; }
-function fill(id,v) { if(document.getElementById(id)) document.getElementById(id).value=v||''; }
+function fill(id,v) { if(document.getElementById(id)) document.getElementById(id).value = v || ''; } // ✅ الإصلاح هنا
 function toggleVisibility(p,s) { db.ref(p).update({active:!s}); }
 
-// [LISTENER]
+// [LISTENER] مراقب البيانات
 db.ref().on('value', (snapshot) => {
     const d = snapshot.val(); if(!d) return;
 
@@ -132,7 +141,6 @@ db.ref().on('value', (snapshot) => {
         // تحميل الثيم الرئيسي
         if(d.settings.theme_color) fill('main_theme_color', d.settings.theme_color);
         
-        // باقي الإعدادات
         if(d.settings.welcome_screen) { if(document.getElementById('welcome_active')) document.getElementById('welcome_active').checked = d.settings.welcome_screen.active; fill('welcome_title_inp', d.settings.welcome_screen.title); fill('welcome_msg_inp', d.settings.welcome_screen.message); }
         if(d.settings.teacher_spacing && document.getElementById('t_spacing_range')) { document.getElementById('t_spacing_range').value = d.settings.teacher_spacing; document.getElementById('t_spacing_display').innerText = d.settings.teacher_spacing + 'px'; }
         if(document.getElementById('toggle_maint')) document.getElementById('toggle_maint').checked = d.settings.maintenance_mode;
@@ -141,7 +149,14 @@ db.ref().on('value', (snapshot) => {
         ['news','student','question','ranks','schedule','teachers'].forEach(k => { const el = document.getElementById('show_'+k); if(el) el.checked = d.settings['show_'+k]; });
     }
     
-    if(d.site_content) { fill('inp_header_title', d.site_content.txt_header_title); fill('inp_header_subtitle', d.site_content.txt_header_subtitle); fill('inp_header_location', d.site_content.txt_header_location); fill('inp_about_content', d.site_content.txt_about_content); }
+    // تحميل النصوص (مع معالجة اختفاء النصوص)
+    if(d.site_content) { 
+        fill('inp_header_title', d.site_content.txt_header_title); 
+        fill('inp_header_subtitle', d.site_content.txt_header_subtitle); 
+        fill('inp_header_location', d.site_content.txt_header_location); 
+        fill('inp_about_content', d.site_content.txt_about_content);
+        fill('inp_video', d.settings ? d.settings.video_url : '');
+    }
     if(d.news_bar) fill('inp_news_bar', d.news_bar.text);
     if(d.weekly_question) { fill('inp_q_text', d.weekly_question.text); fill('inp_q_winner', d.weekly_question.last_winner); }
 
@@ -152,7 +167,7 @@ db.ref().on('value', (snapshot) => {
     renderComplexScheduleAdmin(d.schedule_complex);
 });
 
-// Render List (نفس السابق)
+// Render List
 function renderList(elId, data, type) {
     const el = document.getElementById(elId); if(!el) return; el.innerHTML='';
     if(!data) { el.innerHTML='<p>لا توجد بيانات</p>'; return; }
@@ -175,6 +190,7 @@ function renderList(elId, data, type) {
         let path = (type==='card'?'custom_cards':(type==='teacher'?'teachers_list_v2':(type==='rank'?'ranks_list':'holidays_list'))) + '/' + key;
         const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
 
+        // هنا الإصلاح لتصميم الأزرار
         el.innerHTML += `
             <div class="dynamic-item ${isActive?'':'hidden-item'}">
                 <div class="item-info">${content}</div>
@@ -186,7 +202,7 @@ function renderList(elId, data, type) {
             </div>`;
     });
 }
-function prepareEdit(type, key, item) { /*...نفس السابق...*/ 
+function prepareEdit(type, key, item) { 
     editKeys[type] = key;
     if(type === 'rank') { fill('rank_name', item.name); fill('rank_ring', item.ring); fill('rank_num', item.rank); fill('rank_msg', item.message); }
     else if(type === 'card') { fill('card_title', item.title); fill('card_text', item.text); fill('card_color', item.color); fill('card_btn_text', item.btn_text); fill('card_link', item.link); }
