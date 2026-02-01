@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الشاملة - الثريا V7</title>
+    <title>لوحة التحكم الشاملة - الثريا V8</title>
     
     <link rel="stylesheet" href="css/admin_style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
-<body style="display: none;"> <div id="toast-container" class="toast-container"></div>
+<body style="display: none;">
+
+    <div id="toast-container" class="toast-container"></div>
 
     <aside class="sidebar">
-        <div class="brand"><i class="fas fa-cogs"></i> لوحة التحكم V7</div>
+        <div class="brand"><i class="fas fa-cogs"></i> لوحة التحكم V8</div>
         <ul class="menu">
             <li><a onclick="showTab('tab-general')" class="active"><i class="fas fa-sliders-h"></i> الإعدادات العامة</a></li>
             <li><a onclick="showTab('tab-sections')"><i class="fas fa-eye"></i> إظهار/إخفاء الأقسام</a></li>
             <li><a onclick="showTab('tab-cards')"><i class="fas fa-th-large"></i> الأزرار والبطاقات</a></li>
             <li><a onclick="showTab('tab-complex-schedule')"><i class="fas fa-calendar-alt"></i> الجداول الدراسية</a></li>
             <li><a onclick="showTab('tab-teachers')"><i class="fas fa-chalkboard-teacher"></i> المعلمون</a></li>
-            <li><a onclick="showTab('tab-ranks')"><i class="fas fa-medal"></i> أوائل الحلقات</a></li> <li><a onclick="showTab('tab-holidays')"><i class="fas fa-umbrella-beach"></i> الإجازات</a></li>
+            <li><a onclick="showTab('tab-ranks')"><i class="fas fa-medal"></i> أوائل الحلقات</a></li>
+            <li><a onclick="showTab('tab-holidays')"><i class="fas fa-umbrella-beach"></i> الإجازات</a></li>
             <li><a onclick="showTab('tab-news')"><i class="fas fa-newspaper"></i> الأخبار ومن نحن</a></li>
             <li style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1);">
                 <a onclick="logout()" style="color: #fca5a5;"><i class="fas fa-sign-out-alt"></i> خروج</a>
@@ -120,30 +123,30 @@
         <div id="tab-ranks" class="panel">
             
             <div class="card border-blue" style="background:#f0fdfa;">
-                <h3><i class="fas fa-paint-brush"></i> تخصيص التصميم</h3>
+                <h3><i class="fas fa-paint-brush"></i> تخصيص الألوان والخطوط</h3>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>لون حدود الحلقة:</label>
-                        <input type="color" id="d_ring_color" class="input-field" style="height:40px;" value="#10b981">
+                        <label>لون خلفية رأس الحلقة:</label>
+                        <input type="color" id="d_header_bg" class="input-field" style="height:40px;" value="#064e3b">
+                    </div>
+                    <div class="form-group">
+                        <label>لون نص رأس الحلقة:</label>
+                        <input type="color" id="d_header_text" class="input-field" style="height:40px;" value="#ffffff">
                     </div>
                     <div class="form-group">
                         <label>لون اسم الطالب:</label>
-                        <input type="color" id="d_name_color" class="input-field" style="height:40px;" value="#064e3b">
+                        <input type="color" id="d_student_color" class="input-field" style="height:40px;" value="#333333">
                     </div>
                     <div class="form-group">
-                        <label>حجم خط الحلقة: <span id="disp_ring_size">1.6rem</span></label>
-                        <input type="range" id="d_ring_size" min="1" max="3" step="0.1" value="1.6" oninput="document.getElementById('disp_ring_size').innerText=this.value+'rem'">
-                    </div>
-                    <div class="form-group">
-                        <label>حجم خط الطالب: <span id="disp_name_size">1.5rem</span></label>
-                        <input type="range" id="d_name_size" min="0.8" max="2.5" step="0.1" value="1.5" oninput="document.getElementById('disp_name_size').innerText=this.value+'rem'">
+                        <label>حجم خط الحلقة:</label>
+                        <input type="range" id="d_ring_size" min="1" max="2.5" step="0.1" value="1.2" class="input-field">
                     </div>
                     <div class="form-group" style="grid-column: span 2;">
-                        <label>تكبير/تصغير البطاقات (Zoom): <span id="disp_zoom">100%</span></label>
-                        <input type="range" id="d_card_zoom" min="80" max="150" step="5" value="100" oninput="document.getElementById('disp_zoom').innerText=this.value+'%'">
+                        <label>حجم خط الطالب:</label>
+                        <input type="range" id="d_name_size" min="0.8" max="2" step="0.1" value="1.0" class="input-field">
                     </div>
                 </div>
-                <button onclick="saveRankDesign()" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ التصميم</button>
+                <button onclick="saveRankDesign()" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ الألوان والتصميم</button>
             </div>
 
             <div class="card border-green">
@@ -169,8 +172,8 @@
                         <input type="text" id="rank_name" class="input-field" placeholder="اسم الطالب">
                     </div>
                     <div class="form-group">
-                        <label>الحلقة:</label>
-                        <input type="text" id="rank_ring" class="input-field" list="ring_suggestions" placeholder="اختر أو اكتب جديد...">
+                        <label>الحلقة (اكتب وسيظهر الاقتراح):</label>
+                        <input type="text" id="rank_ring" class="input-field" list="ring_suggestions" placeholder="اسم الحلقة...">
                         <datalist id="ring_suggestions">
                             </datalist>
                     </div>
