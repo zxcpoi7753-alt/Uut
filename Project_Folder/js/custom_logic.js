@@ -1,6 +1,7 @@
 /* ============================================================
    ملف: js/custom_logic.js
-   الوظيفة: جلب البيانات + الترحيب + التصميم المطور للأوائل (V3)
+   الوظيفة: المحرك الرئيسي للموقع (جلب البيانات + العرض)
+   النسخة: V4 - مع تصميم البطاقات والقطاعات المرقمة
    ============================================================ */
 
 const firebaseConfig = {
@@ -35,23 +36,25 @@ try {
 } catch (error) { console.error("Firebase Error:", error); }
 
 
-// ==========================================
-// دالة التطبيق الشاملة
-// ==========================================
+// ============================================================
+// [SECTION 1]: دالة التطبيق الشاملة (The Controller)
+// ============================================================
 function applyAllData(data) {
     applySettings(data);
     applyContent(data);
+    
+    // استدعاء دوال الرسم
     renderComplexSchedule(data.schedule_complex);
-    renderTeachers(data.teachers_list_v2, data.settings);
+    renderTeachers(data.teachers_list_v2, data.settings); // تمرير الإعدادات للمسافة
     renderCustomCards(data.custom_cards);
-    renderRanks(data.ranks_list); // 👈 هنا التغيير الكبير
+    renderRanks(data.ranks_list); // 👈 تصميم البطاقات الجديد
     renderHolidays(data.holidays_list);
 }
 
 
-// ==========================================
-// 🎉 منطق الترحيب الذكي
-// ==========================================
+// ============================================================
+// [SECTION 2]: منطق الترحيب الذكي (Smart Welcome)
+// ============================================================
 function handleSmartWelcome(settings) {
     if (!settings || !settings.welcome_screen || settings.welcome_screen.active !== true) return;
 
@@ -87,14 +90,15 @@ function showWelcomeOverlay(config) {
 }
 
 
-// ==========================================
-// 1. دوال التطبيق الأساسية
-// ==========================================
+// ============================================================
+// [SECTION 3]: الإعدادات وتعبئة النصوص (Settings & Content)
+// ============================================================
+
 function applySettings(data) {
     if(!data.settings) return;
     const s = data.settings;
 
-    // وضع الصيانة
+    // أ. وضع الصيانة
     const maint = document.getElementById('maintenance-mode');
     if(s.maintenance_mode === true) {
         maint.style.display = 'flex';
@@ -106,7 +110,7 @@ function applySettings(data) {
         document.querySelector('header').style.display = 'block';
     }
 
-    // الإشعار المنبثق
+    // ب. الإشعار المنبثق
     const popup = document.getElementById('site-notification');
     const dontShow = localStorage.getItem('dont_show_popup');
     if(s.popup_active === true && dontShow !== 'true') {
@@ -122,7 +126,7 @@ function applySettings(data) {
         popup.style.display = 'none';
     }
 
-    // الأقسام
+    // ج. الأقسام والفيديو
     toggleSection('block-news', s.show_news);
     toggleSection('block-student', s.show_student);
     toggleSection('block-question', s.show_question);
@@ -164,9 +168,9 @@ function applyContent(data) {
 }
 
 
-// ==========================================
-// 2. دوال بناء المحتوى (Renderers)
-// ==========================================
+// ============================================================
+// [SECTION 4]: دوال الرسم والعرض (Renderers)
+// ============================================================
 
 function renderCustomCards(list) {
     const container = document.getElementById('dynamic-custom-cards-container');
@@ -194,79 +198,122 @@ function renderTeachers(list, settings) {
     if(!container) return;
     container.innerHTML = '';
     
+    // جلب المسافة من الإعدادات
     const spacing = (settings && settings.teacher_spacing) ? settings.teacher_spacing + 'px' : '15px';
     
     if(!list) { container.innerHTML = '<p>لا يوجد معلمون حالياً</p>'; return; }
     
     Object.values(list).forEach(t => {
         if(t.active === false) return; 
+        
+        // رسم الأيقونة (إيموجي أو افتراضي)
         let iconHtml = t.emoji && t.emoji.trim() !== "" 
             ? `<div class="teacher-icon" style="background:transparent; font-size:1.8rem;">${t.emoji}</div>`
             : `<div class="teacher-icon"><i class="fas fa-user-tie"></i></div>`;
 
         const div = document.createElement('div');
         div.className = 'teacher-row';
-        div.style.marginBottom = spacing; 
+        div.style.marginBottom = spacing; // تطبيق المسافة
         div.innerHTML = `${iconHtml}<div class="teacher-info"><h4>${t.name}</h4><p>${t.role || 'معلم فاضل'}</p></div>`;
         container.appendChild(div);
     });
 }
 
-// ⭐ [تحديث ضخم]: فصل الحلقات وتصميم الجداول
+// ################# [START MODIFICATION 4: نظام بطاقات الأوائل] #################
 function renderRanks(list) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return;
     container.innerHTML = '';
-    
-    if(!list) { container.innerHTML = '<p>لم يتم رفع الأسماء بعد</p>'; return; }
 
-    // 1. تجميع الطلاب حسب اسم الحلقة
+    // إنشاء عنصر الرسالة المنبثقة (Toast) إذا لم يكن موجوداً
+    if(!document.getElementById('student-toast-msg')) {
+        const toast = document.createElement('div');
+        toast.id = 'student-toast-msg';
+        toast.className = 'student-toast';
+        document.body.appendChild(toast);
+    }
+    
+    if(!list) { container.innerHTML = '<p style="text-align:center; padding:20px;">لم يتم رفع الأسماء بعد</p>'; return; }
+
+    // 1. تجميع الطلاب حسب الحلقة
     const groups = {};
     Object.values(list).forEach(r => {
         if(r.active === false) return;
-        const ringName = r.ring || "حلقات عامة"; // اسم افتراضي إذا لم يكتب الحلقة
+        const ringName = r.ring || "حلقات عامة";
         if(!groups[ringName]) groups[ringName] = [];
         groups[ringName].push(r);
     });
 
-    // 2. إنشاء جدول لكل مجموعة
+    // 2. رسم البطاقات لكل حلقة
     Object.keys(groups).sort().forEach(ringName => {
-        // ترتيب الطلاب داخل الحلقة حسب المركز (1 ثم 2 ثم 3...)
         const students = groups[ringName].sort((a,b) => a.rank - b.rank);
         
-        // إنشاء البطاقة (HTML)
+        // إنشاء حاوية البطاقة
         const card = document.createElement('div');
-        card.className = 'rank-group-card'; // الكلاس الجديد من CSS
+        card.className = 'rank-group-card'; // كلاس CSS الجديد
         
-        let rowsHTML = '';
+        let studentsHTML = '<div class="students-list">';
+        
         students.forEach(s => {
+            // تحديد التصميم حسب المركز
             let rankClass = '';
             let medal = '';
-            
-            // تلوين الأوائل
-            if(s.rank == 1) { rankClass = 'rank-row-1'; medal = '🥇'; }
-            else if(s.rank == 2) { rankClass = 'rank-row-2'; medal = '🥈'; }
-            else if(s.rank == 3) { rankClass = 'rank-row-3'; medal = '🥉'; }
-            else { medal = '✨'; }
+            let rankText = '';
 
-            rowsHTML += `
-                <tr class="${rankClass}">
-                    <td>${medal} <strong>${s.rank}</strong></td>
-                    <td style="font-weight:bold;">${s.name}</td>
-                </tr>`;
+            if(s.rank == 1) { 
+                rankClass = 'rank-1'; 
+                medal = '🥇'; 
+                rankText = 'المركز الأول';
+            } else if(s.rank == 2) { 
+                rankClass = 'rank-2'; 
+                medal = '🥈'; 
+                rankText = 'المركز الثاني';
+            } else if(s.rank == 3) { 
+                rankClass = 'rank-3'; 
+                medal = '🥉'; 
+                rankText = 'المركز الثالث';
+            } else { 
+                rankClass = 'rank-other'; 
+                medal = `<span style="font-size:0.9rem; color:#64748b;">#${s.rank}</span>`; 
+                rankText = `مركز ${s.rank}`;
+            }
+
+            const praiseMsg = "✨ ما شاء الله.. مبارك عليك التفوق!";
+            
+            // رسم صف الطالب
+            studentsHTML += `
+                <div class="student-row ${rankClass}" onclick="showStudentPraise('${s.name}', '${praiseMsg}')">
+                    <div class="student-info">
+                        <div class="rank-badge">${medal}</div>
+                        <div class="student-name">${s.name}</div>
+                    </div>
+                    <div class="rank-text">${rankText}</div>
+                </div>
+            `;
         });
+        
+        studentsHTML += '</div>';
 
         card.innerHTML = `
-            <div class="rank-group-header">🕌 ${ringName}</div>
-            <table class="schedule-table-simple">
-                <thead><tr><th width="30%">المركز</th><th>الطالب</th></tr></thead>
-                <tbody>${rowsHTML}</tbody>
-            </table>
+            <div class="rank-group-header">
+                <i class="fas fa-users" style="margin-left:10px; color:#fbbf24;"></i> ${ringName}
+            </div>
+            ${studentsHTML}
         `;
         
         container.appendChild(card);
     });
 }
+
+// دالة مساعدة لإظهار رسالة التهنئة
+function showStudentPraise(name, msg) {
+    const toast = document.getElementById('student-toast-msg');
+    toast.innerHTML = `🌟 <strong>${name}</strong>: ${msg}`;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 2500);
+}
+// ################# [END MODIFICATION 4] #################
+
 
 function renderHolidays(list) {
     const ul = document.getElementById('dynamic-holidays-list');
@@ -297,7 +344,6 @@ function renderComplexSchedule(data) {
         container.appendChild(timeHeader);
         Object.values(timeSection.rings).forEach(ring => {
             const btn = document.createElement('div');
-            // الكلاس الجديد للأزرار البيضاوية موجود في CSS
             btn.className = 'ring-accordion-btn';
             btn.innerHTML = `<span>📖 ${ring.name}</span> <span>▼</span>`;
             const panel = document.createElement('div');
@@ -330,7 +376,10 @@ function renderComplexSchedule(data) {
     });
 }
 
-// Helpers
+
+// ============================================================
+// [SECTION 5]: دوال مساعدة (Helpers)
+// ============================================================
 function setTxt(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerText = txt; }
 function setHTML(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerHTML = txt; }
 function toggleSection(id, show) {
