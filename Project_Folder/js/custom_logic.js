@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/custom_logic.js (V8 - العودة للتصميم الكلاسيكي + التحكم الكامل)
+   ملف: js/custom_logic.js (V9 - الثيمات + تنسيق النصوص الذكي)
    ============================================================ */
 
 const firebaseConfig = {
@@ -44,7 +44,7 @@ function applyAllData(data) {
     renderComplexSchedule(data.schedule_complex);
     renderTeachers(data.teachers_list_v2, data.settings);
     renderCustomCards(data.custom_cards);
-    renderRanks(data.ranks_list, data.settings); // 👈 نمرر الإعدادات
+    renderRanks(data.ranks_list, data.settings);
     renderHolidays(data.holidays_list);
 }
 
@@ -54,47 +54,34 @@ function applyAllData(data) {
 // ============================================================
 function handleSmartWelcome(settings) {
     if (!settings || !settings.welcome_screen || settings.welcome_screen.active !== true) return;
-
     const lastSeen = localStorage.getItem('welcome_last_seen_time');
     const now = new Date().getTime();
-    const hours = 12; 
-    const diff = now - (lastSeen || 0);
-
-    if (diff > (hours * 60 * 60 * 1000)) {
+    if ((now - (lastSeen || 0)) > (12 * 60 * 60 * 1000)) {
         showWelcomeOverlay(settings.welcome_screen);
         localStorage.setItem('welcome_last_seen_time', now);
     }
 }
 
 function showWelcomeOverlay(config) {
-    const overlay = document.getElementById('welcome-overlay');
-    if(!overlay) return;
-
-    const titleEl = document.getElementById('welcome-title');
-    const msgEl = document.getElementById('welcome-text');
-    let studentName = localStorage.getItem('studentName') || "يا بطل";
-    
-    titleEl.innerText = config.title || "أهلاً بك";
+    const overlay = document.getElementById('welcome-overlay'); if(!overlay) return;
+    document.getElementById('welcome-title').innerText = config.title || "أهلاً بك";
     let message = config.message || "نورتنا يا {name}";
-    message = message.replace("{name}", studentName);
-    msgEl.innerText = message;
-
+    message = message.replace("{name}", localStorage.getItem('studentName') || "يا بطل");
+    document.getElementById('welcome-text').innerText = message;
     overlay.style.display = 'flex';
-    setTimeout(() => {
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.style.display = 'none', 500);
-    }, 3000);
+    setTimeout(() => { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 500); }, 3000);
 }
 
 
 // ============================================================
-// [SECTION 3]: الإعدادات وتعبئة النصوص
+// [SECTION 3]: الإعدادات وتعبئة النصوص (تحديث الثيم والنصوص)
 // ============================================================
 
 function applySettings(data) {
     if(!data.settings) return;
     const s = data.settings;
 
+    // 1. تطبيق وضع الصيانة
     const maint = document.getElementById('maintenance-mode');
     if(s.maintenance_mode === true) {
         maint.style.display = 'flex';
@@ -106,21 +93,26 @@ function applySettings(data) {
         document.querySelector('header').style.display = 'block';
     }
 
+    // 2. تطبيق الثيم (لون الموقع) 🎨
+    if(s.theme_color) {
+        document.documentElement.style.setProperty('--primary-color', s.theme_color);
+        // جعل لون الأكسنت نفس الرئيسي أو مشتق منه
+        document.documentElement.style.setProperty('--accent-color', s.theme_color); 
+    }
+
+    // 3. الإشعارات
     const popup = document.getElementById('site-notification');
     const dontShow = localStorage.getItem('dont_show_popup');
     if(s.popup_active === true && dontShow !== 'true') {
         setTimeout(() => {
              const overlay = document.getElementById('welcome-overlay');
-             if(overlay.style.display === 'none' || overlay.style.opacity === '0') {
-                 popup.style.display = 'flex';
-             }
+             if(overlay.style.display === 'none' || overlay.style.opacity === '0') popup.style.display = 'flex';
         }, 3500);
-        document.getElementById('notif-title').innerText = s.popup_title || "تنبيه";
-        document.getElementById('notif-body').innerText = s.popup_body || "...";
-    } else {
-        popup.style.display = 'none';
-    }
+        setTxt('notif-title', s.popup_title || "تنبيه");
+        setTxt('notif-body', s.popup_body || "...");
+    } else { popup.style.display = 'none'; }
 
+    // 4. إظهار/إخفاء الأقسام
     toggleSection('block-news', s.show_news);
     toggleSection('block-student', s.show_student);
     toggleSection('block-question', s.show_question);
@@ -128,10 +120,7 @@ function applySettings(data) {
     toggleSection('block-schedule', s.show_schedule);
     toggleSection('block-ranks', s.show_ranks);
 
-    if(s.video_url) {
-        const vid = document.getElementById('bg-video');
-        if(vid && !vid.src.includes(s.video_url)) vid.src = s.video_url;
-    }
+    if(s.video_url) { const vid = document.getElementById('bg-video'); if(vid && !vid.src.includes(s.video_url)) vid.src = s.video_url; }
 }
 
 function applyContent(data) {
@@ -140,10 +129,8 @@ function applyContent(data) {
         setHTML('weekly-question-text', `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`);
         setTxt('weekly-winner-text', data.weekly_question.last_winner);
     }
-    if(data.top_student) {
-        setTxt('top-student-name', data.top_student.name);
-        setTxt('top-student-desc', data.top_student.category);
-    }
+    if(data.top_student) { setTxt('top-student-name', data.top_student.name); setTxt('top-student-desc', data.top_student.category); }
+    
     if(data.site_content) {
         const c = data.site_content;
         setTxt('txt_header_title', c.txt_header_title);
@@ -153,11 +140,20 @@ function applyContent(data) {
         setTxt('txt_student_title', c.txt_student_title);
         setTxt('txt_question_title', c.txt_question_title);
         setTxt('txt_about_title', c.txt_about_title);
-        setHTML('txt_about_content', c.txt_about_content); 
         setTxt('txt_contact_title', c.txt_contact_title);
         setTxt('txt_footer', c.txt_footer);
         if(c.txt_schedule_title) setTxt('txt_schedule_title', c.txt_schedule_title);
         if(c.txt_teachers_title) setTxt('txt_teachers_title', c.txt_teachers_title);
+
+        // ⭐ معالجة نص "من نحن" (الآيات والأسطر)
+        if(c.txt_about_content) {
+            let text = c.txt_about_content;
+            // تحويل الأسطر الجديدة
+            text = text.replace(/\n/g, '<br>');
+            // تحويل الآيات {نص} إلى شكل مزخرف
+            text = text.replace(/\{(.*?)\}/g, '<span class="quran-verse">﴾ $1 ﴿</span>');
+            setHTML('txt_about_content', text);
+        }
     }
 }
 
@@ -169,18 +165,13 @@ function applyContent(data) {
 function renderCustomCards(list) {
     const container = document.getElementById('dynamic-custom-cards-container');
     if(!container) return; container.innerHTML = ''; if(!list) return;
-
     Object.values(list).forEach(card => {
         if(card.active === false) return;
         const div = document.createElement('div');
         div.className = 'custom-dynamic-card';
         div.style.borderRightColor = card.color || '#3b82f6';
-        let html = `<h3 style="color:${card.color || '#333'}">${card.title}</h3>`;
-        html += `<p style="white-space: pre-line;">${card.text}</p>`;
-        if(card.link) {
-            html += `<a href="${card.link}" target="_blank" class="nav-btn" style="margin-top:10px; border-color:${card.color}; color:${card.color}; width:auto; display:inline-block;">${card.btn_text || 'اضغط هنا'}</a>`;
-        }
-        div.innerHTML = html;
+        div.innerHTML = `<h3 style="color:${card.color || '#333'}">${card.title}</h3><p style="white-space: pre-line;">${card.text}</p>`;
+        if(card.link) div.innerHTML += `<a href="${card.link}" target="_blank" class="nav-btn" style="margin-top:10px; border-color:${card.color}; color:${card.color}; width:auto; display:inline-block;">${card.btn_text || 'اضغط هنا'}</a>`;
         container.appendChild(div);
     });
 }
@@ -189,223 +180,79 @@ function renderTeachers(list, settings) {
     const container = document.getElementById('dynamic-teachers-container');
     if(!container) return; container.innerHTML = '';
     const spacing = (settings && settings.teacher_spacing) ? settings.teacher_spacing + 'px' : '15px';
-    
     if(!list) { container.innerHTML = '<p>لا يوجد معلمون حالياً</p>'; return; }
-    
     Object.values(list).forEach(t => {
         if(t.active === false) return; 
-        let iconHtml = t.emoji && t.emoji.trim() !== "" 
-            ? `<div class="teacher-icon" style="background:transparent; font-size:1.8rem;">${t.emoji}</div>`
-            : `<div class="teacher-icon"><i class="fas fa-user-tie"></i></div>`;
-
+        let iconHtml = t.emoji && t.emoji.trim() !== "" ? `<div class="teacher-icon" style="background:transparent; font-size:1.8rem;">${t.emoji}</div>` : `<div class="teacher-icon"><i class="fas fa-user-tie"></i></div>`;
         const div = document.createElement('div');
-        div.className = 'teacher-row';
-        div.style.marginBottom = spacing;
+        div.className = 'teacher-row'; div.style.marginBottom = spacing;
         div.innerHTML = `${iconHtml}<div class="teacher-info"><h4>${t.name}</h4><p>${t.role || 'معلم فاضل'}</p></div>`;
         container.appendChild(div);
     });
 }
 
-// ⭐ [تحديث الأوائل V8: تصميم الصناديق الكلاسيكي + التحكم بالألوان]
+// ⭐ [رسم الأوائل V8: تصميم الصناديق الكلاسيكي]
 function renderRanks(list, settings) {
     const container = document.getElementById('dynamic-ranks-list');
-    if(!container) return;
-    container.innerHTML = '';
+    if(!container) return; container.innerHTML = '';
 
-    if(!document.getElementById('student-toast-msg')) {
-        const toast = document.createElement('div');
-        toast.id = 'student-toast-msg';
-        toast.className = 'student-toast';
-        document.body.appendChild(toast);
-    }
-    
+    if(!document.getElementById('student-toast-msg')) { const t=document.createElement('div'); t.id='student-toast-msg'; t.className='student-toast'; document.body.appendChild(t); }
     if(!list) { container.innerHTML = '<p style="text-align:center; padding:20px;">لم يتم رفع الأسماء بعد</p>'; return; }
 
-    // 1. جلب إعدادات التصميم (مع القيم الافتراضية للكلاسيك)
     const design = (settings && settings.ranks_design_v8) ? settings.ranks_design_v8 : {
-        header_bg: '#047857',      // أخضر غامق للخلفية
-        header_text: '#ffffff',    // أبيض للنص
-        student_color: '#333333',  // أسود لاسم الطالب
-        ring_size: '1.2',          // حجم خط الحلقة
-        name_size: '1.0'           // حجم خط الطالب
+        header_bg: '#047857', header_text: '#ffffff', student_color: '#333333', ring_size: '1.2', name_size: '1.0'
     };
 
-    // 2. تجميع الحلقات
     const groups = {};
-    Object.values(list).forEach(r => {
-        if(r.active === false) return;
-        let ringName = r.ring ? r.ring.trim() : "حلقات عامة"; 
-        if(!groups[ringName]) groups[ringName] = [];
-        groups[ringName].push(r);
-    });
+    Object.values(list).forEach(r => { if(r.active===false)return; let n=r.ring?r.ring.trim():"حلقات عامة"; if(!groups[n])groups[n]=[]; groups[n].push(r); });
 
-    // 3. الرسم (تصميم الصندوق المغلق)
     Object.keys(groups).sort().forEach(ringName => {
         const students = groups[ringName].sort((a,b) => a.rank - b.rank);
+        const card = document.createElement('div'); card.className = 'rank-group-card';
         
-        const card = document.createElement('div');
-        card.className = 'rank-group-card'; // كلاس الصندوق الأبيض
-        
-        // بناء الهيكل: رأس ملون + قائمة بيضاء
-        let html = `
-            <div class="rank-group-header" style="
-                background-color: ${design.header_bg};
-                color: ${design.header_text};
-                font-size: ${design.ring_size}rem;
-                text-align: center;
-            ">
-                ${ringName}
-            </div>
-            <div class="students-list">`;
+        let html = `<div class="rank-group-header" style="background-color:${design.header_bg}; color:${design.header_text}; font-size:${design.ring_size}rem; text-align:center;">${ringName}</div><div class="students-list">`;
         
         students.forEach(s => {
-            let medal = '';
-            // أيقونات بسيطة حسب الطلب
-            if(s.rank == 1) medal = '🥇';
-            else if(s.rank == 2) medal = '🥈';
-            else if(s.rank == 3) medal = '🥉';
-            else medal = '🔹';
+            let medal = s.rank==1?'🥇':(s.rank==2?'🥈':(s.rank==3?'🥉':'🔹'));
+            const safeMsg = (s.message||"مبارك التفوق!").replace(/'/g, "\\'"); const safeName = s.name.replace(/'/g, "\\'");
 
-            const msgContent = (s.message && s.message.trim() !== "") ? s.message : "مبارك التفوق والنجاح! 🌟";
-            const safeMsg = msgContent.replace(/'/g, "\\'");
-            const safeName = s.name.replace(/'/g, "\\'");
-
-            // سطر الطالب (تصميم القائمة البسيط)
             html += `
-                <div class="student-list-item" 
-                     style="
-                        color: ${design.student_color};
-                        font-size: ${design.name_size}rem;
-                        text-align: right;
-                     "
-                     oncontextmenu="return false;" 
-                     ontouchstart="handleTouchStart(this, '${safeName}', '${safeMsg}')" 
-                     ontouchend="handleTouchEnd(this)" 
-                     onmousedown="handleTouchStart(this, '${safeName}', '${safeMsg}')" 
-                     onmouseup="handleTouchEnd(this)">
-                     
-                    <span class="rank-icon">${medal}</span>
-                    <span class="student-name-text">${s.name}</span>
-                </div>
-            `;
+                <div class="student-list-item" style="color:${design.student_color}; font-size:${design.name_size}rem; text-align:right;"
+                     oncontextmenu="return false;" ontouchstart="handleTouchStart(this,'${safeName}','${safeMsg}')" ontouchend="handleTouchEnd(this)" onmousedown="handleTouchStart(this,'${safeName}','${safeMsg}')" onmouseup="handleTouchEnd(this)">
+                    <span class="rank-icon">${medal}</span><span class="student-name-text">${s.name}</span>
+                </div>`;
         });
-        
-        html += '</div>'; 
-        card.innerHTML = html;
-        container.appendChild(card);
+        html += '</div>'; card.innerHTML = html; container.appendChild(card);
     });
 }
 
-// === منطق الضغط المطول (Toast) ===
-let longPressTimer;
-const LONG_PRESS_DURATION = 600;
-
-function handleTouchStart(el, name, msg) {
-    el.classList.add('pressing'); 
-    longPressTimer = setTimeout(() => {
-        showStudentPraise(name, msg);
-        if(navigator.vibrate) navigator.vibrate(50); 
-    }, LONG_PRESS_DURATION);
-}
-
-function handleTouchEnd(el) {
-    el.classList.remove('pressing');
-    if(longPressTimer) clearTimeout(longPressTimer);
-}
-
-function showStudentPraise(name, msg) {
-    const toast = document.getElementById('student-toast-msg');
-    toast.innerHTML = `
-        <div style="font-weight:bold; margin-bottom:5px; color:#fbbf24; font-size:1.2rem;">${name}</div>
-        <div style="font-size:1rem;">${msg}</div>
-    `;
-    toast.classList.add('show');
-    setTimeout(() => { toast.classList.remove('show'); }, 4000);
-}
+// === منطق الضغط المطول ===
+let longPressTimer; const LONG_PRESS_DURATION=600;
+function handleTouchStart(el,n,m){ el.classList.add('pressing'); longPressTimer=setTimeout(()=>{showStudentPraise(n,m);if(navigator.vibrate)navigator.vibrate(50);},LONG_PRESS_DURATION); }
+function handleTouchEnd(el){ el.classList.remove('pressing'); if(longPressTimer)clearTimeout(longPressTimer); }
+function showStudentPraise(n,m){ const t=document.getElementById('student-toast-msg'); t.innerHTML=`<div style="font-weight:bold;margin-bottom:5px;color:#fbbf24;font-size:1.2rem;">${n}</div><div style="font-size:1rem;">${m}</div>`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),4000); }
 
 
-function renderHolidays(list) {
-    const ul = document.getElementById('dynamic-holidays-list');
-    if(!ul) return; ul.innerHTML = '';
-    if(!list) { ul.innerHTML = '<li>لا توجد إجازات قريبة</li>'; return; }
-    Object.values(list).forEach(h => {
-        if(h.active === false) return;
-        const li = document.createElement('li');
-        li.innerText = h.text;
-        ul.appendChild(li);
-    });
-}
-
-function renderComplexSchedule(data) {
-    const container = document.getElementById('dynamic-schedule-container');
-    if(!container) return; container.innerHTML = '';
-    if(!data) { container.innerHTML = '<p style="text-align:center;">لا توجد جداول حالياً</p>'; return; }
-    Object.keys(data).sort().forEach(timeKey => {
-        const timeSection = data[timeKey];
-        if(!timeSection.rings) return;
-        const timeHeader = document.createElement('div');
-        timeHeader.className = 'time-group-title';
-        timeHeader.innerText = timeSection.title || "فترة";
-        container.appendChild(timeHeader);
-        Object.values(timeSection.rings).forEach(ring => {
-            const btn = document.createElement('div');
-            btn.className = 'ring-accordion-btn';
-            btn.innerHTML = `<span>📖 ${ring.name}</span> <span>▼</span>`;
-            const panel = document.createElement('div');
-            panel.className = 'ring-schedule-panel';
-            panel.innerHTML = `
-                <table class="schedule-table-simple">
-                    <thead><tr><th>اليوم</th><th>المقرر / النشاط</th></tr></thead>
-                    <tbody>
-                        <tr><td>السبت</td><td>${ring.sat || '-'}</td></tr>
-                        <tr><td>الأحد</td><td>${ring.sun || '-'}</td></tr>
-                        <tr><td>الاثنين</td><td>${ring.mon || '-'}</td></tr>
-                        <tr><td>الثلاثاء</td><td>${ring.tue || '-'}</td></tr>
-                        <tr><td>الأربعاء</td><td>${ring.wed || '-'}</td></tr>
-                        <tr><td>الخميس</td><td>${ring.thu || '-'}</td></tr>
-                    </tbody>
-                </table>`;
-            btn.onclick = function() {
-                this.classList.toggle('active');
-                if (panel.style.display === "block") {
-                    panel.style.display = "none";
-                    this.querySelector('span:last-child').innerText = '▼';
-                } else {
-                    panel.style.display = "block";
-                    this.querySelector('span:last-child').innerText = '▲';
-                }
-            };
-            container.appendChild(btn);
-            container.appendChild(panel);
+function renderHolidays(list) { const ul=document.getElementById('dynamic-holidays-list'); if(!ul)return; ul.innerHTML=''; if(!list){ul.innerHTML='<li>لا توجد إجازات</li>';return;} Object.values(list).forEach(h=>{if(h.active===false)return; const li=document.createElement('li');li.innerText=h.text;ul.appendChild(li);}); }
+function renderComplexSchedule(d) {
+    const c=document.getElementById('dynamic-schedule-container'); if(!c)return; c.innerHTML=''; if(!d){c.innerHTML='<p style="text-align:center;">لا توجد جداول</p>';return;}
+    Object.keys(d).sort().forEach(k => { const s=d[k]; if(!s.rings)return;
+        const h=document.createElement('div'); h.className='time-group-title'; h.innerText=s.title||"فترة"; c.appendChild(h);
+        Object.values(s.rings).forEach(r => {
+            const b=document.createElement('div'); b.className='ring-accordion-btn'; b.innerHTML=`<span>📖 ${r.name}</span> <span>▼</span>`;
+            const p=document.createElement('div'); p.className='ring-schedule-panel';
+            p.innerHTML=`<table class="schedule-table-simple"><thead><tr><th>اليوم</th><th>المقرر</th></tr></thead><tbody><tr><td>السبت</td><td>${r.sat||'-'}</td></tr><tr><td>الأحد</td><td>${r.sun||'-'}</td></tr><tr><td>الاثنين</td><td>${r.mon||'-'}</td></tr><tr><td>الثلاثاء</td><td>${r.tue||'-'}</td></tr><tr><td>الأربعاء</td><td>${r.wed||'-'}</td></tr><tr><td>الخميس</td><td>${r.thu||'-'}</td></tr></tbody></table>`;
+            b.onclick=function(){this.classList.toggle('active'); p.style.display=(p.style.display==="block")?"none":"block"; this.querySelector('span:last-child').innerText=(p.style.display==="block")?'▲':'▼';};
+            c.appendChild(b); c.appendChild(p);
         });
     });
 }
 
-
-// ============================================================
-// [SECTION 5]: دوال مساعدة (Helpers)
-// ============================================================
-function setTxt(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerText = txt; }
-function setHTML(id, txt) { const el = document.getElementById(id); if(el && txt) el.innerHTML = txt; }
-function toggleSection(id, show) {
-    const el = document.getElementById(id);
-    if(el) { el.style.display = show === true ? 'block' : 'none'; }
-}
-function closePopup() { document.getElementById('site-notification').style.display = 'none'; }
-function disablePopupForever() {
-    if(document.getElementById('popup-forever-check').checked) {
-        localStorage.setItem('dont_show_popup', 'true');
-        alert("تم! لن تظهر لك هذه الرسالة مرة أخرى.");
-        closePopup();
-    }
-}
-function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
-function secureLogin() {
-    const u = document.getElementById('admin-user').value;
-    const p = document.getElementById('admin-pass').value;
-    if (!u || !p) return alert("أدخل البيانات");
-    
-    firebase.auth().signInWithEmailAndPassword(u, p)
-        .then(() => window.location.href = "admin.html")
-        .catch(e => alert("خطأ في الدخول: " + e.message));
-}
+// Helpers
+function setTxt(id,t){const e=document.getElementById(id);if(e)e.innerText=t;} 
+function setHTML(id,t){const e=document.getElementById(id);if(e)e.innerHTML=t;} 
+function toggleSection(id,s){const e=document.getElementById(id);if(e)e.style.display=s?'block':'none';}
+function closePopup(){document.getElementById('site-notification').style.display='none';}
+function disablePopupForever(){if(document.getElementById('popup-forever-check').checked){localStorage.setItem('dont_show_popup','true');alert("تم!");closePopup();}}
+function openLoginModal(){document.getElementById('login-modal').style.display='flex';}
+function secureLogin(){const u=document.getElementById('admin-user').value;const p=document.getElementById('admin-pass').value;if(!u||!p)return alert("أدخل البيانات");firebase.auth().signInWithEmailAndPassword(u,p).then(()=>window.location.href="admin.html").catch(e=>alert("خطأ: "+e.message));}
