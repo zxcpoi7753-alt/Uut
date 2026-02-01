@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/admin_logic.js (V7 - التحكم بالتصميم + الاقتراحات الذكية)
+   ملف: js/admin_logic.js (V8 - التحكم بالألوان + الاقتراح الذكي)
    ============================================================ */
 
 const firebaseConfig = {
@@ -54,16 +54,16 @@ function addTeacherV2() {
     else db.ref('teachers_list_v2').push(d).then(()=>{showToast("تمت الإضافة");resetForm('teacher');});
 }
 
-// ⭐ [SECTION 6]: أوائل الحلقات (التحديث الجديد: حفظ التصميم)
+// ⭐ [SECTION 6]: أوائل الحلقات (حفظ التصميم المخصص)
 function saveRankDesign() {
     const design = {
-        ring_color: val('d_ring_color'),
-        name_color: val('d_name_color'),
-        ring_size: val('d_ring_size'),
-        name_size: val('d_name_size'),
-        zoom: val('d_card_zoom')
+        header_bg: val('d_header_bg'),      // لون خلفية العنوان
+        header_text: val('d_header_text'),  // لون نص العنوان
+        student_color: val('d_student_color'), // لون اسم الطالب
+        ring_size: val('d_ring_size'),      // حجم خط الحلقة
+        name_size: val('d_name_size')       // حجم خط الطالب
     };
-    db.ref('settings/ranks_design').set(design).then(() => showToast("تم حفظ تصميم الأوائل 🎨"));
+    db.ref('settings/ranks_design_v8').set(design).then(() => showToast("تم حفظ التصميم 🎨"));
 }
 
 function addRank() {
@@ -94,17 +94,16 @@ db.ref().on('value', (snapshot) => {
     const d = snapshot.val(); if(!d) return;
 
     if(d.settings) {
-        // تحميل إعدادات التصميم للأدمن
-        if(d.settings.ranks_design) {
-            const rd = d.settings.ranks_design;
-            fill('d_ring_color', rd.ring_color); fill('d_name_color', rd.name_color);
-            fill('d_ring_size', rd.ring_size); fill('d_name_size', rd.name_size);
-            fill('d_card_zoom', rd.zoom);
-            // تحديث نصوص العرض
-            if(document.getElementById('disp_ring_size')) document.getElementById('disp_ring_size').innerText = rd.ring_size+'rem';
-            if(document.getElementById('disp_name_size')) document.getElementById('disp_name_size').innerText = rd.name_size+'rem';
-            if(document.getElementById('disp_zoom')) document.getElementById('disp_zoom').innerText = rd.zoom+'%';
+        // تحميل إعدادات التصميم V8 للأدمن
+        if(d.settings.ranks_design_v8) {
+            const rd = d.settings.ranks_design_v8;
+            fill('d_header_bg', rd.header_bg); 
+            fill('d_header_text', rd.header_text);
+            fill('d_student_color', rd.student_color);
+            fill('d_ring_size', rd.ring_size); 
+            fill('d_name_size', rd.name_size);
         }
+        
         // ... باقي الإعدادات
         if(d.settings.welcome_screen) { if(document.getElementById('welcome_active')) document.getElementById('welcome_active').checked = d.settings.welcome_screen.active; fill('welcome_title_inp', d.settings.welcome_screen.title); fill('welcome_msg_inp', d.settings.welcome_screen.message); }
         if(d.settings.teacher_spacing && document.getElementById('t_spacing_range')) { document.getElementById('t_spacing_range').value = d.settings.teacher_spacing; document.getElementById('t_spacing_display').innerText = d.settings.teacher_spacing + 'px'; }
@@ -114,7 +113,6 @@ db.ref().on('value', (snapshot) => {
         ['news','student','question','ranks','schedule','teachers'].forEach(k => { const el = document.getElementById('show_'+k); if(el) el.checked = d.settings['show_'+k]; });
     }
     
-    // النصوص
     if(d.site_content) { fill('inp_header_title', d.site_content.txt_header_title); fill('inp_header_subtitle', d.site_content.txt_header_subtitle); fill('inp_header_location', d.site_content.txt_header_location); fill('inp_about_content', d.site_content.txt_about_content); }
     if(d.news_bar) fill('inp_news_bar', d.news_bar.text);
     if(d.weekly_question) { fill('inp_q_text', d.weekly_question.text); fill('inp_q_winner', d.weekly_question.last_winner); }
@@ -131,7 +129,7 @@ function renderList(elId, data, type) {
     const el = document.getElementById(elId); if(!el) return; el.innerHTML='';
     if(!data) { el.innerHTML='<p>لا توجد بيانات</p>'; return; }
     
-    // ⭐ ميزة الاقتراح الذكي: جمع أسماء الحلقات
+    // ⭐ ميزة الاقتراح الذكي: جمع أسماء الحلقات الفريدة
     if(type === 'rank') {
         const ringsSet = new Set();
         Object.values(data).forEach(item => { if(item.ring) ringsSet.add(item.ring.trim()); });
