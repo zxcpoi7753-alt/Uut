@@ -156,10 +156,38 @@
         <div id="tab-ranks" class="panel">
             <div class="card border-green">
                 <h3><i class="fas fa-medal"></i> إضافة طالب</h3>
-                <div class="form-grid"><div class="form-group"><label>المركز:</label><select id="rank_num" class="input-field"><option value="1">1 🥇</option><option value="2">2 🥈</option><option value="3">3 🥉</option><option value="4">4</option><option value="5">5</option></select></div><div class="form-group"><label>الطالب:</label><input type="text" id="rank_name" class="input-field"></div><div class="form-group"><label>الحلقة:</label><input type="text" id="rank_ring" class="input-field"></div></div>
-                <button onclick="addRank()" class="btn btn-success"><i class="fas fa-plus"></i> إضافة</button>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>المركز:</label>
+                        <select id="rank_num" class="input-field">
+                            <option value="1">1 🥇</option>
+                            <option value="2">2 🥈</option>
+                            <option value="3">3 🥉</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>الطالب:</label>
+                        <input type="text" id="rank_name" class="input-field" placeholder="اسم الطالب">
+                    </div>
+                    <div class="form-group">
+                        <label>الحلقة:</label>
+                        <input type="text" id="rank_ring" class="input-field" placeholder="مثلاً: حلقة الصديق">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>رسالة التهنئة (عند الضغط على الاسم):</label>
+                        <input type="text" id="rank_msg" class="input-field" placeholder="مثلاً: مبارك لك هذا التفوق يا بطل!">
+                    </div>
+                </div>
+                <button onclick="addRank()" class="btn btn-success"><i class="fas fa-plus"></i> إضافة / حفظ</button>
             </div>
-            <div class="card"><h3><i class="fas fa-list-ol"></i> القائمة</h3><div id="ranks-list-admin"></div></div>
+            <div class="card"><h3><i class="fas fa-list-ol"></i> القائمة الحالية</h3><div id="ranks-list-admin"></div></div>
         </div>
 
         <div id="tab-holidays" class="panel">
