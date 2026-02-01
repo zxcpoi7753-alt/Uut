@@ -9,6 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 </head>
+
 <body style="display: none;"> <div id="toast-container" class="toast-container"></div>
 
     <aside class="sidebar">
@@ -114,12 +115,42 @@
         </div>
 
         <div id="tab-teachers" class="panel">
+            
+            <div class="card border-blue" style="background:#f0f9ff;">
+                <h3><i class="fas fa-arrows-alt-v"></i> تباعد القائمة</h3>
+                <div class="form-group">
+                    <label style="display:flex; justify-content:space-between;">
+                        <span>المسافة الفاصلة بين المعلمين:</span>
+                        <span id="t_spacing_display" style="font-weight:bold; color:#0369a1;">15px</span>
+                    </label>
+                    <input type="range" id="t_spacing_range" min="10" max="60" step="5" class="input-field" oninput="document.getElementById('t_spacing_display').innerText = this.value + 'px'">
+                    <button onclick="saveTeacherSettings()" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ المسافة</button>
+                </div>
+            </div>
+
             <div class="card border-blue">
                 <h3><i class="fas fa-user-plus"></i> إضافة معلم</h3>
-                <div class="form-grid"><div class="form-group"><label>الاسم:</label><input type="text" id="t_name_v2" class="input-field"></div><div class="form-group"><label>الدور:</label><input type="text" id="t_role_v2" class="input-field"></div></div>
-                <button onclick="addTeacherV2()" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة</button>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>الاسم:</label>
+                        <input type="text" id="t_name_v2" class="input-field" placeholder="أ. محمد أحمد">
+                    </div>
+                    <div class="form-group">
+                        <label>الدور:</label>
+                        <input type="text" id="t_role_v2" class="input-field" placeholder="حلقة الصديق">
+                    </div>
+                    <div class="form-group">
+                        <label>الأيقونة (إيموجي):</label>
+                        <input type="text" id="t_emoji" class="input-field" placeholder="مثلاً: 👑 أو 🌹" style="text-align:center; font-size:1.2rem;">
+                    </div>
+                </div>
+                <button onclick="addTeacherV2()" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة / حفظ</button>
             </div>
-            <div class="card"><h3><i class="fas fa-users"></i> القائمة</h3><div id="teachers-list-v2-admin"></div></div>
+
+            <div class="card">
+                <h3><i class="fas fa-users"></i> قائمة المعلمين</h3>
+                <div id="teachers-list-v2-admin"></div>
+            </div>
         </div>
 
         <div id="tab-ranks" class="panel">
@@ -145,6 +176,7 @@
             <div class="card"><h3><i class="fas fa-question-circle"></i> السؤال</h3><div class="form-group"><label>السؤال:</label><textarea id="inp_q_text" class="input-field" rows="2"></textarea></div><div class="form-group"><label>الفائز:</label><input type="text" id="inp_q_winner" class="input-field"></div><button onclick="saveQuestion()" class="btn btn-primary">تحديث</button></div>
             <div class="card"><h3><i class="fas fa-info-circle"></i> من نحن</h3><textarea id="inp_about_content" class="input-field" rows="6"></textarea><button onclick="saveAbout()" class="btn btn-primary" style="margin-top:10px;">حفظ</button></div>
         </div>
+
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
