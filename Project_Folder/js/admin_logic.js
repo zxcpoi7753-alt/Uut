@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/admin_logic.js (V10 - إصلاح الثيمات + الحذف + النصوص)
+   ملف: js/admin_logic.js (V12 - ضبط المصنع + الألوان الدقيقة)
    ============================================================ */
 
 const firebaseConfig = {
@@ -15,7 +15,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 let editKeys = { card: null, teacher: null, rank: null, holiday: null, complex: null };
-let pendingDeleteAction = null; // لتخزين عملية الحذف المعلقة
+let pendingDeleteAction = null;
 
 // [SECTION 0]: Auth & Toast
 auth.onAuthStateChanged((user) => { if (user) document.body.style.display = 'flex'; else window.location.replace("index.html"); });
@@ -26,38 +26,72 @@ function showToast(msg, type='success') {
     t.innerHTML = (type==='success'?'✅ ':'❌ ') + msg; c.appendChild(t); setTimeout(()=>t.remove(),3000);
 }
 
-// [SECTION 1]: General & Theme (إصلاح الثيمات)
+// [SECTION 1]: الإعدادات العامة + الألوان الدقيقة
 function saveGeneral() {
-    // حفظ نصوص الهيدر
+    // 1. حفظ نصوص الهيدر + ألوانها الخاصة
     db.ref('site_content').update({ 
         txt_header_title: val('inp_header_title'), 
+        col_header_title: val('col_header_title'), // لون العنوان
+
         txt_header_subtitle: val('inp_header_subtitle'), 
+        col_header_subtitle: val('col_header_subtitle'), // لون الوصف
+
         txt_header_location: val('inp_header_location'),
-        txt_about_content: val('inp_about_content') // حفظ "من نحن" أيضاً هنا
+        col_header_location: val('col_header_location'), // لون الموقع
+
+        txt_about_content: val('inp_about_content')
     });
     
-    // حفظ إعدادات الثيم والحالة والفيديو
+    // 2. حفظ الثيم العام
     db.ref('settings').update({ 
         video_url: val('inp_video'), 
         maintenance_mode: document.getElementById('toggle_maint').checked,
-        theme_color: val('main_theme_color') // حفظ اللون المختار
-    }).then(() => showToast("تم حفظ الإعدادات والثيم"));
+        theme_color: val('main_theme_color') 
+    }).then(() => showToast("تم حفظ الإعدادات والألوان 🎨"));
 }
 
-// زر استعادة الثيم الأصلي
+// زر استعادة الثيم الأخضر
 function resetTheme() {
-    document.getElementById('main_theme_color').value = "#047857"; // اللون الأصلي
-    db.ref('settings/theme_color').set("#047857").then(() => showToast("تمت استعادة الثيم الأصلي 🎨"));
+    if(confirm("هل تريد استعادة اللون الأخضر الافتراضي؟")) {
+        document.getElementById('main_theme_color').value = "#047857";
+        db.ref('settings/theme_color').set("#047857").then(() => showToast("تمت الاستعادة"));
+    }
+}
+
+// ⚠️ زر ضبط المصنع (Factory Reset)
+function factoryReset() {
+    if(confirm("⚠️ تحذير خطير!\nهل أنت متأكد أنك تريد حذف كل شيء واستعادة ضبط المصنع؟\nسيتم حذف جميع الطلاب والمعلمين والألوان المخصصة.")) {
+        if(confirm("تأكيد نهائي: هل أنت متأكد تماماً؟ لا يمكن التراجع!")) {
+            const updates = {};
+            // مسح كل الجداول
+            updates['settings'] = null; 
+            updates['site_content'] = null;
+            updates['custom_cards'] = null;
+            updates['teachers_list_v2'] = null;
+            updates['ranks_list'] = null;
+            updates['holidays_list'] = null;
+            updates['news_bar'] = null;
+            updates['weekly_question'] = null;
+            updates['schedule_complex'] = null;
+            
+            // إعادة تعيين الثيم الافتراضي فوراً
+            updates['settings/theme_color'] = '#047857';
+
+            db.ref().update(updates).then(() => {
+                alert("تم تصفير الموقع بنجاح! سيتم إعادة تحميل الصفحة.");
+                window.location.reload();
+            });
+        }
+    }
 }
 
 function saveWelcomeSettings() { db.ref('settings/welcome_screen').update({ active: document.getElementById('welcome_active').checked, title: val('welcome_title_inp'), message: val('welcome_msg_inp') }).then(()=>showToast("تم الحفظ")); }
-function saveNotification() { db.ref('settings').update({ popup_active: document.getElementById('notify_active').checked, popup_title: val('notify_title'), popup_body: val('notify_body') }).then(()=>showToast("تم الحفظ")); }
+
+// [SECTION 2-5]: Cards, Schedule, Teachers
 function saveSections() {
     let s={}; ['news','student','question','ranks','schedule','teachers'].forEach(k=>s['show_'+k]=document.getElementById('show_'+k).checked);
     db.ref('settings').update(s).then(()=>showToast("تم الحفظ"));
 }
-
-// [SECTION 3-5]: Cards, Schedule, Teachers
 function addCustomCard() {
     const d={title:val('card_title'),text:val('card_text'),color:val('card_color'),btn_text:val('card_btn_text'),link:val('card_link'),active:true};
     if(editKeys.card) db.ref('custom_cards/'+editKeys.card).update(d).then(()=>{showToast("تم التعديل");resetForm('card');});
@@ -68,7 +102,6 @@ function addComplexSchedule() {
     db.ref(`schedule_complex/${k}/title`).set(k==='time_1'?'☀️ عصر':'🌙 مغرب');
     db.ref(`schedule_complex/${k}/rings`).push({name:val('comp_sch_name'),sat:val('d_sat'),sun:val('d_sun'),mon:val('d_mon'),tue:val('d_tue'),wed:val('d_wed'),thu:val('d_thu')}).then(()=>{showToast("تمت الإضافة"); document.getElementById('comp_sch_name').value='';});
 }
-// الحذف باستخدام النافذة الجديدة
 function deleteComplexRing(t,k) { 
     pendingDeleteAction = () => db.ref(`schedule_complex/${t}/rings/${k}`).remove().then(()=>showToast("تم الحذف"));
     document.getElementById('confirm-modal').style.display = 'flex';
@@ -80,14 +113,22 @@ function addTeacherV2() {
     else db.ref('teachers_list_v2').push(d).then(()=>{showToast("تمت الإضافة");resetForm('teacher');});
 }
 
-// [SECTION 6]: Ranks (الألوان والتصميم)
+// [SECTION 6]: Ranks (تصميم + استعادة)
 function saveRankDesign() {
     const design = {
         header_bg: val('d_header_bg'), header_text: val('d_header_text'),
         student_color: val('d_student_color'),
         ring_size: val('d_ring_size'), name_size: val('d_name_size')
     };
-    db.ref('settings/ranks_design_v8').set(design).then(() => showToast("تم حفظ تصميم الأوائل 🎨"));
+    db.ref('settings/ranks_design_v8').set(design).then(() => showToast("تم حفظ الألوان 🎨"));
+}
+function resetRankDesign() {
+    if(confirm("استعادة ألوان الأوائل الافتراضية؟")) {
+        // القيم الافتراضية (أخضر وأبيض)
+        fill('d_header_bg', '#064e3b'); fill('d_header_text', '#ffffff'); fill('d_student_color', '#333333');
+        fill('d_ring_size', '1.2'); fill('d_name_size', '1.0');
+        saveRankDesign(); // حفظ تلقائي
+    }
 }
 function addRank() {
     const name = val('rank_name'); if(!name) return showToast("الاسم مطلوب","error");
@@ -104,30 +145,23 @@ function addHoliday() {
 }
 function saveNewsBar(){ db.ref('news_bar').set({text:val('inp_news_bar')}).then(()=>showToast("تم")); }
 function saveQuestion(){ db.ref('weekly_question').set({text:val('inp_q_text'),last_winner:val('inp_q_winner')}).then(()=>showToast("تم")); }
-// دالة حفظ من نحن (مدمجة مع saveGeneral لكن تركتها للزر المنفصل أيضاً)
 function saveAbout(){ db.ref('site_content/txt_about_content').set(val('inp_about_content')).then(()=>showToast("تم")); }
 
-// === منطق النافذة المنبثقة للحذف (Modal Logic) ===
+// === Modal Logic ===
 function deleteItem(path) {
     pendingDeleteAction = () => db.ref(path).remove().then(()=>showToast("تم الحذف"));
     document.getElementById('confirm-modal').style.display = 'flex';
 }
-function confirmAction() {
-    if(pendingDeleteAction) pendingDeleteAction();
-    closeModal();
-}
-function closeModal() {
-    document.getElementById('confirm-modal').style.display = 'none';
-    pendingDeleteAction = null;
-}
+function confirmAction() { if(pendingDeleteAction) pendingDeleteAction(); closeModal(); }
+function closeModal() { document.getElementById('confirm-modal').style.display = 'none'; pendingDeleteAction = null; }
 
-// Helpers (تم إصلاح fill لمنع undefined)
+// Helpers
 function showTab(id) { document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 function val(id) { return document.getElementById(id)?document.getElementById(id).value:''; }
-function fill(id,v) { if(document.getElementById(id)) document.getElementById(id).value = v || ''; } // ✅ الإصلاح هنا
+function fill(id,v) { if(document.getElementById(id)) document.getElementById(id).value = v || ''; }
 function toggleVisibility(p,s) { db.ref(p).update({active:!s}); }
 
-// [LISTENER] مراقب البيانات
+// [LISTENER] مراقب البيانات (تحديث الحقول الجديدة)
 db.ref().on('value', (snapshot) => {
     const d = snapshot.val(); if(!d) return;
 
@@ -138,25 +172,29 @@ db.ref().on('value', (snapshot) => {
             fill('d_student_color', rd.student_color);
             fill('d_ring_size', rd.ring_size); fill('d_name_size', rd.name_size);
         }
-        // تحميل الثيم الرئيسي
         if(d.settings.theme_color) fill('main_theme_color', d.settings.theme_color);
         
         if(d.settings.welcome_screen) { if(document.getElementById('welcome_active')) document.getElementById('welcome_active').checked = d.settings.welcome_screen.active; fill('welcome_title_inp', d.settings.welcome_screen.title); fill('welcome_msg_inp', d.settings.welcome_screen.message); }
         if(d.settings.teacher_spacing && document.getElementById('t_spacing_range')) { document.getElementById('t_spacing_range').value = d.settings.teacher_spacing; document.getElementById('t_spacing_display').innerText = d.settings.teacher_spacing + 'px'; }
         if(document.getElementById('toggle_maint')) document.getElementById('toggle_maint').checked = d.settings.maintenance_mode;
-        if(document.getElementById('notify_active')) document.getElementById('notify_active').checked = d.settings.popup_active;
-        fill('notify_title', d.settings.popup_title); fill('notify_body', d.settings.popup_body);
         ['news','student','question','ranks','schedule','teachers'].forEach(k => { const el = document.getElementById('show_'+k); if(el) el.checked = d.settings['show_'+k]; });
     }
     
-    // تحميل النصوص (مع معالجة اختفاء النصوص)
+    // تحميل النصوص والألوان الخاصة بها
     if(d.site_content) { 
         fill('inp_header_title', d.site_content.txt_header_title); 
+        fill('col_header_title', d.site_content.col_header_title || '#ffffff'); // Load color
+
         fill('inp_header_subtitle', d.site_content.txt_header_subtitle); 
+        fill('col_header_subtitle', d.site_content.col_header_subtitle || '#ffffff'); // Load color
+
         fill('inp_header_location', d.site_content.txt_header_location); 
+        fill('col_header_location', d.site_content.col_header_location || '#ffffff'); // Load color
+
         fill('inp_about_content', d.site_content.txt_about_content);
         fill('inp_video', d.settings ? d.settings.video_url : '');
     }
+    
     if(d.news_bar) fill('inp_news_bar', d.news_bar.text);
     if(d.weekly_question) { fill('inp_q_text', d.weekly_question.text); fill('inp_q_winner', d.weekly_question.last_winner); }
 
@@ -167,7 +205,7 @@ db.ref().on('value', (snapshot) => {
     renderComplexScheduleAdmin(d.schedule_complex);
 });
 
-// Render List
+// Render List (Standard)
 function renderList(elId, data, type) {
     const el = document.getElementById(elId); if(!el) return; el.innerHTML='';
     if(!data) { el.innerHTML='<p>لا توجد بيانات</p>'; return; }
@@ -190,7 +228,6 @@ function renderList(elId, data, type) {
         let path = (type==='card'?'custom_cards':(type==='teacher'?'teachers_list_v2':(type==='rank'?'ranks_list':'holidays_list'))) + '/' + key;
         const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
 
-        // هنا الإصلاح لتصميم الأزرار
         el.innerHTML += `
             <div class="dynamic-item ${isActive?'':'hidden-item'}">
                 <div class="item-info">${content}</div>
