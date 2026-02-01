@@ -1,28 +1,31 @@
 /* ============================================================
    ملف: css/custom_style.css
-   الوظيفة: الإصلاحات النهائية (زر الحذف + من نحن + الثيمات) V10
+   الوظيفة: إصلاح الأزرار + فرض الثيمات (V11 Final)
    ============================================================ */
 
 :root {
-    /* تعريف المتغيرات بـ !important لضمان عدم تجاهلها */
-    --primary-color: #047857; 
+    --primary-color: #047857; /* القيمة الافتراضية */
     --accent-color: #fbbf24;
     --bg-light: #f3f4f6;
     --text-dark: #1f2937;
 }
 
 /* ==========================================
-   1. إصلاحات لوحة التحكم (الأزرار) 🛠️
+   1. إصلاح أزرار لوحة التحكم (الحل الجذري) 🛠️
    ========================================== */
 .action-buttons {
     display: flex;
-    gap: 8px; /* مسافة بين الأزرار */
-    min-width: 130px; /* عرض كافٍ للأزرار الثلاثة */
+    justify-content: flex-end; /* تجميع الأزرار في جهة اليسار */
+    gap: 5px;
+    width: auto; /* منع التمدد الزائد */
 }
 
 .btn-icon {
-    flex: 1; /* توزيع المساحة بالتساوي */
+    /* إلغاء التمدد وجعل الحجم ثابتاً */
+    flex: 0 0 40px; 
+    width: 40px; 
     height: 35px;
+    
     display: flex;
     justify-content: center;
     align-items: center;
@@ -31,18 +34,77 @@
     cursor: pointer;
     transition: 0.2s;
     color: white;
+    font-size: 0.9rem;
 }
 
 /* ألوان الأزرار */
-.btn-edit { background-color: #3b82f6; }   /* أزرق للتعديل */
-.btn-hide { background-color: #f59e0b; }   /* برتقالي للإخفاء */
-.btn-delete { background-color: #ef4444; } /* أحمر للحذف */
+.btn-edit { background-color: #3b82f6; }   
+.btn-hide { background-color: #f59e0b; }   
+.btn-delete { background-color: #ef4444; } 
 
-.btn-icon:hover { opacity: 0.8; transform: scale(1.05); }
+.btn-icon:hover { opacity: 0.9; transform: scale(1.05); }
 
 
 /* ==========================================
-   2. بطاقة الترحيب (Welcome)
+   2. فرض الثيم على الموقع (Theme Enforcer) 🎨
+   ========================================== */
+/* نجبر العناصر الرئيسية على استخدام متغير اللون */
+
+/* الهيدر */
+header {
+    background-color: var(--primary-color) !important;
+    border-bottom-color: var(--accent-color) !important;
+}
+
+/* العناوين الملونة */
+h1, h2, h3, h4, 
+#txt_header_title, 
+#txt_news_title, 
+#txt_student_title, 
+#txt_question_title,
+#txt_schedule_title,
+#txt_teachers_title,
+#txt_about_title,
+#txt_contact_title {
+    color: var(--primary-color) !important;
+}
+
+/* الأزرار النشطة وأزرار القوائم */
+.nav-btn.active, 
+.nav-btn-home.active, 
+.accordion-btn,
+.calc-btn-option.selected,
+.font-control-btn {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+/* أزرار الحدود الملونة */
+.nav-btn {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.nav-btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* القوائم والجداول */
+.schedule-table-simple th {
+    background-color: #f1f5f9 !important;
+    color: var(--primary-color) !important;
+}
+.ring-accordion-btn.active {
+    background-color: var(--primary-color) !important;
+}
+.teacher-icon {
+    color: var(--primary-color) !important;
+}
+
+
+/* ==========================================
+   3. بطاقة الترحيب (Welcome)
    ========================================== */
 #welcome-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -59,13 +121,12 @@
 .welcome-icon { font-size: 3.5rem; margin-bottom: 15px; display: block; animation: float 3s infinite; }
 .welcome-title { color: var(--primary-color); font-family: 'Amiri', serif; font-size: 1.8rem; margin: 0 0 10px; }
 .welcome-text { color: #4b5563; font-size: 1.1rem; margin: 0; line-height: 1.6; }
-
 @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
 
 /* ==========================================
-   3. الأساسيات (العناصر العامة)
+   4. الأساسيات والبطاقات
    ========================================== */
 #maintenance-mode { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1e293b; color: white; z-index: 2147483647; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; display: none; justify-content: center; align-items: center; }
@@ -75,21 +136,16 @@
 .time-group-title { background: var(--bg-light); border-right: 5px solid var(--accent-color); padding: 10px 15px; margin: 20px 0 10px 0; font-weight: bold; color: var(--primary-color); border-radius: 5px; font-size: 1.1rem; }
 
 .ring-accordion-btn { width: 100%; text-align: right; background: white; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; color: #334155; }
-.ring-accordion-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
 .ring-schedule-panel { display: none; padding: 10px; background: white; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 10px; animation: slideDown 0.3s ease; }
 .schedule-table-simple { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .schedule-table-simple th, .schedule-table-simple td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-.schedule-table-simple th { background: #f1f5f9; color: var(--primary-color); }
-
 .teacher-row { display: flex; align-items: center; gap: 10px; padding: 12px; background: white; border-bottom: 1px solid #eee; transition: 0.2s; }
-.teacher-icon { font-size: 1.2rem; color: var(--primary-color); background: #eff6ff; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-
 @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
 
-/* ============================================================
-   🎨 تصميم الأوائل V9 (الصناديق الكلاسيكية المطابقة للصور)
-   ============================================================ */
+/* ==========================================
+   5. تصميم الأوائل (الكلاسيكي)
+   ========================================== */
 .rank-group-card {
     background: #f3f4f6;
     border-radius: 12px;
@@ -98,68 +154,41 @@
     overflow: hidden;
     border: 1px solid #e5e7eb;
 }
-
 .rank-group-header {
-    padding: 15px;
-    font-weight: 900;
+    padding: 15px; font-weight: 900;
     border-bottom: 4px solid #fbbf24; 
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
-.students-list {
-    padding: 15px;
-    display: flex; flex-direction: column; gap: 10px;
-}
-
+.students-list { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
 .student-list-item {
     display: flex; align-items: center; justify-content: space-between;
-    flex-direction: row-reverse; /* عكس الاتجاه */
-    background: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    flex-direction: row-reverse;
+    background: white; padding: 12px 20px;
+    border-radius: 8px; border: 1px solid #e5e7eb;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     cursor: pointer; transition: all 0.2s ease;
 }
-
 .student-list-item:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-color: #d1d5db; }
 .student-list-item.pressing { transform: scale(0.98); background-color: #f9fafb; }
 .rank-icon { font-size: 1.3rem; width: 30px; text-align: center; display: flex; justify-content: center; align-items: center; }
 .student-name-text { font-weight: bold; }
 
-
 /* ==========================================
-   4. إصلاح "من نحن" (نص نظيف بدون زخرفة) ✨
+   6. من نحن (نص نظيف)
    ========================================== */
-
-/* النص الشعري العام */
 .poetic-text {
-    line-height: 2.2;
-    text-align: center;
-    font-size: 1.1rem;
-    color: #333;
-    padding: 20px;
+    line-height: 2.2; text-align: center; font-size: 1.1rem; color: #333; padding: 20px;
 }
-
-/* تنسيق الآيات (بسيط جداً حسب الطلب) */
 .quran-verse-simple {
-    display: block;
-    margin: 15px 0;
-    font-family: 'Amiri', serif; /* خط قرآني */
-    font-size: 1.4rem;            /* أكبر قليلاً */
-    color: var(--primary-color);  /* نفس لون الثيم */
+    display: block; margin: 15px 0;
+    font-family: 'Amiri', serif; font-size: 1.4rem; color: var(--primary-color);
     font-weight: bold;
-    /* تمت إزالة الخلفيات والإطارات */
 }
-
-/* رسالة التهنئة المنبثقة */
 .student-toast {
     position: fixed; top: 50%; left: 50%;
     transform: translate(-50%, -50%) scale(0.8);
-    background: rgba(31, 41, 55, 0.95);
-    color: white; padding: 20px 30px; border-radius: 15px;
+    background: rgba(31, 41, 55, 0.95); color: white; padding: 20px 30px; border-radius: 15px;
     text-align: center; z-index: 99999; min-width: 250px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-    opacity: 0; pointer-events: none; transition: all 0.3s;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3); opacity: 0; pointer-events: none; transition: all 0.3s;
 }
 .student-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
