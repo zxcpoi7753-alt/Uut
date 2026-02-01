@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/custom_logic.js (V9 - الثيمات + تنسيق النصوص الذكي)
+   ملف: js/custom_logic.js (V10 - إصلاح اختفاء النصوص + الثيمات)
    ============================================================ */
 
 const firebaseConfig = {
@@ -38,6 +38,7 @@ try {
 // [SECTION 1]: دالة التطبيق الشاملة
 // ============================================================
 function applyAllData(data) {
+    if (!data) return;
     applySettings(data);
     applyContent(data);
     
@@ -74,14 +75,20 @@ function showWelcomeOverlay(config) {
 
 
 // ============================================================
-// [SECTION 3]: الإعدادات وتعبئة النصوص (تحديث الثيم والنصوص)
+// [SECTION 3]: الإعدادات وتعبئة النصوص (الحل الجذري لـ undefined)
 // ============================================================
 
 function applySettings(data) {
     if(!data.settings) return;
     const s = data.settings;
 
-    // 1. تطبيق وضع الصيانة
+    // 1. تطبيق الثيم (الألوان) 🎨
+    if(s.theme_color) {
+        document.documentElement.style.setProperty('--primary-color', s.theme_color);
+        document.documentElement.style.setProperty('--accent-color', s.theme_color); 
+    }
+
+    // 2. وضع الصيانة
     const maint = document.getElementById('maintenance-mode');
     if(s.maintenance_mode === true) {
         maint.style.display = 'flex';
@@ -93,13 +100,6 @@ function applySettings(data) {
         document.querySelector('header').style.display = 'block';
     }
 
-    // 2. تطبيق الثيم (لون الموقع) 🎨
-    if(s.theme_color) {
-        document.documentElement.style.setProperty('--primary-color', s.theme_color);
-        // جعل لون الأكسنت نفس الرئيسي أو مشتق منه
-        document.documentElement.style.setProperty('--accent-color', s.theme_color); 
-    }
-
     // 3. الإشعارات
     const popup = document.getElementById('site-notification');
     const dontShow = localStorage.getItem('dont_show_popup');
@@ -108,8 +108,8 @@ function applySettings(data) {
              const overlay = document.getElementById('welcome-overlay');
              if(overlay.style.display === 'none' || overlay.style.opacity === '0') popup.style.display = 'flex';
         }, 3500);
-        setTxt('notif-title', s.popup_title || "تنبيه");
-        setTxt('notif-body', s.popup_body || "...");
+        setSafeTxt('notif-title', s.popup_title, "تنبيه هام");
+        setSafeTxt('notif-body', s.popup_body, "...");
     } else { popup.style.display = 'none'; }
 
     // 4. إظهار/إخفاء الأقسام
@@ -124,42 +124,55 @@ function applySettings(data) {
 }
 
 function applyContent(data) {
-    if(data.news_bar) setTxt('dynamic-news-bar', data.news_bar.text);
-    if(data.weekly_question) {
-        setHTML('weekly-question-text', `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text}`);
-        setTxt('weekly-winner-text', data.weekly_question.last_winner);
-    }
-    if(data.top_student) { setTxt('top-student-name', data.top_student.name); setTxt('top-student-desc', data.top_student.category); }
+    // 🛑 الحل الجذري: استخدام دالة setSafeTxt التي تضع نصاً افتراضياً
     
-    if(data.site_content) {
-        const c = data.site_content;
-        setTxt('txt_header_title', c.txt_header_title);
-        setTxt('txt_header_subtitle', c.txt_header_subtitle);
-        setTxt('txt_header_location', c.txt_header_location);
-        setTxt('txt_news_title', c.txt_news_title);
-        setTxt('txt_student_title', c.txt_student_title);
-        setTxt('txt_question_title', c.txt_question_title);
-        setTxt('txt_about_title', c.txt_about_title);
-        setTxt('txt_contact_title', c.txt_contact_title);
-        setTxt('txt_footer', c.txt_footer);
-        if(c.txt_schedule_title) setTxt('txt_schedule_title', c.txt_schedule_title);
-        if(c.txt_teachers_title) setTxt('txt_teachers_title', c.txt_teachers_title);
+    // شريط الأخبار
+    if(data.news_bar) setSafeTxt('dynamic-news-bar', data.news_bar.text, "أهلاً بكم في حلقات الثريا...");
+    
+    // السؤال الأسبوعي
+    if(data.weekly_question) {
+        setHTML('weekly-question-text', `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text || "سيتم نشره قريباً"}`);
+        setSafeTxt('weekly-winner-text', data.weekly_question.last_winner, "بانتظار الفائز");
+    }
+    
+    // نجم الأسبوع
+    if(data.top_student) { 
+        setSafeTxt('top-student-name', data.top_student.name, "..."); 
+        setSafeTxt('top-student-desc', data.top_student.category, "..."); 
+    }
+    
+    // نصوص الموقع الأساسية (الهيدر و من نحن)
+    // هنا الإصلاح: إذا لم توجد بيانات، نستخدم النصوص الافتراضية
+    const c = data.site_content || {};
+    setSafeTxt('txt_header_title', c.txt_header_title, "حلقات الثريا");
+    setSafeTxt('txt_header_subtitle', c.txt_header_subtitle, "لتعليم القرآن الكريم");
+    setSafeTxt('txt_header_location', c.txt_header_location, "حضرموت - غيل باوزير");
+    
+    setSafeTxt('txt_news_title', c.txt_news_title, "📢 آخر الأخبار");
+    setSafeTxt('txt_student_title', c.txt_student_title, "نجم الأسبوع");
+    setSafeTxt('txt_question_title', c.txt_question_title, "❓ السؤال الأسبوعي");
+    setSafeTxt('txt_about_title', c.txt_about_title, "🕌 من نحن");
+    setSafeTxt('txt_contact_title', c.txt_contact_title, "📞 تواصل معنا");
+    setSafeTxt('txt_footer', c.txt_footer, "جميع الحقوق محفوظة © 2026");
+    
+    if(c.txt_schedule_title) setSafeTxt('txt_schedule_title', c.txt_schedule_title, "📅 الجداول الدراسية");
+    if(c.txt_teachers_title) setSafeTxt('txt_teachers_title', c.txt_teachers_title, "👨‍🏫 المعلمون");
 
-        // ⭐ معالجة نص "من نحن" (الآيات والأسطر)
-        if(c.txt_about_content) {
-            let text = c.txt_about_content;
-            // تحويل الأسطر الجديدة
-            text = text.replace(/\n/g, '<br>');
-            // تحويل الآيات {نص} إلى شكل مزخرف
-            text = text.replace(/\{(.*?)\}/g, '<span class="quran-verse">﴾ $1 ﴿</span>');
-            setHTML('txt_about_content', text);
-        }
+    // معالجة نص "من نحن"
+    if(c.txt_about_content) {
+        let text = c.txt_about_content;
+        text = text.replace(/\n/g, '<br>');
+        // تحويل الآيات {نص} إلى سبان بدون تنسيق معقد (فقط خط)
+        text = text.replace(/\{(.*?)\}/g, '<span class="quran-verse-simple">﴾ $1 ﴿</span>');
+        setHTML('txt_about_content', text);
+    } else {
+        setHTML('txt_about_content', "نحن حلقات الثريا لتحفيظ القرآن الكريم...");
     }
 }
 
 
 // ============================================================
-// [SECTION 4]: دوال الرسم (Renderers)
+// [SECTION 4]: دوال الرسم
 // ============================================================
 
 function renderCustomCards(list) {
@@ -191,7 +204,7 @@ function renderTeachers(list, settings) {
     });
 }
 
-// ⭐ [رسم الأوائل V8: تصميم الصناديق الكلاسيكي]
+// ⭐ [رسم الأوائل V9: التصميم الكلاسيكي]
 function renderRanks(list, settings) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return; container.innerHTML = '';
@@ -248,8 +261,19 @@ function renderComplexSchedule(d) {
     });
 }
 
-// Helpers
-function setTxt(id,t){const e=document.getElementById(id);if(e)e.innerText=t;} 
+// Helpers (الدالة المنقذة: setSafeTxt)
+// هذه الدالة تتأكد من أن النص ليس فارغاً، وإلا تضع النص الافتراضي
+function setSafeTxt(id, text, defaultText) {
+    const el = document.getElementById(id);
+    if(el) {
+        if(text && text.trim() !== "") {
+            el.innerText = text;
+        } else {
+            el.innerText = defaultText;
+        }
+    }
+}
+
 function setHTML(id,t){const e=document.getElementById(id);if(e)e.innerHTML=t;} 
 function toggleSection(id,s){const e=document.getElementById(id);if(e)e.style.display=s?'block':'none';}
 function closePopup(){document.getElementById('site-notification').style.display='none';}
