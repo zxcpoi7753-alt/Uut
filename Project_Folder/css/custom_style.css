@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: css/custom_style.css
-   الوظيفة: إصلاح الأزرار + فرض الثيمات (V11 Final)
+   الوظيفة: الإصلاح النهائي (الحذف الصغير + ألوان الهيدر الحرة) V12
    ============================================================ */
 
 :root {
@@ -11,20 +11,21 @@
 }
 
 /* ==========================================
-   1. إصلاح أزرار لوحة التحكم (الحل الجذري) 🛠️
+   1. إصلاح أزرار لوحة التحكم (الحجم الصغير) ✅
    ========================================== */
 .action-buttons {
     display: flex;
-    justify-content: flex-end; /* تجميع الأزرار في جهة اليسار */
+    justify-content: flex-end; /* تجميع الأزرار يساراً */
     gap: 5px;
-    width: auto; /* منع التمدد الزائد */
+    /* إزالة العرض الثابت للسماح بالمرونة، لكن بدون تمدد */
+    flex-shrink: 0; 
 }
 
 .btn-icon {
-    /* إلغاء التمدد وجعل الحجم ثابتاً */
-    flex: 0 0 40px; 
-    width: 40px; 
-    height: 35px;
+    /* حجم ثابت وصغير للأزرار */
+    flex: 0 0 35px !important; 
+    width: 35px !important;
+    height: 35px !important;
     
     display: flex;
     justify-content: center;
@@ -35,6 +36,7 @@
     transition: 0.2s;
     color: white;
     font-size: 0.9rem;
+    margin: 0; /* إزالة أي هوامش خارجية */
 }
 
 /* ألوان الأزرار */
@@ -46,19 +48,16 @@
 
 
 /* ==========================================
-   2. فرض الثيم على الموقع (Theme Enforcer) 🎨
+   2. فرض الثيم (مع استثناء الهيدر) 🎨
    ========================================== */
-/* نجبر العناصر الرئيسية على استخدام متغير اللون */
-
-/* الهيدر */
+/* الهيدر يأخذ لون الخلفية فقط، والنصوص حرة */
 header {
     background-color: var(--primary-color) !important;
     border-bottom-color: var(--accent-color) !important;
 }
 
-/* العناوين الملونة */
+/* العناوين العامة تأخذ لون الثيم */
 h1, h2, h3, h4, 
-#txt_header_title, 
 #txt_news_title, 
 #txt_student_title, 
 #txt_question_title,
@@ -69,7 +68,15 @@ h1, h2, h3, h4,
     color: var(--primary-color) !important;
 }
 
-/* الأزرار النشطة وأزرار القوائم */
+/* ⚠️ نصوص الهيدر (بدون !important) لكي تقبل التلوين اليدوي */
+#txt_header_title, 
+#txt_header_subtitle, 
+#txt_header_location {
+    /* لا نضع لوناً هنا، سيأتي من JS أو CSS الأساسي */
+    transition: color 0.3s;
+}
+
+/* الأزرار */
 .nav-btn.active, 
 .nav-btn-home.active, 
 .accordion-btn,
@@ -80,27 +87,12 @@ h1, h2, h3, h4,
     color: white !important;
 }
 
-/* أزرار الحدود الملونة */
-.nav-btn {
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-.nav-btn:hover {
-    background-color: var(--primary-color);
-    color: white;
-}
+.nav-btn { color: var(--primary-color); border-color: var(--primary-color); }
+.nav-btn:hover { background-color: var(--primary-color); color: white; }
 
-/* القوائم والجداول */
-.schedule-table-simple th {
-    background-color: #f1f5f9 !important;
-    color: var(--primary-color) !important;
-}
-.ring-accordion-btn.active {
-    background-color: var(--primary-color) !important;
-}
-.teacher-icon {
-    color: var(--primary-color) !important;
-}
+.schedule-table-simple th { background-color: #f1f5f9 !important; color: var(--primary-color) !important; }
+.ring-accordion-btn.active { background-color: var(--primary-color) !important; }
+.teacher-icon { color: var(--primary-color) !important; }
 
 
 /* ==========================================
