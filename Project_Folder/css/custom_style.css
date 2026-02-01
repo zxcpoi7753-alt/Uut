@@ -148,3 +148,105 @@
 .teacher-info p { margin: 2px 0 0 0; font-size: 0.85rem; color: gray; }
 
 @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ============================================================
+   🎨 تصميم الجداول المطور (الأوائل + الحلقات) - V3
+   ============================================================ */
+
+/* 1. حاوية مجموعة الأوائل (لكل حلقة جدول منفصل) */
+.rank-group-card {
+    background: white;
+    border-radius: 20px; /* زوايا بيضاوية ناعمة */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* ظل فخم */
+    margin-bottom: 25px; /* مسافة بين كل حلقة والأخرى */
+    overflow: hidden; /* لضمان عدم خروج المحتوى عن الزوايا */
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+}
+
+.rank-group-card:hover {
+    transform: translateY(-5px); /* حركة خفيفة عند المرور */
+}
+
+/* 2. ترويسة الحلقة (رأس الجدول) */
+.rank-group-header {
+    background: linear-gradient(135deg, var(--primary), #1e293b); /* تدرج لوني فخم */
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    border-bottom: 3px solid #fbbf24; /* خط ذهبي أسفل العنوان */
+}
+
+/* 3. تنسيق الجدول البيضاوي */
+.schedule-table-simple {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.schedule-table-simple th {
+    background: #f8fafc;
+    color: #475569;
+    padding: 12px;
+    font-size: 0.9rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.schedule-table-simple td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: center;
+    color: #334155;
+}
+
+/* تمييز المراكز الثلاثة الأولى */
+.rank-row-1 { background: linear-gradient(to left, #fffbeb, #fff); border-right: 4px solid #fbbf24; } /* الأول: ذهبي */
+.rank-row-2 { background: linear-gradient(to left, #f8fafc, #fff); border-right: 4px solid #94a3b8; } /* الثاني: فضي */
+.rank-row-3 { background: linear-gradient(to left, #fff7ed, #fff); border-right: 4px solid #fdba74; } /* الثالث: برونزي */
+
+/* 4. الجداول الدراسية (تصميم بيضاوي للأزرار والمحتوى) */
+.ring-accordion-btn {
+    background: white;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    border-radius: 50px; /* شكل بيضاوي كامل للأزرار */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    transition: 0.3s;
+}
+
+.ring-accordion-btn:hover {
+    background: #f0f9ff;
+    border-color: var(--primary);
+    transform: scale(1.01);
+}
+
+.ring-accordion-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+}
+
+.ring-schedule-panel {
+    display: none;
+    background: white;
+    border-radius: 20px; /* الحواف الدائرية للجدول */
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+    animation: slideDown 0.3s ease-out;
+}
+
+/* أنيميشن للفتح */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
