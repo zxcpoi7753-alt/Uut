@@ -1,9 +1,11 @@
 /* ============================================================
    ملف: css/custom_style.css
-   الوظيفة: تنسيقات الترحيب الذكي + تحسينات الواجهة
+   الوظيفة: تنسيقات الترحيب الذكي + تحسينات الواجهة + تصميم الأوائل V5
    ============================================================ */
 
-/* --- 1. بطاقة الترحيب الذكية (Smart Welcome) --- */
+/* ==========================================
+   1. بطاقة الترحيب الذكية (Smart Welcome)
+   ========================================== */
 #welcome-overlay {
     position: fixed;
     top: 0; left: 0;
@@ -63,7 +65,10 @@
     50% { transform: translateY(-10px); }
 }
 
-/* --- 2. وضع الصيانة (تم الإصلاح ليغطي القوائم) --- */
+
+/* ==========================================
+   2. وضع الصيانة (Maintenance Mode)
+   ========================================== */
 #maintenance-mode {
     display: none;
     position: fixed;
@@ -80,7 +85,9 @@
 }
 
 
-/* --- 3. الإشعار المنبثق (Popup) --- */
+/* ==========================================
+   3. الإشعار المنبثق (Popup)
+   ========================================== */
 .popup-overlay {
     position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
@@ -101,7 +108,10 @@
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
 }
 
-/* --- 4. باقي التنسيقات (البطاقات، الجداول، المعلمين) بقيت كما هي --- */
+
+/* ==========================================
+   4. التنسيقات العامة (بطاقات - جداول - معلمين)
+   ========================================== */
 .custom-dynamic-card {
     background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px;
     border: 1px solid #eee; border-right-width: 4px;
@@ -116,6 +126,7 @@
     border-radius: 5px; font-size: 1.1rem;
 }
 
+/* أزرار الجداول الدراسية */
 .ring-accordion-btn {
     width: 100%; text-align: right; background: white; border: 1px solid #e2e8f0;
     padding: 15px; margin-bottom: 5px; border-radius: 8px; cursor: pointer;
@@ -135,6 +146,7 @@
 .schedule-table-simple th, .schedule-table-simple td { border: 1px solid #ddd; padding: 8px; text-align: center; }
 .schedule-table-simple th { background: #f1f5f9; color: var(--primary-color); }
 
+/* قائمة المعلمين */
 .teacher-row {
     display: flex; align-items: center; gap: 10px; padding: 12px;
     background: white; border-bottom: 1px solid #eee; transition: 0.2s;
@@ -149,148 +161,140 @@
 
 @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
+
 /* ============================================================
-   🎨 تصميم الأوائل الاحترافي (نظام البطاقات) - V4
+   🎨 تصميم الأوائل V5 (نظام القوائم والبطاقات التفاعلية)
    ============================================================ */
 
-/* حاوية الحلقة (البطاقة الكبيرة) */
+/* 1. حاوية الحلقة (البطاقة الكبيرة) */
 .rank-group-card {
     background: white;
-    border-radius: 25px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-    margin-bottom: 30px;
+    border-radius: 16px; /* زوايا دائرية ناعمة */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06); /* ظل خفيف */
+    margin-bottom: 25px;
     overflow: hidden;
-    border: 1px solid rgba(0,0,0,0.02);
+    border: 1px solid #f1f5f9;
     animation: fadeInUp 0.5s ease-out;
 }
 
-/* عنوان الحلقة */
+/* 2. رأس الحلقة */
 .rank-group-header {
-    background: linear-gradient(135deg, #0f766e, #115e59); /* لون إسلامي فخم */
+    background: #0f172a; /* خلفية داكنة فخمة */
     color: white;
-    padding: 20px;
-    text-align: center;
-    font-family: 'Cairo', sans-serif;
-    font-size: 1.2rem;
+    padding: 15px 20px;
+    text-align: right;
     font-weight: bold;
-    border-bottom: 4px solid #fbbf24; /* خط ذهبي */
-    position: relative;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 3px solid #fbbf24; /* خط ذهبي أسفل العنوان */
 }
 
-/* قائمة الطلاب (الحاوية الداخلية) */
+/* 3. قائمة الطلاب */
 .students-list {
     padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 12px; /* مسافة بين كل طالب وطالب */
+    gap: 10px; /* مسافة بين كل طالب وطالب */
 }
 
-/* تصميم شريط الطالب الواحد */
-.student-row {
+/* 4. سطر الطالب (الكبسولة) */
+.student-item {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 15px 20px;
-    border-radius: 15px;
-    background: #f8fafc;
+    align-items: center;
+    padding: 12px 15px;
+    background: white;
+    border-radius: 12px;
     border: 1px solid #e2e8f0;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
     position: relative;
-    overflow: hidden;
 }
 
-.student-row:hover {
-    transform: translateX(-5px) scale(1.02);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+/* تأثير عند المرور والضغط */
+.student-item:hover {
+    transform: translateX(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-/* تفاصيل الاسم والمركز */
-.student-info {
+.student-item:active {
+    transform: scale(0.98);
+}
+
+/* 5. تفاصيل الاسم والأيقونة */
+.s-info {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
 }
 
-.rank-badge {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+.s-icon {
+    font-size: 1.4rem;
+    width: 35px;
+    text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    font-size: 1.2rem;
-    background: white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.student-name {
-    font-size: 1.1rem;
+.s-name {
     font-weight: bold;
     color: #334155;
+    font-size: 1rem;
 }
 
-.rank-text {
+/* رقم المركز (لغير الثلاثة الأوائل) */
+.rank-num {
     font-size: 0.85rem;
-    padding: 5px 12px;
-    border-radius: 20px;
+    color: #64748b;
     font-weight: bold;
-}
-
-/* --- تمييز المراكز الثلاثة (ألوان خاصة) --- */
-
-/* 🥇 المركز الأول (ذهبي) */
-.student-row.rank-1 {
-    background: linear-gradient(to left, #fffbeb, white);
-    border: 1px solid #fcd34d;
-    border-right: 5px solid #f59e0b;
-}
-.student-row.rank-1 .rank-text {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-/* 🥈 المركز الثاني (فضي) */
-.student-row.rank-2 {
-    background: linear-gradient(to left, #f8fafc, white);
-    border: 1px solid #cbd5e1;
-    border-right: 5px solid #94a3b8;
-}
-.student-row.rank-2 .rank-text {
     background: #f1f5f9;
-    color: #475569;
+    padding: 4px 10px;
+    border-radius: 6px;
 }
 
-/* 🥉 المركز الثالث (برونزي) */
-.student-row.rank-3 {
-    background: linear-gradient(to left, #fff7ed, white);
-    border: 1px solid #fdba74;
-    border-right: 5px solid #ea580c;
-}
-.student-row.rank-3 .rank-text {
-    background: #ffedd5;
-    color: #c2410c;
+/* سهم صغير لليسار */
+.s-arrow {
+    color: #cbd5e1;
+    font-size: 0.8rem;
+    margin-right: 10px;
 }
 
-/* أنيميشن الظهور */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* رسالة التهنئة المنبثقة (Toast خاص للطالب) */
+/* 6. رسالة التهنئة المنبثقة (Toast) */
 .student-toast {
     position: fixed;
-    bottom: 20px;
+    bottom: -100px; /* مخفية تحت الشاشة */
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.85);
+    background: rgba(15, 23, 42, 0.95); /* لون داكن شفاف قليلاً */
     color: white;
-    padding: 12px 25px;
+    padding: 15px 25px;
     border-radius: 50px;
-    z-index: 9999;
-    font-size: 0.9rem;
-    display: none;
-    animation: fadeIn 0.3s;
+    text-align: center;
+    z-index: 99999;
+    min-width: 280px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* حركة نطاطة */
+    display: none; /* مخفي افتراضياً */
+}
+
+/* كلاس الظهور */
+.student-toast.show {
+    display: block;
+    bottom: 30px; /* تطلع لفوق */
+    animation: bounceIn 0.4s;
+}
+
+@keyframes bounceIn {
+    0% { bottom: -100px; opacity: 0; }
+    60% { bottom: 40px; opacity: 1; }
+    100% { bottom: 30px; }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
