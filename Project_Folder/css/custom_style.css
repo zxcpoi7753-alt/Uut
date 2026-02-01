@@ -150,103 +150,147 @@
 @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ============================================================
-   🎨 تصميم الجداول المطور (الأوائل + الحلقات) - V3
+   🎨 تصميم الأوائل الاحترافي (نظام البطاقات) - V4
    ============================================================ */
 
-/* 1. حاوية مجموعة الأوائل (لكل حلقة جدول منفصل) */
+/* حاوية الحلقة (البطاقة الكبيرة) */
 .rank-group-card {
     background: white;
-    border-radius: 20px; /* زوايا بيضاوية ناعمة */
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* ظل فخم */
-    margin-bottom: 25px; /* مسافة بين كل حلقة والأخرى */
-    overflow: hidden; /* لضمان عدم خروج المحتوى عن الزوايا */
-    border: 1px solid rgba(0,0,0,0.05);
-    transition: transform 0.3s ease;
+    border-radius: 25px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.02);
+    animation: fadeInUp 0.5s ease-out;
 }
 
-.rank-group-card:hover {
-    transform: translateY(-5px); /* حركة خفيفة عند المرور */
-}
-
-/* 2. ترويسة الحلقة (رأس الجدول) */
+/* عنوان الحلقة */
 .rank-group-header {
-    background: linear-gradient(135deg, var(--primary), #1e293b); /* تدرج لوني فخم */
+    background: linear-gradient(135deg, #0f766e, #115e59); /* لون إسلامي فخم */
     color: white;
-    padding: 15px;
+    padding: 20px;
     text-align: center;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-bottom: 4px solid #fbbf24; /* خط ذهبي */
+    position: relative;
+}
+
+/* قائمة الطلاب (الحاوية الداخلية) */
+.students-list {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* مسافة بين كل طالب وطالب */
+}
+
+/* تصميم شريط الطالب الواحد */
+.student-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-radius: 15px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.student-row:hover {
+    transform: translateX(-5px) scale(1.02);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+/* تفاصيل الاسم والمركز */
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.rank-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.student-name {
     font-size: 1.1rem;
     font-weight: bold;
-    letter-spacing: 0.5px;
-    border-bottom: 3px solid #fbbf24; /* خط ذهبي أسفل العنوان */
-}
-
-/* 3. تنسيق الجدول البيضاوي */
-.schedule-table-simple {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.schedule-table-simple th {
-    background: #f8fafc;
-    color: #475569;
-    padding: 12px;
-    font-size: 0.9rem;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.schedule-table-simple td {
-    padding: 12px;
-    border-bottom: 1px solid #f1f5f9;
-    text-align: center;
     color: #334155;
 }
 
-/* تمييز المراكز الثلاثة الأولى */
-.rank-row-1 { background: linear-gradient(to left, #fffbeb, #fff); border-right: 4px solid #fbbf24; } /* الأول: ذهبي */
-.rank-row-2 { background: linear-gradient(to left, #f8fafc, #fff); border-right: 4px solid #94a3b8; } /* الثاني: فضي */
-.rank-row-3 { background: linear-gradient(to left, #fff7ed, #fff); border-right: 4px solid #fdba74; } /* الثالث: برونزي */
-
-/* 4. الجداول الدراسية (تصميم بيضاوي للأزرار والمحتوى) */
-.ring-accordion-btn {
-    background: white;
-    padding: 15px 20px;
-    margin-bottom: 10px;
-    border-radius: 50px; /* شكل بيضاوي كامل للأزرار */
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    border: 1px solid #e2e8f0;
-    cursor: pointer;
+.rank-text {
+    font-size: 0.85rem;
+    padding: 5px 12px;
+    border-radius: 20px;
     font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    transition: 0.3s;
 }
 
-.ring-accordion-btn:hover {
-    background: #f0f9ff;
-    border-color: var(--primary);
-    transform: scale(1.01);
+/* --- تمييز المراكز الثلاثة (ألوان خاصة) --- */
+
+/* 🥇 المركز الأول (ذهبي) */
+.student-row.rank-1 {
+    background: linear-gradient(to left, #fffbeb, white);
+    border: 1px solid #fcd34d;
+    border-right: 5px solid #f59e0b;
+}
+.student-row.rank-1 .rank-text {
+    background: #fef3c7;
+    color: #d97706;
 }
 
-.ring-accordion-btn.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+/* 🥈 المركز الثاني (فضي) */
+.student-row.rank-2 {
+    background: linear-gradient(to left, #f8fafc, white);
+    border: 1px solid #cbd5e1;
+    border-right: 5px solid #94a3b8;
+}
+.student-row.rank-2 .rank-text {
+    background: #f1f5f9;
+    color: #475569;
 }
 
-.ring-schedule-panel {
-    display: none;
-    background: white;
-    border-radius: 20px; /* الحواف الدائرية للجدول */
-    padding: 15px;
-    margin-bottom: 15px;
-    border: 1px solid #e2e8f0;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-    animation: slideDown 0.3s ease-out;
+/* 🥉 المركز الثالث (برونزي) */
+.student-row.rank-3 {
+    background: linear-gradient(to left, #fff7ed, white);
+    border: 1px solid #fdba74;
+    border-right: 5px solid #ea580c;
+}
+.student-row.rank-3 .rank-text {
+    background: #ffedd5;
+    color: #c2410c;
 }
 
-/* أنيميشن للفتح */
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
+/* أنيميشن الظهور */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* رسالة التهنئة المنبثقة (Toast خاص للطالب) */
+.student-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 50px;
+    z-index: 9999;
+    font-size: 0.9rem;
+    display: none;
+    animation: fadeIn 0.3s;
 }
