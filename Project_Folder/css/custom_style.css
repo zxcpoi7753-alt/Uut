@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: css/custom_style.css
-   الوظيفة: الإصلاح النهائي (نافذة الحذف + ألوان الهيدر) V12
+   الوظيفة: V13 (الأزرار الشفافة + إخفاء النافذة + الثيم الذكي)
    ============================================================ */
 
 :root {
@@ -11,169 +11,148 @@
 }
 
 /* ==========================================
-   1. إصلاح أزرار لوحة التحكم (صغيرة ومرتبة)
-   ========================================== */
-.action-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 5px;
-    flex-shrink: 0;
-}
-
-.btn-icon {
-    flex: 0 0 35px !important; 
-    width: 35px !important;
-    height: 35px !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    transition: 0.2s;
-    color: white;
-    font-size: 0.9rem;
-    margin: 0;
-}
-
-.btn-edit { background-color: #3b82f6; }   
-.btn-hide { background-color: #f59e0b; }   
-.btn-delete { background-color: #ef4444; } 
-.btn-icon:hover { opacity: 0.9; transform: scale(1.05); }
-
-
-/* ==========================================
-   2. نافذة الحذف المنبثقة (Modal) - الإصلاح الجذري
+   1. إصلاح نافذة الحذف (الإخفاء الصارم) 🛡️
    ========================================== */
 .custom-modal {
-    display: none; /* مخفية افتراضياً */
-    position: fixed; /* تطفو فوق الموقع */
+    display: none; /* مخفية تماماً افتراضياً */
+    position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* خلفية معتمة */
-    z-index: 9999999; /* فوق كل شيء */
-    justify-content: center; /* توسيط أفقي */
-    align-items: center; /* توسيط عمودي */
-    backdrop-filter: blur(3px);
+    background: rgba(0, 0, 0, 0.6); /* تعتيم الخلفية */
+    z-index: 99999999; /* فوق كل شيء في الكون */
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+/* عندما يتم تفعيلها عبر JS تصبح flex */
+.custom-modal[style*="display: flex"] {
+    display: flex !important;
 }
 
 .custom-modal-content {
     background: white;
-    width: 300px; /* عرض ثابت صغير */
-    max-width: 90%;
+    width: 320px;
     padding: 25px;
-    border-radius: 12px;
+    border-radius: 15px;
     text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    border: 2px solid var(--primary-color); /* إطار بلون الثيم */
-    animation: popUp 0.3s ease;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    border: 2px solid var(--primary-color);
+    animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.modal-icon {
-    font-size: 3rem; color: #ef4444; margin-bottom: 10px;
-}
-.modal-actions {
-    display: flex; gap: 10px; margin-top: 20px;
-}
-.modal-actions button { flex: 1; padding: 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+.modal-icon { font-size: 3.5rem; color: #ef4444; margin-bottom: 15px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.modal-actions button { flex: 1; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 1rem; }
 .modal-actions .btn-danger { background: #ef4444; color: white; }
 .modal-actions .btn-secondary { background: #e5e7eb; color: #333; }
+.modal-actions .btn-primary { background: var(--primary-color); color: white; } /* لنافذة كلمة السر */
 
-@keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes popUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 
 /* ==========================================
-   3. فرض الثيم (مع استثناء نصوص الهيدر)
+   2. الأزرار الشفافة (التصميم الأصلي) ✨
+   ========================================== */
+/* الحالة العادية: شفاف مع إطار ملون */
+.nav-btn, 
+.accordion-btn, 
+.nav-btn-home,
+.contact-box {
+    background-color: transparent !important;
+    border: 2px solid var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+/* عند التحويم أو التفعيل: يمتلئ باللون */
+.nav-btn:hover, 
+.nav-btn.active, 
+.accordion-btn:hover, 
+.accordion-btn.active, 
+.nav-btn-home.active,
+.contact-box:hover {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* استثناءات خاصة (أزرار التحكم بالخط) */
+.font-control-btn {
+    background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);
+}
+.font-control-btn:active { background: var(--primary-color); color: white; }
+
+
+/* ==========================================
+   3. الثيم الذكي (تلوين العناوين والهيدر) 🎨
    ========================================== */
 header {
     background-color: var(--primary-color) !important;
-    border-bottom-color: var(--accent-color) !important;
+    border-bottom: 4px solid var(--accent-color) !important;
 }
 
-/* العناوين العامة تأخذ لون الثيم */
+/* العناوين تأخذ لون الثيم */
 h1, h2, h3, h4, 
-#txt_news_title, 
-#txt_student_title, 
-#txt_question_title,
-#txt_schedule_title,
-#txt_teachers_title,
-#txt_about_title,
-#txt_contact_title {
+#txt_news_title, #txt_student_title, #txt_question_title,
+#txt_schedule_title, #txt_teachers_title, 
+#txt_about_title, #txt_contact_title {
     color: var(--primary-color) !important;
 }
 
-/* نصوص الهيدر: بدون important لتقبل التلوين اليدوي */
+/* ⚠️ هام: نصوص الهيدر بدون !important لتقبل التلوين من الأدمن */
 #txt_header_title, 
 #txt_header_subtitle, 
 #txt_header_location {
     transition: color 0.3s;
 }
 
-.nav-btn.active, 
-.nav-btn-home.active, 
-.accordion-btn,
-.calc-btn-option.selected,
-.font-control-btn {
-    background-color: var(--primary-color) !important;
-    border-color: var(--primary-color) !important;
-    color: white !important;
-}
-
-.nav-btn { color: var(--primary-color); border-color: var(--primary-color); }
-.nav-btn:hover { background-color: var(--primary-color); color: white; }
+/* الجداول والقوائم */
 .schedule-table-simple th { background-color: #f1f5f9 !important; color: var(--primary-color) !important; }
-.ring-accordion-btn.active { background-color: var(--primary-color) !important; }
-.teacher-icon { color: var(--primary-color) !important; }
+.ring-accordion-btn.active { background-color: var(--primary-color) !important; color: white !important; }
+.teacher-icon { color: var(--primary-color) !important; background: rgba(0,0,0,0.05); }
 
 
 /* ==========================================
-   4. بطاقة الترحيب (Welcome)
+   4. إصلاح أزرار الأدمن (صغيرة)
+   ========================================== */
+.action-buttons { display: flex; justify-content: flex-end; gap: 5px; flex-shrink: 0; }
+.btn-icon {
+    flex: 0 0 35px !important; width: 35px !important; height: 35px !important;
+    display: flex; justify-content: center; align-items: center;
+    border-radius: 6px; border: none; cursor: pointer; color: white; margin: 0;
+}
+.btn-edit { background-color: #3b82f6; }   
+.btn-hide { background-color: #f59e0b; }   
+.btn-delete { background-color: #ef4444; } 
+
+
+/* ==========================================
+   5. الأساسيات (بطاقة الترحيب + من نحن)
    ========================================== */
 #welcome-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6); z-index: 9999999;
+    background: rgba(0, 0, 0, 0.7); z-index: 9999999;
     display: none; justify-content: center; align-items: center;
-    backdrop-filter: blur(8px); transition: opacity 0.5s ease;
+    backdrop-filter: blur(5px);
 }
 .welcome-card {
-    background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 20px;
-    text-align: center; max-width: 90%; width: 350px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.5);
-    animation: popIn 0.4s forwards;
+    background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3); border: 2px solid var(--primary-color);
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.welcome-icon { font-size: 3.5rem; margin-bottom: 15px; display: block; animation: float 3s infinite; }
-.welcome-title { color: var(--primary-color); font-family: 'Amiri', serif; font-size: 1.8rem; margin: 0 0 10px; }
-.welcome-text { color: #4b5563; font-size: 1.1rem; margin: 0; line-height: 1.6; }
-@keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.welcome-title { color: var(--primary-color); font-family: 'Amiri', serif; font-size: 2rem; margin: 10px 0; }
 
-
-/* ==========================================
-   5. الأساسيات
-   ========================================== */
-#maintenance-mode { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1e293b; color: white; z-index: 2147483647; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; display: none; justify-content: center; align-items: center; }
-.popup-content { background: white; padding: 30px; border-radius: 15px; max-width: 90%; width: 400px; text-align: center; border: 3px solid var(--accent-color); animation: popUp 0.4s ease; }
-.custom-dynamic-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #eee; border-right-width: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-.time-group-title { background: var(--bg-light); border-right: 5px solid var(--accent-color); padding: 10px 15px; margin: 20px 0 10px 0; font-weight: bold; color: var(--primary-color); border-radius: 5px; font-size: 1.1rem; }
-.ring-accordion-btn { width: 100%; text-align: right; background: white; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; color: #334155; }
-.ring-schedule-panel { display: none; padding: 10px; background: white; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 10px; animation: slideDown 0.3s ease; }
-.schedule-table-simple { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-.schedule-table-simple th, .schedule-table-simple td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-.teacher-row { display: flex; align-items: center; gap: 10px; padding: 12px; background: white; border-bottom: 1px solid #eee; transition: 0.2s; }
-@keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-
-/* ==========================================
-   6. تصميم الأوائل + من نحن
-   ========================================== */
-.rank-group-card { background: #f3f4f6; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px; overflow: hidden; border: 1px solid #e5e7eb; }
-.rank-group-header { padding: 15px; font-weight: 900; border-bottom: 4px solid #fbbf24; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.students-list { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-.student-list-item { display: flex; align-items: center; justify-content: space-between; flex-direction: row-reverse; background: white; padding: 12px 20px; border-radius: 8px; border: 1px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; transition: all 0.2s ease; }
-.student-list-item:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-color: #d1d5db; }
-.student-list-item.pressing { transform: scale(0.98); background-color: #f9fafb; }
-.rank-icon { font-size: 1.3rem; width: 30px; text-align: center; display: flex; justify-content: center; align-items: center; }
-.student-name-text { font-weight: bold; }
+/* من نحن - تصميم نظيف */
 .poetic-text { line-height: 2.2; text-align: center; font-size: 1.1rem; color: #333; padding: 20px; }
-.quran-verse-simple { display: block; margin: 15px 0; font-family: 'Amiri', serif; font-size: 1.4rem; color: var(--primary-color); font-weight: bold; }
-.student-toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: rgba(31, 41, 55, 0.95); color: white; padding: 20px 30px; border-radius: 15px; text-align: center; z-index: 99999; min-width: 250px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); opacity: 0; pointer-events: none; transition: all 0.3s; }
+.quran-verse-simple { display: block; margin: 20px 0; font-family: 'Amiri', serif; font-size: 1.5rem; color: var(--primary-color); font-weight: bold; text-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+
+/* الأوائل - الصناديق */
+.rank-group-card { background: #f3f4f6; border-radius: 12px; margin-bottom: 30px; border: 1px solid #e5e7eb; overflow: hidden; }
+.rank-group-header { padding: 15px; font-weight: 900; border-bottom: 4px solid #fbbf24; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.student-list-item { display: flex; align-items: center; justify-content: space-between; flex-direction: row-reverse; background: white; padding: 12px 20px; border-radius: 8px; border: 1px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; }
+
+/* رسالة التهنئة */
+.student-toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: rgba(31, 41, 55, 0.95); color: white; padding: 20px 30px; border-radius: 15px; text-align: center; z-index: 99999; min-width: 250px; opacity: 0; pointer-events: none; transition: all 0.3s; }
 .student-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
