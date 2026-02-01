@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: css/custom_style.css
-   الوظيفة: تنسيقات الترحيب + التصميم الزجاجي الأخضر (V7 Final)
+   الوظيفة: تنسيقات الترحيب + التصميم الكلاسيكي (Box Style V8)
    ============================================================ */
 
 /* ==========================================
@@ -88,74 +88,84 @@
 
 
 /* ============================================================
-   🎨 تصميم الأوائل V7 (هيكل قابل للتخصيص - الثيم الأخضر)
+   🎨 تصميم الأوائل V8 (النمط الكلاسيكي - الصناديق)
    ============================================================ */
 
-/* حاوية الحلقة */
+/* 1. حاوية الحلقة (الصندوق الأبيض) */
 .rank-group-card {
-    background: transparent; margin-bottom: 40px; border: none; box-shadow: none;
-    /* الزوم يتم التحكم به من الأدمن */
+    background: white; 
+    border-radius: 12px; /* حواف ناعمة */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* ظل كلاسيكي */
+    margin-bottom: 30px;
+    overflow: hidden; /* لقص الزوايا العلوية للرأس */
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s;
 }
+.rank-group-card:hover { transform: translateY(-2px); }
 
-/* رأس الحلقة (اسم الحلقة) */
+/* 2. رأس الحلقة (اللون يأتي من JS) */
 .rank-group-header {
-    /* الألوان والأحجام يتم التحكم بها من الأدمن */
-    /* القيم هنا هي قيم احتياطية (Fallback) */
-    text-align: center;
-    color: #064e3b; 
-    font-weight: 900; 
-    margin-bottom: 25px; 
-    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
-    border-bottom: 3px solid #10b981;
-    padding-bottom: 10px; 
-    display: block;
-    background: linear-gradient(to right, transparent, rgba(16, 185, 129, 0.1), transparent);
+    padding: 15px 10px;
+    font-weight: 900;
+    /* الألوان والخطوط تأتي inline من الـ JS */
 }
 
-/* قائمة الطلاب */
-.students-list { display: flex; flex-direction: column; gap: 15px; }
-
-/* سطر الطالب */
-.student-item {
-    display: flex; align-items: center; padding: 20px;
-    
-    /* التصميم الزجاجي */
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    
-    border-radius: 20px; 
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-    
-    position: relative; overflow: hidden; transition: transform 0.2s;
-    user-select: none; -webkit-user-select: none;
+/* 3. قائمة الطلاب */
+.students-list {
+    padding: 0;
+    background: white;
 }
+
+/* 4. سطر الطالب (تنسيق القائمة) */
+.student-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    /* ⭐ (مهم) عكس الاتجاه لجعل الاسم يمين والوسام يسار */
+    flex-direction: row-reverse;
+    
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f5f9; /* خط فاصل خفيف */
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.student-list-item:last-child { border-bottom: none; }
+.student-list-item:hover { background-color: #f8fafc; }
 
 /* تأثير الضغط المطول */
-.student-item.pressing { transform: scale(0.95); background: rgba(255, 255, 255, 0.9); }
-
-/* أيقونة الوسام */
-.s-rank-icon { 
-    width: 50px; text-align: center; font-size: 2.2rem; 
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); 
+.student-list-item.pressing {
+    background-color: #f1f5f9;
+    transform: scale(0.98);
 }
 
-/* اسم الطالب */
-.s-name {
-    font-weight: 800; flex-grow: 1;
-    /* اللون والحجم والمحاذاة تأتي من إعدادات الأدمن */
+/* الأيقونة (يسار) */
+.rank-icon {
+    font-size: 1.4rem;
+    width: 30px;
+    text-align: center;
+    /* لا نحتاج مارجن لأننا استخدمنا space-between */
 }
 
-/* خلفيات المراكز (شفافة ومتناسقة) */
-.student-item.rank-1 { background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(254, 243, 199, 0.6)); border: 2px solid rgba(251, 191, 36, 0.6); }
-.student-item.rank-2 { background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(241, 245, 249, 0.6)); border: 2px solid rgba(148, 163, 184, 0.5); }
-.student-item.rank-3 { background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 237, 213, 0.6)); border: 2px solid rgba(253, 186, 116, 0.5); }
+/* الاسم (يمين) */
+.student-name-text {
+    font-weight: bold;
+    /* اللون والحجم يأتي من JS */
+}
 
-/* رسالة التهنئة المنبثقة (أخضر غامق فخم) */
+/* 5. رسالة التهنئة المنبثقة (Toast) */
 .student-toast {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-    background: rgba(6, 78, 59, 0.95); color: white; padding: 30px; border-radius: 20px;
-    text-align: center; z-index: 99999; min-width: 300px; box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    opacity: 0; pointer-events: none; transition: all 0.3s;
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: rgba(0, 0, 0, 0.9); /* أسود فخم */
+    color: white;
+    padding: 25px 30px; border-radius: 12px;
+    text-align: center;
+    z-index: 99999;
+    min-width: 280px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    opacity: 0; pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 .student-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
