@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الشاملة - الثريا V9</title>
+    <title>لوحة التحكم - الإصدار المصحح V10</title>
     
     <link rel="stylesheet" href="css/admin_style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -15,16 +15,16 @@
     <div id="toast-container" class="toast-container"></div>
 
     <aside class="sidebar">
-        <div class="brand"><i class="fas fa-cogs"></i> لوحة التحكم V9</div>
+        <div class="brand"><i class="fas fa-cogs"></i> التحكم V10</div>
         <ul class="menu">
             <li><a onclick="showTab('tab-general')" class="active"><i class="fas fa-sliders-h"></i> الإعدادات والثيم</a></li>
-            <li><a onclick="showTab('tab-sections')"><i class="fas fa-eye"></i> إظهار/إخفاء الأقسام</a></li>
-            <li><a onclick="showTab('tab-cards')"><i class="fas fa-th-large"></i> الأزرار والبطاقات</a></li>
-            <li><a onclick="showTab('tab-complex-schedule')"><i class="fas fa-calendar-alt"></i> الجداول الدراسية</a></li>
+            <li><a onclick="showTab('tab-sections')"><i class="fas fa-eye"></i> إظهار الأقسام</a></li>
+            <li><a onclick="showTab('tab-cards')"><i class="fas fa-th-large"></i> البطاقات</a></li>
+            <li><a onclick="showTab('tab-complex-schedule')"><i class="fas fa-calendar-alt"></i> الجداول</a></li>
             <li><a onclick="showTab('tab-teachers')"><i class="fas fa-chalkboard-teacher"></i> المعلمون</a></li>
-            <li><a onclick="showTab('tab-ranks')"><i class="fas fa-medal"></i> أوائل الحلقات</a></li>
+            <li><a onclick="showTab('tab-ranks')"><i class="fas fa-medal"></i> الأوائل</a></li>
             <li><a onclick="showTab('tab-holidays')"><i class="fas fa-umbrella-beach"></i> الإجازات</a></li>
-            <li><a onclick="showTab('tab-news')"><i class="fas fa-newspaper"></i> الأخبار ومن نحن</a></li>
+            <li><a onclick="showTab('tab-news')"><i class="fas fa-newspaper"></i> الأخبار</a></li>
             <li style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1);">
                 <a onclick="logout()" style="color: #fca5a5;"><i class="fas fa-sign-out-alt"></i> خروج</a>
             </li>
@@ -40,32 +40,38 @@
         <div id="tab-general" class="panel active">
             
             <div class="card border-blue" style="background:#eff6ff;">
-                <h3><i class="fas fa-palette"></i> ثيم الموقع</h3>
-                <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between;">
-                    <label>اللون الرئيسي للموقع (الهيدر والأزرار):</label>
-                    <input type="color" id="main_theme_color" class="input-field" style="width:100px; height:40px; padding:2px;" value="#047857">
+                <h3><i class="fas fa-palette"></i> لون الموقع (الثيم)</h3>
+                <div class="form-grid" style="grid-template-columns: 1fr auto; align-items: center; gap: 15px;">
+                    <div>
+                        <label>اختر اللون الرئيسي:</label>
+                        <input type="color" id="main_theme_color" class="input-field" style="height:45px; width:100%; padding:2px;" value="#047857">
+                    </div>
+                    <div>
+                        <label style="color:transparent">.</label>
+                        <button onclick="resetTheme()" class="btn btn-secondary" style="height:45px; width:100%;"><i class="fas fa-undo"></i> استعادة الأصلي</button>
+                    </div>
                 </div>
-                <p style="font-size:0.85rem; color:gray; margin-top:5px;">سيتم تطبيق هذا اللون على كافة أجزاء الموقع الرئيسية.</p>
+                <p style="font-size:0.85rem; color:gray; margin-top:5px;">هذا اللون سيغير الهيدر والأزرار والعناوين في الموقع.</p>
             </div>
 
             <div class="card border-red">
-                <h3><i class="fas fa-power-off"></i> حالة الموقع</h3>
+                <h3><i class="fas fa-power-off"></i> وضع الصيانة</h3>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div><strong>تفعيل وضع الصيانة</strong><p style="margin:5px 0 0 0; color:gray; font-size:0.85rem;">يغلق الموقع وتظهر رسالة صيانة.</p></div>
+                    <div><strong>تفعيل الصيانة</strong><p style="margin:5px 0 0 0; color:gray; font-size:0.85rem;">يغلق الموقع أمام الزوار.</p></div>
                     <label class="switch"><input type="checkbox" id="toggle_maint"><span class="slider"></span></label>
                 </div>
             </div>
 
             <div class="card border-green">
-                <h3><i class="fas fa-hand-sparkles"></i> شاشة الترحيب الذكية</h3>
+                <h3><i class="fas fa-hand-sparkles"></i> شاشة الترحيب</h3>
                 <div style="margin-bottom:15px; background:#f0fdf4; padding:10px; border-radius:5px;">
                     <label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="welcome_active"> <strong>تفعيل الترحيب؟</strong></label>
                 </div>
                 <div class="form-grid">
-                    <div class="form-group"><label>العنوان:</label><input type="text" id="welcome_title_inp" class="input-field"></div>
-                    <div class="form-group"><label>الرسالة ({name} للاسم):</label><input type="text" id="welcome_msg_inp" class="input-field"></div>
+                    <div class="form-group"><label>العنوان:</label><input type="text" id="welcome_title_inp" class="input-field" placeholder="أهلاً بك"></div>
+                    <div class="form-group"><label>الرسالة ({name} للاسم):</label><input type="text" id="welcome_msg_inp" class="input-field" placeholder="نورتنا يا {name}"></div>
                 </div>
-                <button onclick="saveWelcomeSettings()" class="btn btn-success" style="margin-top:10px;">حفظ إعدادات الترحيب</button>
+                <button onclick="saveWelcomeSettings()" class="btn btn-success" style="margin-top:10px;">حفظ الترحيب</button>
             </div>
 
             <div class="card border-blue">
@@ -76,15 +82,20 @@
             </div>
 
             <div class="card">
-                <h3><i class="fas fa-edit"></i> نصوص الهيدر</h3>
-                <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="inp_header_title" class="input-field"></div><div class="form-group"><label>الوصف:</label><input type="text" id="inp_header_subtitle" class="input-field"></div><div class="form-group"><label>الموقع:</label><input type="text" id="inp_header_location" class="input-field"></div><div class="form-group"><label>فيديو الخلفية:</label><input type="text" id="inp_video" class="input-field"></div></div>
-                <button onclick="saveGeneral()" class="btn btn-primary" style="margin-top:15px;">💾 حفظ الإعدادات والثيم</button>
+                <h3><i class="fas fa-edit"></i> نصوص الهيدر (اتركها فارغة للافتراضي)</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>العنوان الرئيسي:</label><input type="text" id="inp_header_title" class="input-field" placeholder="حلقات الثريا"></div>
+                    <div class="form-group"><label>الوصف:</label><input type="text" id="inp_header_subtitle" class="input-field" placeholder="لتعليم القرآن الكريم"></div>
+                    <div class="form-group"><label>الموقع:</label><input type="text" id="inp_header_location" class="input-field" placeholder="حضرموت - غيل باوزير"></div>
+                    <div class="form-group"><label>فيديو الخلفية (رابط):</label><input type="text" id="inp_video" class="input-field"></div>
+                </div>
+                <button onclick="saveGeneral()" class="btn btn-primary" style="margin-top:15px;">💾 حفظ الكل</button>
             </div>
         </div>
 
         <div id="tab-sections" class="panel">
             <div class="card">
-                <h3><i class="fas fa-eye"></i> التحكم بظهور الأقسام</h3>
+                <h3><i class="fas fa-eye"></i> إظهار وإخفاء الأقسام</h3>
                 <div class="dynamic-item"><span>📢 الأخبار</span><label class="switch"><input type="checkbox" id="show_news"><span class="slider"></span></label></div>
                 <div class="dynamic-item"><span>🎓 نجم الأسبوع</span><label class="switch"><input type="checkbox" id="show_student"><span class="slider"></span></label></div>
                 <div class="dynamic-item"><span>❓ السؤال الأسبوعي</span><label class="switch"><input type="checkbox" id="show_question"><span class="slider"></span></label></div>
@@ -135,7 +146,7 @@
 
         <div id="tab-ranks" class="panel">
             <div class="card border-blue" style="background:#f0fdfa;">
-                <h3><i class="fas fa-paint-brush"></i> تخصيص الألوان والخطوط</h3>
+                <h3><i class="fas fa-paint-brush"></i> تخصيص الألوان</h3>
                 <div class="form-grid">
                     <div class="form-group"><label>لون خلفية رأس الحلقة:</label><input type="color" id="d_header_bg" class="input-field" style="height:40px;" value="#064e3b"></div>
                     <div class="form-group"><label>لون نص رأس الحلقة:</label><input type="color" id="d_header_text" class="input-field" style="height:40px;" value="#ffffff"></div>
@@ -143,7 +154,7 @@
                     <div class="form-group"><label>حجم خط الحلقة:</label><input type="range" id="d_ring_size" min="1" max="2.5" step="0.1" value="1.2" class="input-field"></div>
                     <div class="form-group" style="grid-column: span 2;"><label>حجم خط الطالب:</label><input type="range" id="d_name_size" min="0.8" max="2" step="0.1" value="1.0" class="input-field"></div>
                 </div>
-                <button onclick="saveRankDesign()" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ الألوان والتصميم</button>
+                <button onclick="saveRankDesign()" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ الألوان</button>
             </div>
             <div class="card border-green">
                 <h3><i class="fas fa-medal"></i> إضافة طالب</h3>
@@ -172,11 +183,8 @@
             <div class="card"><h3><i class="fas fa-question-circle"></i> السؤال</h3><div class="form-group"><label>السؤال:</label><textarea id="inp_q_text" class="input-field" rows="2"></textarea></div><div class="form-group"><label>الفائز:</label><input type="text" id="inp_q_winner" class="input-field"></div><button onclick="saveQuestion()" class="btn btn-primary">تحديث</button></div>
             
             <div class="card">
-                <h3><i class="fas fa-info-circle"></i> من نحن (تنسيق مطور)</h3>
-                <p style="color:gray; font-size:0.9rem; margin-bottom:10px;">
-                    💡 تلميح: ضع الآيات القرآنية بين قوسين معقوفين <strong>{ }</strong> لتظهر مزخرفة.<br>
-                    مثال: {وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا}
-                </p>
+                <h3><i class="fas fa-info-circle"></i> من نحن (نص فقط)</h3>
+                <p style="color:gray; font-size:0.9rem;">تلميح: ضع الآيات بين قوسين { } لتمييزها بخط قرآني فقط.</p>
                 <textarea id="inp_about_content" class="input-field" rows="8"></textarea>
                 <button onclick="saveAbout()" class="btn btn-primary" style="margin-top:10px;">حفظ</button>
             </div>
