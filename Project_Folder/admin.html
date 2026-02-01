@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الشاملة - الثريا V3</title>
+    <title>لوحة التحكم الشاملة - الثريا V7</title>
     
     <link rel="stylesheet" href="css/admin_style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -13,15 +13,14 @@
 <body style="display: none;"> <div id="toast-container" class="toast-container"></div>
 
     <aside class="sidebar">
-        <div class="brand"><i class="fas fa-cogs"></i> لوحة التحكم V3</div>
+        <div class="brand"><i class="fas fa-cogs"></i> لوحة التحكم V7</div>
         <ul class="menu">
             <li><a onclick="showTab('tab-general')" class="active"><i class="fas fa-sliders-h"></i> الإعدادات العامة</a></li>
             <li><a onclick="showTab('tab-sections')"><i class="fas fa-eye"></i> إظهار/إخفاء الأقسام</a></li>
             <li><a onclick="showTab('tab-cards')"><i class="fas fa-th-large"></i> الأزرار والبطاقات</a></li>
             <li><a onclick="showTab('tab-complex-schedule')"><i class="fas fa-calendar-alt"></i> الجداول الدراسية</a></li>
             <li><a onclick="showTab('tab-teachers')"><i class="fas fa-chalkboard-teacher"></i> المعلمون</a></li>
-            <li><a onclick="showTab('tab-ranks')"><i class="fas fa-medal"></i> أوائل الحلقات</a></li>
-            <li><a onclick="showTab('tab-holidays')"><i class="fas fa-umbrella-beach"></i> الإجازات</a></li>
+            <li><a onclick="showTab('tab-ranks')"><i class="fas fa-medal"></i> أوائل الحلقات</a></li> <li><a onclick="showTab('tab-holidays')"><i class="fas fa-umbrella-beach"></i> الإجازات</a></li>
             <li><a onclick="showTab('tab-news')"><i class="fas fa-newspaper"></i> الأخبار ومن نحن</a></li>
             <li style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1);">
                 <a onclick="logout()" style="color: #fca5a5;"><i class="fas fa-sign-out-alt"></i> خروج</a>
@@ -36,7 +35,6 @@
         </div>
 
         <div id="tab-general" class="panel active">
-            
             <div class="card border-red">
                 <h3><i class="fas fa-power-off"></i> حالة الموقع</h3>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -44,35 +42,23 @@
                     <label class="switch"><input type="checkbox" id="toggle_maint"><span class="slider"></span></label>
                 </div>
             </div>
-
             <div class="card border-green">
                 <h3><i class="fas fa-hand-sparkles"></i> شاشة الترحيب الذكية</h3>
                 <div style="margin-bottom:15px; background:#f0fdf4; padding:10px; border-radius:5px;">
-                    <label style="display:flex; align-items:center; gap:10px;">
-                        <input type="checkbox" id="welcome_active"> 
-                        <strong>تفعيل الترحيب؟</strong>
-                    </label>
+                    <label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="welcome_active"> <strong>تفعيل الترحيب؟</strong></label>
                 </div>
                 <div class="form-grid">
-                    <div class="form-group">
-                        <label>العنوان:</label>
-                        <input type="text" id="welcome_title_inp" class="input-field" placeholder="مثلاً: السلام عليكم">
-                    </div>
-                    <div class="form-group">
-                        <label>الرسالة (استخدم {name} لاسم الطالب):</label>
-                        <input type="text" id="welcome_msg_inp" class="input-field" placeholder="أنرت حلقات الثريا يا {name}">
-                    </div>
+                    <div class="form-group"><label>العنوان:</label><input type="text" id="welcome_title_inp" class="input-field"></div>
+                    <div class="form-group"><label>الرسالة ({name} للاسم):</label><input type="text" id="welcome_msg_inp" class="input-field"></div>
                 </div>
                 <button onclick="saveWelcomeSettings()" class="btn btn-success" style="margin-top:10px;">حفظ إعدادات الترحيب</button>
             </div>
-
             <div class="card border-blue">
                 <h3><i class="fas fa-bell"></i> الإشعار المنبثق</h3>
                 <div style="margin-bottom:15px; background:#eff6ff; padding:10px; border-radius:5px;"><label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="notify_active"> <strong>تفعيل الإشعار؟</strong></label></div>
                 <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="notify_title" class="input-field"></div><div class="form-group"><label>النص:</label><input type="text" id="notify_body" class="input-field"></div></div>
                 <button onclick="saveNotification()" class="btn btn-primary" style="margin-top:10px;">حفظ الإشعار</button>
             </div>
-
             <div class="card">
                 <h3><i class="fas fa-edit"></i> نصوص الهيدر</h3>
                 <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="inp_header_title" class="input-field"></div><div class="form-group"><label>الوصف:</label><input type="text" id="inp_header_subtitle" class="input-field"></div><div class="form-group"><label>الموقع:</label><input type="text" id="inp_header_location" class="input-field"></div><div class="form-group"><label>فيديو الخلفية:</label><input type="text" id="inp_video" class="input-field"></div></div>
@@ -95,7 +81,7 @@
 
         <div id="tab-cards" class="panel">
             <div class="card border-blue">
-                <h3><i class="fas fa-plus-circle"></i> إضافة بطاقة جديدة</h3>
+                <h3><i class="fas fa-plus-circle"></i> إضافة بطاقة</h3>
                 <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="card_title" class="input-field"></div><div class="form-group"><label>اللون:</label><input type="color" id="card_color" class="input-field" style="height:45px;" value="#3b82f6"></div></div>
                 <div class="form-group"><label>النص:</label><textarea id="card_text" class="input-field" rows="3"></textarea></div>
                 <div class="form-grid"><div class="form-group"><label>نص الزر:</label><input type="text" id="card_btn_text" class="input-field"></div><div class="form-group"><label>الرابط:</label><input type="text" id="card_link" class="input-field"></div></div>
@@ -115,45 +101,51 @@
         </div>
 
         <div id="tab-teachers" class="panel">
-            
             <div class="card border-blue" style="background:#f0f9ff;">
                 <h3><i class="fas fa-arrows-alt-v"></i> تباعد القائمة</h3>
                 <div class="form-group">
-                    <label style="display:flex; justify-content:space-between;">
-                        <span>المسافة الفاصلة بين المعلمين:</span>
-                        <span id="t_spacing_display" style="font-weight:bold; color:#0369a1;">15px</span>
-                    </label>
+                    <label style="display:flex; justify-content:space-between;"><span>المسافة:</span><span id="t_spacing_display" style="font-weight:bold; color:#0369a1;">15px</span></label>
                     <input type="range" id="t_spacing_range" min="10" max="60" step="5" class="input-field" oninput="document.getElementById('t_spacing_display').innerText = this.value + 'px'">
                     <button onclick="saveTeacherSettings()" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ المسافة</button>
                 </div>
             </div>
-
             <div class="card border-blue">
                 <h3><i class="fas fa-user-plus"></i> إضافة معلم</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>الاسم:</label>
-                        <input type="text" id="t_name_v2" class="input-field" placeholder="أ. محمد أحمد">
-                    </div>
-                    <div class="form-group">
-                        <label>الدور:</label>
-                        <input type="text" id="t_role_v2" class="input-field" placeholder="حلقة الصديق">
-                    </div>
-                    <div class="form-group">
-                        <label>الأيقونة (إيموجي):</label>
-                        <input type="text" id="t_emoji" class="input-field" placeholder="مثلاً: 👑 أو 🌹" style="text-align:center; font-size:1.2rem;">
-                    </div>
-                </div>
-                <button onclick="addTeacherV2()" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة / حفظ</button>
+                <div class="form-grid"><div class="form-group"><label>الاسم:</label><input type="text" id="t_name_v2" class="input-field"></div><div class="form-group"><label>الدور:</label><input type="text" id="t_role_v2" class="input-field"></div><div class="form-group"><label>الأيقونة:</label><input type="text" id="t_emoji" class="input-field" placeholder="👑"></div></div>
+                <button onclick="addTeacherV2()" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة</button>
             </div>
-
-            <div class="card">
-                <h3><i class="fas fa-users"></i> قائمة المعلمين</h3>
-                <div id="teachers-list-v2-admin"></div>
-            </div>
+            <div class="card"><h3><i class="fas fa-users"></i> القائمة</h3><div id="teachers-list-v2-admin"></div></div>
         </div>
 
         <div id="tab-ranks" class="panel">
+            
+            <div class="card border-blue" style="background:#f0fdfa;">
+                <h3><i class="fas fa-paint-brush"></i> تخصيص التصميم</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>لون حدود الحلقة:</label>
+                        <input type="color" id="d_ring_color" class="input-field" style="height:40px;" value="#10b981">
+                    </div>
+                    <div class="form-group">
+                        <label>لون اسم الطالب:</label>
+                        <input type="color" id="d_name_color" class="input-field" style="height:40px;" value="#064e3b">
+                    </div>
+                    <div class="form-group">
+                        <label>حجم خط الحلقة: <span id="disp_ring_size">1.6rem</span></label>
+                        <input type="range" id="d_ring_size" min="1" max="3" step="0.1" value="1.6" oninput="document.getElementById('disp_ring_size').innerText=this.value+'rem'">
+                    </div>
+                    <div class="form-group">
+                        <label>حجم خط الطالب: <span id="disp_name_size">1.5rem</span></label>
+                        <input type="range" id="d_name_size" min="0.8" max="2.5" step="0.1" value="1.5" oninput="document.getElementById('disp_name_size').innerText=this.value+'rem'">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>تكبير/تصغير البطاقات (Zoom): <span id="disp_zoom">100%</span></label>
+                        <input type="range" id="d_card_zoom" min="80" max="150" step="5" value="100" oninput="document.getElementById('disp_zoom').innerText=this.value+'%'">
+                    </div>
+                </div>
+                <button onclick="saveRankDesign()" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ التصميم</button>
+            </div>
+
             <div class="card border-green">
                 <h3><i class="fas fa-medal"></i> إضافة طالب</h3>
                 <div class="form-grid">
@@ -178,18 +170,20 @@
                     </div>
                     <div class="form-group">
                         <label>الحلقة:</label>
-                        <input type="text" id="rank_ring" class="input-field" placeholder="مثلاً: حلقة الصديق">
+                        <input type="text" id="rank_ring" class="input-field" list="ring_suggestions" placeholder="اختر أو اكتب جديد...">
+                        <datalist id="ring_suggestions">
+                            </datalist>
                     </div>
                     <div class="form-group" style="grid-column: span 2;">
-                        <label>رسالة التهنئة (عند الضغط على الاسم):</label>
-                        <input type="text" id="rank_msg" class="input-field" placeholder="مثلاً: مبارك لك هذا التفوق يا بطل!">
+                        <label>رسالة التهنئة:</label>
+                        <input type="text" id="rank_msg" class="input-field" placeholder="مبارك لك التفوق...">
                     </div>
                 </div>
                 <button onclick="addRank()" class="btn btn-success"><i class="fas fa-plus"></i> إضافة / حفظ</button>
             </div>
+            
             <div class="card"><h3><i class="fas fa-list-ol"></i> القائمة الحالية</h3><div id="ranks-list-admin"></div></div>
         </div>
-
         <div id="tab-holidays" class="panel">
             <div class="card border-red">
                 <h3><i class="fas fa-umbrella-beach"></i> إضافة إجازة</h3>
@@ -197,7 +191,7 @@
                 <button onclick="addHoliday()" class="btn btn-danger"><i class="fas fa-plus"></i> إضافة</button>
             </div>
             <div class="card"><h3><i class="fas fa-list"></i> القائمة</h3><div id="holidays-list-admin"></div></div>
-        </div>
+        </div></div>
 
         <div id="tab-news" class="panel">
             <div class="card"><h3><i class="fas fa-bullhorn"></i> الأخبار</h3><textarea id="inp_news_bar" class="input-field" rows="3"></textarea><button onclick="saveNewsBar()" class="btn btn-primary" style="margin-top:10px;">تحديث</button></div>
