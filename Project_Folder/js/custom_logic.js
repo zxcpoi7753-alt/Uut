@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: js/custom_logic.js
-   الوظيفة: المحرك الرئيسي للموقع (V5 - البطاقات الذكية + حل التكرار)
+   الوظيفة: المحرك الرئيسي (V6 - البطاقات الذكية + الضغط المطول)
    ============================================================ */
 
 const firebaseConfig = {
@@ -45,7 +45,7 @@ function applyAllData(data) {
     renderComplexSchedule(data.schedule_complex);
     renderTeachers(data.teachers_list_v2, data.settings);
     renderCustomCards(data.custom_cards);
-    renderRanks(data.ranks_list); // 👈 التصميم الجديد هنا
+    renderRanks(data.ranks_list); // 👈 التصميم الجديد (ضغط مطول)
     renderHolidays(data.holidays_list);
 }
 
@@ -207,13 +207,13 @@ function renderTeachers(list, settings) {
     });
 }
 
-// ⭐ [START MODIFICATION 4: تصميم البطاقات المتفاعل V5]
+// ⭐ [START MODIFICATION 5: الضغط المطول وإصلاح الرسائل]
 function renderRanks(list) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return;
     container.innerHTML = '';
 
-    // إنشاء عنصر الرسالة المنبثقة (Toast) إذا لم يكن موجوداً
+    // إنشاء عنصر التوست
     if(!document.getElementById('student-toast-msg')) {
         const toast = document.createElement('div');
         toast.id = 'student-toast-msg';
@@ -223,78 +223,91 @@ function renderRanks(list) {
     
     if(!list) { container.innerHTML = '<p style="text-align:center; padding:20px;">لم يتم رفع الأسماء بعد</p>'; return; }
 
-    // 1. تجميع الطلاب (مع تنظيف المسافات لحل مشكلة التكرار)
     const groups = {};
     Object.values(list).forEach(r => {
         if(r.active === false) return;
-        // 🛠️ الحل الجذري للتكرار: تنظيف المسافات باستخدام trim
+        // تنظيف الاسم لحل مشكلة التكرار
         let ringName = r.ring ? r.ring.trim() : "حلقات عامة"; 
-        
         if(!groups[ringName]) groups[ringName] = [];
         groups[ringName].push(r);
     });
 
-    // 2. رسم البطاقات (بدون جداول HTML)
     Object.keys(groups).sort().forEach(ringName => {
         const students = groups[ringName].sort((a,b) => a.rank - b.rank);
         
-        // حاوية الحلقة (البطاقة الكبيرة)
         const card = document.createElement('div');
         card.className = 'rank-group-card';
         
-        // رأس الحلقة
-        let html = `<div class="rank-group-header">
-                        <i class="fas fa-crown" style="color:#fbbf24;"></i> ${ringName}
-                    </div>
-                    <div class="students-list">`;
+        let html = `<div class="rank-group-header">${ringName}</div><div class="students-list">`;
         
-        // قائمة الطلاب
         students.forEach(s => {
-            // تحديد الستايل
-            let rankStyle = '';
-            let icon = '';
+            let rankClass = '';
+            let medal = '';
             
-            if(s.rank == 1) { rankStyle = 'style="border-right: 4px solid #fbbf24; background: #fffbeb;"'; icon = '🥇'; }
-            else if(s.rank == 2) { rankStyle = 'style="border-right: 4px solid #94a3b8; background: #f8fafc;"'; icon = '🥈'; }
-            else if(s.rank == 3) { rankStyle = 'style="border-right: 4px solid #fdba74; background: #fff7ed;"'; icon = '🥉'; }
-            else { rankStyle = 'style="border-right: 4px solid #e2e8f0;"'; icon = `<span class="rank-num">#${s.rank}</span>`; }
+            if(s.rank == 1) { rankClass = 'rank-1'; medal = '🥇'; }
+            else if(s.rank == 2) { rankClass = 'rank-2'; medal = '🥈'; }
+            else if(s.rank == 3) { rankClass = 'rank-3'; medal = '🥉'; }
+            else { rankClass = 'rank-other'; medal = `#${s.rank}`; }
 
-            // تجهيز الرسالة (الافتراضية أو الخاصة) وحماية النصوص
-            const safeMsg = (s.message || "مبارك عليك التفوق يا بطل!").replace(/'/g, "\\'");
+            // 🛑 إصلاح الرسالة: إذا كانت فارغة نضع نصاً افتراضياً
+            const defaultMsg = "مبارك التفوق والنجاح! 🌟";
+            const msgContent = (s.message && s.message.trim() !== "") ? s.message : defaultMsg;
+            const safeMsg = msgContent.replace(/'/g, "\\'");
             const safeName = s.name.replace(/'/g, "\\'");
 
-            // رسم سطر الطالب (ليس جدولاً، بل Div تفاعلي)
+            // إضافة أحداث الضغط المطول (Touch & Mouse)
             html += `
-                <div class="student-item" ${rankStyle} onclick="showStudentPraise('${safeName}', '${safeMsg}')">
-                    <div class="s-info">
-                        <span class="s-icon">${icon}</span>
-                        <span class="s-name">${s.name}</span>
-                    </div>
-                    <div class="s-arrow"><i class="fas fa-chevron-left"></i></div>
+                <div class="student-item ${rankClass}" 
+                     oncontextmenu="return false;" 
+                     ontouchstart="handleTouchStart(this, '${safeName}', '${safeMsg}')" 
+                     ontouchend="handleTouchEnd(this)" 
+                     onmousedown="handleTouchStart(this, '${safeName}', '${safeMsg}')" 
+                     onmouseup="handleTouchEnd(this)">
+                     
+                    <div class="s-rank-icon">${medal}</div>
+                    <div class="s-name">${s.name}</div>
                 </div>
             `;
         });
         
-        html += '</div>'; // إغلاق القائمة
+        html += '</div>'; 
         card.innerHTML = html;
         container.appendChild(card);
     });
 }
 
-// دالة إظهار الرسالة
+// === منطق الضغط المطول ===
+let longPressTimer;
+const LONG_PRESS_DURATION = 700; // مدة الضغطة (أقل من ثانية)
+
+function handleTouchStart(el, name, msg) {
+    el.classList.add('pressing'); // تأثير بصري
+    // بدء المؤقت
+    longPressTimer = setTimeout(() => {
+        showStudentPraise(name, msg);
+        // محاولة عمل اهتزاز للهاتف
+        if(navigator.vibrate) navigator.vibrate(50); 
+    }, LONG_PRESS_DURATION);
+}
+
+function handleTouchEnd(el) {
+    el.classList.remove('pressing');
+    // إلغاء المؤقت إذا رفع إصبعه قبل الوقت المحدد
+    if(longPressTimer) clearTimeout(longPressTimer);
+}
+
 function showStudentPraise(name, msg) {
     const toast = document.getElementById('student-toast-msg');
     toast.innerHTML = `
-        <div style="font-weight:bold; margin-bottom:5px; color:#fbbf24;">${name}</div>
-        <div>${msg}</div>
+        <div style="font-weight:bold; margin-bottom:8px; color:#fbbf24; font-size:1.2rem;">${name}</div>
+        <div style="line-height:1.6;">${msg}</div>
     `;
     toast.classList.add('show');
     
-    // إعادة ضبط المؤقت
-    if(window.toastTimeout) clearTimeout(window.toastTimeout);
-    window.toastTimeout = setTimeout(() => {
+    // إخفاء تلقائي بعد 4 ثواني
+    setTimeout(() => {
         toast.classList.remove('show');
-    }, 3000);
+    }, 4000);
 }
 // [END MODIFICATION]
 
