@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/custom_logic.js (V10 - إصلاح اختفاء النصوص + الثيمات)
+   ملف: js/custom_logic.js (V11 - تطبيق الثيم القسري)
    ============================================================ */
 
 const firebaseConfig = {
@@ -75,17 +75,21 @@ function showWelcomeOverlay(config) {
 
 
 // ============================================================
-// [SECTION 3]: الإعدادات وتعبئة النصوص (الحل الجذري لـ undefined)
+// [SECTION 3]: الإعدادات وتعبئة النصوص (تطبيق الثيم)
 // ============================================================
 
 function applySettings(data) {
     if(!data.settings) return;
     const s = data.settings;
 
-    // 1. تطبيق الثيم (الألوان) 🎨
+    // 🎨 تطبيق الثيم (الألوان) بشكل فوري
     if(s.theme_color) {
         document.documentElement.style.setProperty('--primary-color', s.theme_color);
         document.documentElement.style.setProperty('--accent-color', s.theme_color); 
+        
+        // فرض اللون على الهيدر مباشرة في حال تأخر الـ CSS
+        const header = document.querySelector('header');
+        if(header) header.style.backgroundColor = s.theme_color;
     }
 
     // 2. وضع الصيانة
@@ -124,8 +128,6 @@ function applySettings(data) {
 }
 
 function applyContent(data) {
-    // 🛑 الحل الجذري: استخدام دالة setSafeTxt التي تضع نصاً افتراضياً
-    
     // شريط الأخبار
     if(data.news_bar) setSafeTxt('dynamic-news-bar', data.news_bar.text, "أهلاً بكم في حلقات الثريا...");
     
@@ -141,8 +143,7 @@ function applyContent(data) {
         setSafeTxt('top-student-desc', data.top_student.category, "..."); 
     }
     
-    // نصوص الموقع الأساسية (الهيدر و من نحن)
-    // هنا الإصلاح: إذا لم توجد بيانات، نستخدم النصوص الافتراضية
+    // نصوص الموقع الأساسية
     const c = data.site_content || {};
     setSafeTxt('txt_header_title', c.txt_header_title, "حلقات الثريا");
     setSafeTxt('txt_header_subtitle', c.txt_header_subtitle, "لتعليم القرآن الكريم");
@@ -162,7 +163,6 @@ function applyContent(data) {
     if(c.txt_about_content) {
         let text = c.txt_about_content;
         text = text.replace(/\n/g, '<br>');
-        // تحويل الآيات {نص} إلى سبان بدون تنسيق معقد (فقط خط)
         text = text.replace(/\{(.*?)\}/g, '<span class="quran-verse-simple">﴾ $1 ﴿</span>');
         setHTML('txt_about_content', text);
     } else {
@@ -204,36 +204,23 @@ function renderTeachers(list, settings) {
     });
 }
 
-// ⭐ [رسم الأوائل V9: التصميم الكلاسيكي]
+// رسم الأوائل
 function renderRanks(list, settings) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return; container.innerHTML = '';
-
     if(!document.getElementById('student-toast-msg')) { const t=document.createElement('div'); t.id='student-toast-msg'; t.className='student-toast'; document.body.appendChild(t); }
     if(!list) { container.innerHTML = '<p style="text-align:center; padding:20px;">لم يتم رفع الأسماء بعد</p>'; return; }
-
-    const design = (settings && settings.ranks_design_v8) ? settings.ranks_design_v8 : {
-        header_bg: '#047857', header_text: '#ffffff', student_color: '#333333', ring_size: '1.2', name_size: '1.0'
-    };
-
+    const design = (settings && settings.ranks_design_v8) ? settings.ranks_design_v8 : { header_bg: '#047857', header_text: '#ffffff', student_color: '#333333', ring_size: '1.2', name_size: '1.0' };
     const groups = {};
     Object.values(list).forEach(r => { if(r.active===false)return; let n=r.ring?r.ring.trim():"حلقات عامة"; if(!groups[n])groups[n]=[]; groups[n].push(r); });
-
     Object.keys(groups).sort().forEach(ringName => {
         const students = groups[ringName].sort((a,b) => a.rank - b.rank);
         const card = document.createElement('div'); card.className = 'rank-group-card';
-        
         let html = `<div class="rank-group-header" style="background-color:${design.header_bg}; color:${design.header_text}; font-size:${design.ring_size}rem; text-align:center;">${ringName}</div><div class="students-list">`;
-        
         students.forEach(s => {
             let medal = s.rank==1?'🥇':(s.rank==2?'🥈':(s.rank==3?'🥉':'🔹'));
             const safeMsg = (s.message||"مبارك التفوق!").replace(/'/g, "\\'"); const safeName = s.name.replace(/'/g, "\\'");
-
-            html += `
-                <div class="student-list-item" style="color:${design.student_color}; font-size:${design.name_size}rem; text-align:right;"
-                     oncontextmenu="return false;" ontouchstart="handleTouchStart(this,'${safeName}','${safeMsg}')" ontouchend="handleTouchEnd(this)" onmousedown="handleTouchStart(this,'${safeName}','${safeMsg}')" onmouseup="handleTouchEnd(this)">
-                    <span class="rank-icon">${medal}</span><span class="student-name-text">${s.name}</span>
-                </div>`;
+            html += `<div class="student-list-item" style="color:${design.student_color}; font-size:${design.name_size}rem; text-align:right;" oncontextmenu="return false;" ontouchstart="handleTouchStart(this,'${safeName}','${safeMsg}')" ontouchend="handleTouchEnd(this)" onmousedown="handleTouchStart(this,'${safeName}','${safeMsg}')" onmouseup="handleTouchEnd(this)"><span class="rank-icon">${medal}</span><span class="student-name-text">${s.name}</span></div>`;
         });
         html += '</div>'; card.innerHTML = html; container.appendChild(card);
     });
@@ -244,7 +231,6 @@ let longPressTimer; const LONG_PRESS_DURATION=600;
 function handleTouchStart(el,n,m){ el.classList.add('pressing'); longPressTimer=setTimeout(()=>{showStudentPraise(n,m);if(navigator.vibrate)navigator.vibrate(50);},LONG_PRESS_DURATION); }
 function handleTouchEnd(el){ el.classList.remove('pressing'); if(longPressTimer)clearTimeout(longPressTimer); }
 function showStudentPraise(n,m){ const t=document.getElementById('student-toast-msg'); t.innerHTML=`<div style="font-weight:bold;margin-bottom:5px;color:#fbbf24;font-size:1.2rem;">${n}</div><div style="font-size:1rem;">${m}</div>`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),4000); }
-
 
 function renderHolidays(list) { const ul=document.getElementById('dynamic-holidays-list'); if(!ul)return; ul.innerHTML=''; if(!list){ul.innerHTML='<li>لا توجد إجازات</li>';return;} Object.values(list).forEach(h=>{if(h.active===false)return; const li=document.createElement('li');li.innerText=h.text;ul.appendChild(li);}); }
 function renderComplexSchedule(d) {
@@ -261,19 +247,8 @@ function renderComplexSchedule(d) {
     });
 }
 
-// Helpers (الدالة المنقذة: setSafeTxt)
-// هذه الدالة تتأكد من أن النص ليس فارغاً، وإلا تضع النص الافتراضي
-function setSafeTxt(id, text, defaultText) {
-    const el = document.getElementById(id);
-    if(el) {
-        if(text && text.trim() !== "") {
-            el.innerText = text;
-        } else {
-            el.innerText = defaultText;
-        }
-    }
-}
-
+// Helpers
+function setSafeTxt(id, text, defaultText) { const el = document.getElementById(id); if(el) el.innerText = (text && text.trim() !== "") ? text : defaultText; }
 function setHTML(id,t){const e=document.getElementById(id);if(e)e.innerHTML=t;} 
 function toggleSection(id,s){const e=document.getElementById(id);if(e)e.style.display=s?'block':'none';}
 function closePopup(){document.getElementById('site-notification').style.display='none';}
