@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/custom_logic.js (V11 - تطبيق الثيم القسري)
+   ملف: js/custom_logic.js (V12 - الألوان الدقيقة + ضبط المصنع)
    ============================================================ */
 
 const firebaseConfig = {
@@ -24,10 +24,15 @@ try {
     // 🌐 2. الاتصال بفايربيس
     db.ref().on('value', (snapshot) => {
         const data = snapshot.val();
-        if (data) {
+        
+        // إذا كانت البيانات فارغة (بعد ضبط المصنع)، نرسل كائناً فارغاً ليعيد النصوص للافتراضي
+        if (!data) {
+            localStorage.removeItem('site_cache_v3');
+            applyAllData({}); // تفعيل الوضع الافتراضي
+        } else {
             localStorage.setItem('site_cache_v3', JSON.stringify(data));
             applyAllData(data);
-            handleSmartWelcome(data.settings);
+            if(data.settings) handleSmartWelcome(data.settings);
         }
     });
 
@@ -38,7 +43,9 @@ try {
 // [SECTION 1]: دالة التطبيق الشاملة
 // ============================================================
 function applyAllData(data) {
-    if (!data) return;
+    // حتى لو البيانات null، نمرر كائن فارغ لتفعيل النصوص الافتراضية
+    data = data || {}; 
+    
     applySettings(data);
     applyContent(data);
     
@@ -75,22 +82,21 @@ function showWelcomeOverlay(config) {
 
 
 // ============================================================
-// [SECTION 3]: الإعدادات وتعبئة النصوص (تطبيق الثيم)
+// [SECTION 3]: الإعدادات وتعبئة النصوص (تطبيق الألوان الدقيقة)
 // ============================================================
 
 function applySettings(data) {
-    if(!data.settings) return;
-    const s = data.settings;
+    const s = data.settings || {}; // استخدام كائن فارغ إذا لم توجد إعدادات
 
-    // 🎨 تطبيق الثيم (الألوان) بشكل فوري
-    if(s.theme_color) {
-        document.documentElement.style.setProperty('--primary-color', s.theme_color);
-        document.documentElement.style.setProperty('--accent-color', s.theme_color); 
-        
-        // فرض اللون على الهيدر مباشرة في حال تأخر الـ CSS
-        const header = document.querySelector('header');
-        if(header) header.style.backgroundColor = s.theme_color;
-    }
+    // 🎨 1. تطبيق الثيم العام
+    // إذا لم يوجد لون (بعد التصفير)، نعود للأخضر الافتراضي
+    const themeColor = s.theme_color || '#047857';
+    document.documentElement.style.setProperty('--primary-color', themeColor);
+    document.documentElement.style.setProperty('--accent-color', themeColor);
+    
+    // إجبار الهيدر على أخذ لون الثيم
+    const header = document.querySelector('header');
+    if(header) header.style.backgroundColor = themeColor;
 
     // 2. وضع الصيانة
     const maint = document.getElementById('maintenance-mode');
@@ -128,27 +134,37 @@ function applySettings(data) {
 }
 
 function applyContent(data) {
-    // شريط الأخبار
+    // 1. شريط الأخبار
     if(data.news_bar) setSafeTxt('dynamic-news-bar', data.news_bar.text, "أهلاً بكم في حلقات الثريا...");
     
-    // السؤال الأسبوعي
+    // 2. السؤال الأسبوعي
     if(data.weekly_question) {
         setHTML('weekly-question-text', `<strong>سؤال الأسبوع:</strong> ${data.weekly_question.text || "سيتم نشره قريباً"}`);
         setSafeTxt('weekly-winner-text', data.weekly_question.last_winner, "بانتظار الفائز");
     }
     
-    // نجم الأسبوع
+    // 3. نجم الأسبوع
     if(data.top_student) { 
         setSafeTxt('top-student-name', data.top_student.name, "..."); 
         setSafeTxt('top-student-desc', data.top_student.category, "..."); 
     }
     
-    // نصوص الموقع الأساسية
+    // 4. نصوص الموقع الأساسية + 🎨 الألوان الخاصة
     const c = data.site_content || {};
-    setSafeTxt('txt_header_title', c.txt_header_title, "حلقات الثريا");
-    setSafeTxt('txt_header_subtitle', c.txt_header_subtitle, "لتعليم القرآن الكريم");
-    setSafeTxt('txt_header_location', c.txt_header_location, "حضرموت - غيل باوزير");
     
+    // العنوان الرئيسي
+    setSafeTxt('txt_header_title', c.txt_header_title, "حلقات الثريا");
+    applyColor('txt_header_title', c.col_header_title, '#ffffff'); // تطبيق اللون الخاص
+
+    // الوصف
+    setSafeTxt('txt_header_subtitle', c.txt_header_subtitle, "لتعليم القرآن الكريم");
+    applyColor('txt_header_subtitle', c.col_header_subtitle, '#ffffff');
+
+    // الموقع
+    setSafeTxt('txt_header_location', c.txt_header_location, "حضرموت - غيل باوزير");
+    applyColor('txt_header_location', c.col_header_location, '#ffffff');
+    
+    // باقي العناوين (تتبع الثيم العام)
     setSafeTxt('txt_news_title', c.txt_news_title, "📢 آخر الأخبار");
     setSafeTxt('txt_student_title', c.txt_student_title, "نجم الأسبوع");
     setSafeTxt('txt_question_title', c.txt_question_title, "❓ السؤال الأسبوعي");
@@ -204,13 +220,15 @@ function renderTeachers(list, settings) {
     });
 }
 
-// رسم الأوائل
 function renderRanks(list, settings) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return; container.innerHTML = '';
     if(!document.getElementById('student-toast-msg')) { const t=document.createElement('div'); t.id='student-toast-msg'; t.className='student-toast'; document.body.appendChild(t); }
     if(!list) { container.innerHTML = '<p style="text-align:center; padding:20px;">لم يتم رفع الأسماء بعد</p>'; return; }
+    
+    // القيم الافتراضية للعودة إليها عند التصفير
     const design = (settings && settings.ranks_design_v8) ? settings.ranks_design_v8 : { header_bg: '#047857', header_text: '#ffffff', student_color: '#333333', ring_size: '1.2', name_size: '1.0' };
+    
     const groups = {};
     Object.values(list).forEach(r => { if(r.active===false)return; let n=r.ring?r.ring.trim():"حلقات عامة"; if(!groups[n])groups[n]=[]; groups[n].push(r); });
     Object.keys(groups).sort().forEach(ringName => {
@@ -255,3 +273,11 @@ function closePopup(){document.getElementById('site-notification').style.display
 function disablePopupForever(){if(document.getElementById('popup-forever-check').checked){localStorage.setItem('dont_show_popup','true');alert("تم!");closePopup();}}
 function openLoginModal(){document.getElementById('login-modal').style.display='flex';}
 function secureLogin(){const u=document.getElementById('admin-user').value;const p=document.getElementById('admin-pass').value;if(!u||!p)return alert("أدخل البيانات");firebase.auth().signInWithEmailAndPassword(u,p).then(()=>window.location.href="admin.html").catch(e=>alert("خطأ: "+e.message));}
+
+// ⭐ دالة تطبيق اللون الخاص (تستخدم لتلوين نصوص الهيدر)
+function applyColor(id, color, defaultColor) {
+    const el = document.getElementById(id);
+    if(el) {
+        el.style.color = (color && color !== "") ? color : defaultColor;
+    }
+}
