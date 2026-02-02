@@ -1,242 +1,372 @@
 /* ============================================================
-   ملف: css/admin_style.css (V16 - إصلاح الهيكل والنوافذ)
+   ملف: css/admin_style.css (V17 - التصميم الأصلي المستقر + النوافذ)
    ============================================================ */
 
-:root {
-    --primary: #047857;
-    --secondary: #fbbf24;
-    --dark: #1e293b;
-    --light: #f1f5f9;
-    --danger: #ef4444;
-    --blue: #3b82f6;
+/* --- 1. الألوان والمتغيرات الأساسية --- */
+:root { 
+    --primary: #1e293b;   /* كحلي غامق (القائمة) */
+    --accent: #3b82f6;    /* أزرق (الزر الرئيسي) */
+    --bg: #f1f5f9;        /* خلفية الصفحة */
+    --text: #334155;      /* لون النص */
+    --danger: #ef4444;    /* أحمر (حذف) */
+    --success: #10b981;   /* أخضر (حفظ) */
 }
 
-* { box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-
-body {
-    margin: 0; padding: 0;
-    background-color: var(--light);
-    height: 100vh;
-    display: flex; /* ترتيب القائمة والمحتوى جنباً إلى جنب */
-    overflow: hidden; /* منع التمرير المزدوج */
+/* --- 2. إعدادات الصفحة (Body) --- */
+body { 
+    margin: 0; 
+    font-family: 'Cairo', sans-serif; 
+    background: var(--bg); 
+    display: flex; 
+    height: 100vh; 
+    overflow: hidden; 
     direction: rtl;
 }
 
-/* ==========================================
-   1. القائمة الجانبية (Sidebar)
-   ========================================== */
-.sidebar {
-    width: 260px;
-    background-color: var(--dark);
-    color: white;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-    flex-shrink: 0; /* منع التقلص */
-    overflow-y: auto;
-    z-index: 100;
+/* --- 3. القائمة الجانبية (Sidebar) --- */
+.sidebar { 
+    width: 260px; 
+    background: var(--primary); 
+    color: white; 
+    display: flex; 
+    flex-direction: column; 
+    transition: 0.3s; 
+    z-index: 1000; 
+    box-shadow: 4px 0 10px rgba(0,0,0,0.1); 
 }
 
-.brand {
-    font-size: 1.4rem;
-    font-weight: bold;
-    margin-bottom: 30px;
-    color: var(--secondary);
-    display: flex; align-items: center; gap: 10px;
+.brand { 
+    padding: 20px; 
+    font-size: 1.3rem; 
+    font-weight: bold; 
+    text-align: center; 
+    border-bottom: 1px solid rgba(255,255,255,0.1); 
+    background: rgba(0,0,0,0.2); 
 }
 
-.menu { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; height: 100%; }
-.menu li a {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 15px;
-    border-radius: 8px;
-    color: #cbd5e1;
-    text-decoration: none;
-    transition: 0.3s;
-    cursor: pointer;
-    font-weight: bold;
-}
-.menu li a:hover, .menu li a.active {
-    background-color: rgba(255,255,255,0.1);
-    color: white;
-    transform: translateX(-5px);
-}
-.menu li a.active { border-right: 4px solid var(--secondary); }
-
-/* ==========================================
-   2. المحتوى الرئيسي (Main Content)
-   ========================================== */
-.main {
-    flex-grow: 1; /* يأخذ باقي المساحة */
-    padding: 25px;
-    overflow-y: auto; /* هو الذي يتحرك */
-    position: relative;
-    background-color: #f8fafc;
+.menu { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+    flex: 1; 
+    overflow-y: auto; 
 }
 
-.header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 25px; background: white; padding: 15px 20px;
-    border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+.menu li a { 
+    display: flex; 
+    align-items: center; 
+    padding: 14px 20px; 
+    color: #cbd5e1; 
+    text-decoration: none; 
+    transition: 0.2s; 
+    border-right: 4px solid transparent; 
+    cursor: pointer; 
+    font-size: 0.95rem; 
 }
 
-.panel { display: none; animation: fadeIn 0.3s ease; }
-.panel.active { display: block; }
-
-/* البطاقات والحقول */
-.card {
-    background: white; padding: 20px; border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px;
-    border: 1px solid #e2e8f0; position: relative;
+.menu li a:hover, .menu li a.active { 
+    background: rgba(255,255,255,0.1); 
+    color: white; 
+    border-right-color: var(--accent); 
 }
-.card h3 { margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; color: var(--dark); font-size: 1.1rem; }
 
-.border-blue { border-top: 4px solid var(--blue); }
-.border-green { border-top: 4px solid var(--primary); }
-.border-red { border-top: 4px solid var(--danger); }
+.menu li a i { 
+    margin-left: 10px; 
+    width: 20px; 
+    text-align: center; 
+}
+
+/* --- 4. المحتوى الرئيسي (Main Content) --- */
+.main { 
+    flex: 1; 
+    padding: 25px; 
+    overflow-y: auto; 
+    position: relative; 
+}
+
+.header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 25px; 
+    background: white; 
+    padding: 15px 25px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+}
+
+/* --- 5. نظام التبويبات (Tabs Animation) --- */
+.panel { 
+    display: none; 
+    animation: fadeIn 0.3s ease; 
+}
+.panel.active { 
+    display: block; 
+}
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* --- 6. البطاقات (Cards) --- */
+.card { 
+    background: white; 
+    padding: 25px; 
+    border-radius: 15px; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+    margin-bottom: 20px; 
+    border: 1px solid #e2e8f0; 
+}
+
+.card h3 { 
+    margin-top: 0; 
+    border-bottom: 2px solid #f8fafc; 
+    padding-bottom: 15px; 
+    color: var(--primary); 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    font-size: 1.1rem; 
+}
+
+/* ألوان حدود البطاقات */
+.border-green { border-right: 4px solid var(--success); }
+.border-blue { border-right: 4px solid var(--accent); }
+.border-red { border-right: 4px solid var(--danger); }
+
+/* --- 7. النماذج والحقول (Forms) --- */
+.form-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+    gap: 15px; 
+}
 
 .form-group { margin-bottom: 15px; }
-.form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #475569; font-size: 0.9rem; }
-.input-field {
-    width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;
-    font-size: 1rem; transition: 0.3s; outline: none; background: #f8fafc;
-}
-.input-field:focus { border-color: var(--blue); background: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
 
-/* الأزرار */
-.btn {
-    padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;
-    font-weight: bold; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+.form-group label { 
+    display: block; 
+    margin-bottom: 6px; 
+    font-weight: bold; 
+    color: var(--text); 
+    font-size: 0.9rem; 
 }
+
+.input-field, select, textarea { 
+    width: 100%; 
+    padding: 10px; 
+    border: 2px solid #e2e8f0; 
+    border-radius: 8px; 
+    font-family: inherit; 
+    font-size: 0.95rem; 
+    box-sizing: border-box; 
+    transition: 0.2s; 
+}
+
+.input-field:focus { 
+    border-color: var(--accent); 
+    outline: none; 
+}
+
+/* جداول الإدخال المعقدة (للجداول الدراسية) */
+.complex-table-builder { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.complex-table-builder th, .complex-table-builder td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+.complex-table-builder th { background: #f1f5f9; font-size: 0.85rem; }
+.complex-table-builder input { border: none; background: transparent; width: 100%; text-align: center; }
+
+/* --- 8. الأزرار (Buttons) --- */
+.btn { 
+    padding: 10px 18px; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    color: white; 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 8px; 
+    transition: 0.2s; 
+    font-size: 0.9rem; 
+}
+.btn-primary { background: var(--accent); }
+.btn-success { background: var(--success); }
+.btn-danger { background: var(--danger); }
+.btn-warning { background: #f59e0b; color: white; }
 .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-.btn-primary { background: var(--blue); color: white; }
-.btn-success { background: var(--primary); color: white; }
-.btn-danger { background: var(--danger); color: white; }
-.btn-secondary { background: #e2e8f0; color: #333; }
 
-/* العناصر الديناميكية (Dynamic Items) */
+/* --- 9. القوائم الديناميكية (Dynamic Lists) --- */
+.dynamic-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background: #f8fafc; 
+    padding: 10px 15px; 
+    border-radius: 8px; 
+    border: 1px solid #e2e8f0; 
+    margin-bottom: 8px; 
+}
+.dynamic-item strong { color: var(--primary); }
+
+/* --- 10. زر التبديل (Toggle Switch) --- */
+.switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--success); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* --- 11. إشعارات التوست (Toast Notifications) --- */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: #333;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 50px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    font-weight: bold;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 200px;
+    justify-content: center;
+    animation: slideInDown 0.4s ease, fadeOut 0.5s 2.5s forwards;
+}
+
+.toast.success { background: #10b981; } /* أخضر */
+.toast.error { background: #ef4444; }   /* أحمر */
+
+@keyframes slideInDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; transform: translateY(-10px); }
+}
+
+/* --- 12. تحسين تنسيق عناصر القائمة (CRUD List) --- */
 .dynamic-item {
-    display: flex; justify-content: space-between; align-items: center;
-    background: #f8fafc; padding: 10px 15px; margin-bottom: 8px;
-    border-radius: 8px; border: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between; /* المحتوى يمين والأزرار يسار */
+    align-items: center;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 10px;
+    transition: 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
-.item-info { font-weight: 500; color: #334155; }
-.action-buttons { display: flex; gap: 5px; }
-.btn-icon {
-    width: 32px; height: 32px; border-radius: 6px; border: none;
-    color: white; cursor: pointer; display: flex; justify-content: center; align-items: center;
-}
-.btn-edit { background: var(--blue); }
-.btn-hide { background: #f59e0b; }
-.btn-delete { background: var(--danger); }
-.hidden-item { opacity: 0.6; background: #eee; text-decoration: line-through; }
 
-/* ==========================================
-   3. النوافذ المنبثقة (Modals) - الحل النهائي
-   ========================================== */
+.dynamic-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border-color: var(--accent);
+}
+
+/* حالة العنصر المخفي */
+.dynamic-item.hidden-item {
+    opacity: 0.6;
+    background: #f1f5f9;
+    border: 1px dashed #cbd5e1;
+}
+
+.item-info {
+    flex: 1; /* يأخذ المساحة المتبقية */
+    font-size: 1rem;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+/* أزرار التحكم الصغيرة */
+.btn-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 6px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+
+.btn-edit { background: #f59e0b; }   /* برتقالي للتعديل */
+.btn-edit:hover { background: #d97706; }
+
+.btn-hide { background: #64748b; }   /* رمادي للإخفاء */
+.btn-hide:hover { background: #475569; }
+.btn-hide.active { background: #10b981; } /* أخضر عند التفعيل */
+
+.btn-delete { background: #ef4444; } /* أحمر للحذف */
+.btn-delete:hover { background: #dc2626; }
+
+
+/* =================================================================
+   13. الإضافة الجديدة: النوافذ المنبثقة (للحماية والحذف)
+   (مضافة لتعمل مع التصميم القديم دون إفساده)
+   ================================================================= */
 .custom-modal {
-    display: none; /* مخفي افتراضياً */
-    position: fixed; /* ثابت فوق الشاشة */
+    display: none; 
+    position: fixed; 
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.8); /* خلفية معتمة */
-    z-index: 9999999; /* فوق كل شيء */
+    z-index: 2000; /* فوق القائمة الجانبية */
     justify-content: center;
     align-items: center;
     padding: 20px;
 }
 
-/* عندما يتم تفعيله بالجافاسكربت */
+/* التفعيل بالجافاسكربت */
 .custom-modal[style*="display: flex"] {
     display: flex !important;
 }
 
 .custom-modal-content {
     background: white;
-    width: 100%; max-width: 400px; /* لا يتجاوز هذا العرض */
+    width: 100%; max-width: 380px; 
     padding: 30px;
-    border-radius: 15px;
+    border-radius: 12px;
     text-align: center;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    border: 3px solid var(--secondary); /* إطار لتمييز النافذة */
+    border: 2px solid var(--accent); /* إطار أزرق أنيق */
     animation: zoomIn 0.3s ease;
 }
 
-.modal-icon { font-size: 3rem; margin-bottom: 15px; }
-.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-.modal-actions button { flex: 1; padding: 12px; }
+.modal-icon { font-size: 3rem; margin-bottom: 20px; display: block; }
+.modal-actions { display: flex; gap: 10px; margin-top: 25px; }
+.modal-actions button { flex: 1; padding: 12px; font-size: 1rem; }
 
-@keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-/* مفتاح التبديل (Switch) */
-.switch { position: relative; display: inline-block; width: 50px; height: 26px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider {
-    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #ccc; transition: .4s; border-radius: 34px;
-}
-.slider:before {
-    position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
-    background-color: white; transition: .4s; border-radius: 50%;
-}
-input:checked + .slider { background-color: var(--primary); }
-input:checked + .slider:before { transform: translateX(24px); }
-
-
-/* ==========================================
-   4. التوافق مع الجوال (Mobile Fix) 📱
-   ========================================== */
+/* التوافق مع الجوال */
 @media (max-width: 768px) {
-    body {
-        flex-direction: column; /* القائمة فوق، المحتوى تحت */
-        height: auto;
-        overflow: auto;
-    }
-
-    .sidebar {
-        width: 100%;
-        height: auto;
-        padding: 10px;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-    }
-    
-    .brand { margin-bottom: 0; font-size: 1.1rem; }
-    
-    .menu {
-        flex-direction: row;
-        overflow-x: auto;
-        width: 100%;
-        padding-top: 10px;
-        gap: 5px;
-        padding-bottom: 5px;
-    }
-    
-    .menu li a {
-        padding: 8px 12px;
-        font-size: 0.85rem;
-        white-space: nowrap;
-        background: rgba(255,255,255,0.05);
-    }
-    
-    .menu li { flex-shrink: 0; }
-    
-    .main {
-        width: 100%;
-        padding: 15px;
-        overflow: visible; /* السماح بالتمرير الطبيعي */
-    }
-
+    body { flex-direction: column; height: auto; overflow: auto; }
+    .sidebar { width: 100%; height: auto; flex-direction: row; justify-content: space-between; align-items: center; padding: 10px; flex-wrap: wrap; }
+    .brand { border: none; background: none; padding: 0; font-size: 1rem; }
+    .menu { flex-direction: row; width: 100%; overflow-x: auto; gap: 5px; padding-top: 10px; }
+    .menu li a { padding: 8px 12px; font-size: 0.8rem; white-space: nowrap; background: rgba(255,255,255,0.1); border: none; border-radius: 4px; }
+    .menu li a.active { background: var(--accent); }
+    .main { overflow: visible; padding: 15px; }
     .header { flex-direction: column; gap: 10px; text-align: center; }
-    .btn { width: 100%; }
-    
-    /* إصلاح النوافذ للجوال */
-    .custom-modal-content {
-        width: 90%;
-        margin: auto;
-    }
 }
