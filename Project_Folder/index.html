@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حلقات الثريا - V26</title>
+    <title>حلقات الثريا لتعليم القرآن الكريم</title>
     
     <link rel="icon" type="image/png" href="1768411699920.png">
     <link rel="apple-touch-icon" href="1768411699920.png">
@@ -11,11 +11,11 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/darkmode.css">
-    <link rel="stylesheet" href="css/custom_style.css?v=26">
+    <link rel="stylesheet" href="css/main.css">        
+    <link rel="stylesheet" href="css/layout.css">      
+    <link rel="stylesheet" href="css/components.css">  
+    <link rel="stylesheet" href="css/darkmode.css">    
+    <link rel="stylesheet" href="css/custom_style.css?v=27">
 </head>
 <body oncontextmenu="return false;">
 
@@ -27,7 +27,6 @@
     <div id="maintenance-mode" style="display: none;">
         <h1 style="font-size: 3rem;">🚧</h1>
         <h2>الموقع تحت الصيانة</h2>
-        <p>نقوم ببعض التحسينات، سنعود قريباً...</p>
         <button onclick="openLoginModal()" style="margin-top:20px; background: transparent; border: 1px solid white; color: white; padding: 5px 15px; border-radius: 20px; cursor: pointer;">دخول المشرف</button>
     </div>
 
@@ -55,7 +54,6 @@
         <h1 id="txt_header_title">حلقات الثريا</h1>
         <p class="header-subtitle" id="txt_header_subtitle">لتعليم القرآن الكريم</p>
         <p class="header-location" id="txt_header_location">حضرموت - غيل باوزير</p>
-        <div id="verse-display" class="verse-ticker"></div>
     </header>
 
     <div class="nav-container-wrapper">
@@ -97,7 +95,7 @@
                     <div style="background: rgba(251, 191, 36, 0.1); padding: 10px; border-radius: 8px; margin-top:10px;">
                         <strong>🏆 الفائز السابق:</strong> <span id="weekly-winner-text" style="color: var(--primary-color); font-weight:bold;">...</span>
                     </div>
-                    <button class="nav-btn" style="width:100%; margin-top:15px; border-color:#25D366; color:#25D366; display:flex; align-items:center; justify-content:center; gap:5px;" onclick="sendAnswerViaWhatsapp()">
+                    <button class="nav-btn" style="width:100%; margin-top:15px; border-color:#25D366; color:#25D366;" onclick="sendAnswerViaWhatsapp()">
                         <span>💬 أرسل الإجابة (واتساب)</span>
                     </button>
                 </div>
@@ -126,8 +124,7 @@
                         <h3 id="azkar-category-title" style="color:var(--primary-color); text-align:center;"></h3>
                         <div id="azkar-items-list"></div>
                     </div>
-                    <div id="subha-interface" style="display:none; margin-top:10px;">
-                        </div>
+                    <div id="subha-interface" style="display:none; margin-top:10px;"></div>
                 </div>
             </div>
 
@@ -139,7 +136,7 @@
                 </div>
             </div>
             
-            <button class="accordion-btn">🚀 خطة ختمي (بناءً على جهدي) <span>▼</span></button>
+            <button class="accordion-btn" onclick="toggleAccordion(this)">🚀 خطة ختمي (بناءً على جهدي) <span>▼</span></button>
             <div class="accordion-panel">
                 <div style="padding: 15px 0;">
                     <div id="calc-step-1"><p><strong>1️⃣ كم يوماً تحفظ في الأسبوع؟</strong></p><div id="days-buttons-container" class="button-grid"></div></div>
@@ -156,7 +153,7 @@
                 </div>
             </div>
 
-            <button class="accordion-btn">🧭 دليل الختم (بناءً على وقتي) <span>▼</span></button>
+            <button class="accordion-btn" onclick="toggleAccordion(this)">🧭 دليل الختم (بناءً على وقتي) <span>▼</span></button>
             <div class="accordion-panel">
                 <div style="padding: 15px 0;">
                     <div class="radio-group">
@@ -171,7 +168,7 @@
                 </div>
             </div>
 
-            <button class="accordion-btn">🧠 اختبر حفظك (نظام ذكي) <span>▼</span></button>
+            <button class="accordion-btn" onclick="toggleAccordion(this)">🧠 اختبر حفظك (نظام ذكي) <span>▼</span></button>
             <div class="accordion-panel">
                 <div style="padding: 15px 0;">
                     <div id="quiz-controls">
@@ -311,7 +308,7 @@
     <script src="js/azkar.js"></script>
     <script src="js/logic.js"></script>
 
-    <script src="js/custom_logic.js?v=26"></script>
+    <script src="js/custom_logic.js?v=27"></script>
 
 </body>
 </html>
