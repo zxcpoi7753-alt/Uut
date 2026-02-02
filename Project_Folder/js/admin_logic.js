@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/admin_logic.js (V14 - النوافذ الاحترافية + الأوائل المطور)
+   ملف: js/admin_logic.js (V15 - الحماية الشاملة لكل زر)
    ============================================================ */
 
 const firebaseConfig = {
@@ -15,13 +15,13 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 
-// 🔐 إعدادات الحماية
+// 🔐 إعدادات الحماية (كلمة السر)
 const SYS_PASS = "12345"; 
-let pendingSecureAction = null;
+let pendingSecureAction = null; // لتخزين الأمر المعلق
 let editKeys = { card: null, teacher: null, rank: null, holiday: null, complex: null };
 let pendingDeleteAction = null;
 
-// [SECTION 0]: Auth & Toast
+// [SECTION 0]: التحقق من الدخول
 auth.onAuthStateChanged((user) => { if (user) document.body.style.display = 'flex'; else window.location.replace("index.html"); });
 function showToast(msg, type='success') {
     const c = document.getElementById('toast-container'); if(!c) return;
@@ -30,22 +30,30 @@ function showToast(msg, type='success') {
 }
 
 // ============================================================
-// 🚪 إدارة النوافذ المنبثقة (Popups Management)
+// 🛡️ نظام إدارة النوافذ والحماية (Popups & Security)
 // ============================================================
 
-// 1. نافذة الخروج
-function openLogoutModal() { document.getElementById('logout-modal').style.setProperty('display', 'flex', 'important'); }
-function closeLogoutModal() { document.getElementById('logout-modal').style.setProperty('display', 'none', 'important'); }
+// دالة عامة لفتح أي نافذة بقوة
+function openModal(id) {
+    const el = document.getElementById(id);
+    if(el) el.style.setProperty('display', 'flex', 'important');
+}
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if(el) el.style.setProperty('display', 'none', 'important');
+}
+
+// 1. الخروج
+function openLogoutModal() { openModal('logout-modal'); }
 function performLogout() { 
-    closeLogoutModal();
+    closeModal('logout-modal');
     auth.signOut().then(() => window.location.replace("index.html")); 
 }
 
-// 2. نافذة الحماية (كلمة المرور)
+// 2. الحماية (كلمة المرور)
 function protectedAction(actionFunction) {
     pendingSecureAction = actionFunction;
-    const modal = document.getElementById('security-modal');
-    modal.style.setProperty('display', 'flex', 'important');
+    openModal('security-modal');
     document.getElementById('sys_pass_input').value = '';
     document.getElementById('sys_pass_input').focus();
 }
@@ -53,9 +61,9 @@ function protectedAction(actionFunction) {
 function verifyPasswordAction() {
     const inputPass = document.getElementById('sys_pass_input').value;
     if (inputPass === SYS_PASS) {
-        document.getElementById('security-modal').style.setProperty('display', 'none', 'important'); // إغلاق مباشر
+        closeModal('security-modal');
         if (pendingSecureAction) {
-            pendingSecureAction();
+            pendingSecureAction(); // تنفيذ الأمر المعلق
             pendingSecureAction = null;
         }
     } else {
@@ -65,35 +73,29 @@ function verifyPasswordAction() {
 }
 
 function closeSecurityModal() {
-    document.getElementById('security-modal').style.setProperty('display', 'none', 'important');
+    closeModal('security-modal');
     pendingSecureAction = null;
 }
 
-// 3. نافذة الحذف
+// 3. الحذف
 function deleteItem(path) {
     pendingDeleteAction = () => db.ref(path).remove().then(()=>showToast("تم الحذف"));
-    document.getElementById('confirm-modal').style.setProperty('display', 'flex', 'important');
+    openModal('confirm-modal');
 }
-function confirmAction() { if(pendingDeleteAction) pendingDeleteAction(); closeModal(); }
-function closeModal() { 
-    document.getElementById('confirm-modal').style.setProperty('display', 'none', 'important');
-    pendingDeleteAction = null; 
-}
+function confirmAction() { if(pendingDeleteAction) pendingDeleteAction(); closeModal('confirm-modal'); }
 
 
 // ============================================================
-// [SECTION 1]: العمليات الرئيسية
+// [SECTION 1]: العمليات الرئيسية (كلها محمية الآن)
 // ============================================================
 
 function saveGeneral() {
-    // حفظ ألوان الهيدر المخصصة
     db.ref('site_content').update({ 
         txt_header_title: val('inp_header_title'), col_header_title: val('col_header_title'),
         txt_header_subtitle: val('inp_header_subtitle'), col_header_subtitle: val('col_header_subtitle'),
         txt_header_location: val('inp_header_location'), col_header_location: val('col_header_location'),
         txt_about_content: val('inp_about_content')
     });
-    // حفظ الثيم
     db.ref('settings').update({ 
         video_url: val('inp_video'), 
         maintenance_mode: document.getElementById('toggle_maint').checked,
@@ -101,35 +103,28 @@ function saveGeneral() {
     }).then(() => showToast("تم الحفظ بنجاح 🎨"));
 }
 
-// ⭐ استعادة التصميم الأصلي
 function restoreOriginalDesign() {
     const updates = {};
-    // إعادة اللون الأخضر
     updates['settings/theme_color'] = '#047857';
-    // إعادة نصوص الهيدر للأبيض (ليناسب التصميم الشفاف)
     updates['site_content/col_header_title'] = '#ffffff';
     updates['site_content/col_header_subtitle'] = '#ffffff';
     updates['site_content/col_header_location'] = '#ffffff';
     
-    // تحديث الواجهة فوراً
     document.getElementById('main_theme_color').value = "#047857";
-    fill('col_header_title', '#ffffff');
-    fill('col_header_subtitle', '#ffffff');
-    fill('col_header_location', '#ffffff');
+    fill('col_header_title', '#ffffff'); fill('col_header_subtitle', '#ffffff'); fill('col_header_location', '#ffffff');
 
     db.ref().update(updates).then(() => showToast("تمت الاستعادة ✨"));
 }
 
-// ⚠️ تصفير كامل
 function secureFactoryReset() {
-    if(confirm("هل أنت متأكد؟ سيتم حذف كل شيء!")) {
+    if(confirm("تحذير نهائي: سيتم مسح كل البيانات!")) {
         const updates = {};
         updates['settings'] = null; updates['site_content'] = null;
         updates['custom_cards'] = null; updates['teachers_list_v2'] = null;
         updates['ranks_list'] = null; updates['holidays_list'] = null;
         updates['news_bar'] = null; updates['weekly_question'] = null;
         updates['schedule_complex'] = null;
-        updates['settings/theme_color'] = '#047857'; // إعادة الافتراضي
+        updates['settings/theme_color'] = '#047857';
         
         db.ref().update(updates).then(() => {
             alert("تم التصفير.");
@@ -140,7 +135,7 @@ function secureFactoryReset() {
 
 function saveWelcomeSettings() { db.ref('settings/welcome_screen').update({ active: document.getElementById('welcome_active').checked, title: val('welcome_title_inp'), message: val('welcome_msg_inp') }).then(()=>showToast("تم الحفظ")); }
 
-// [SECTION 2-8]: الوظائف
+// [SECTION 2-8]: باقي الوظائف
 function saveSections() {
     let s={}; ['news','student','question','ranks','schedule','teachers'].forEach(k=>s['show_'+k]=document.getElementById('show_'+k).checked);
     db.ref('settings').update(s).then(()=>showToast("تم الحفظ"));
@@ -157,32 +152,23 @@ function addComplexSchedule() {
 }
 function deleteComplexRing(t,k) { 
     pendingDeleteAction = () => db.ref(`schedule_complex/${t}/rings/${k}`).remove().then(()=>showToast("تم الحذف"));
-    document.getElementById('confirm-modal').style.setProperty('display', 'flex', 'important');
+    openModal('confirm-modal');
 }
 function saveTeacherSettings() { db.ref('settings/teacher_spacing').set(val('t_spacing_range')).then(()=>showToast("تم الحفظ")); }
 
-// إضافة معلم
 function addTeacherV2() {
     const d={name:val('t_name_v2'),role:val('t_role_v2'),emoji:val('t_emoji'),active:true};
     if(editKeys.teacher) db.ref('teachers_list_v2/'+editKeys.teacher).update(d).then(()=>{showToast("تم التعديل");resetForm('teacher');});
     else db.ref('teachers_list_v2').push(d).then(()=>{showToast("تمت الإضافة");resetForm('teacher');});
 }
 
-// إضافة أوائل (الجديد: دعم الإيموجي)
 function addRank() {
     const name = val('rank_name'); if(!name) return showToast("الاسم مطلوب","error");
-    // نأخذ الإيموجي من الخانة الجديدة
-    const customEmoji = val('rank_emoji');
-    
     const d = { 
-        rank: val('rank_num'), 
-        name: name, 
-        ring: val('rank_ring'), 
-        emoji: customEmoji, // حفظ الإيموجي
-        message: val('rank_msg'), 
-        active: true 
+        rank: val('rank_num'), name: name, ring: val('rank_ring'), 
+        emoji: val('rank_emoji'), // حفظ الإيموجي الاختياري
+        message: val('rank_msg'), active: true 
     };
-    
     if(editKeys.rank) db.ref('ranks_list/'+editKeys.rank).update(d).then(()=>{showToast("تم التعديل");resetForm('rank');});
     else db.ref('ranks_list').push(d).then(()=>{showToast("تمت الإضافة");resetForm('rank');});
 }
@@ -228,7 +214,7 @@ db.ref().on('value', (snapshot) => {
     renderComplexScheduleAdmin(d.schedule_complex);
 });
 
-// Render List
+// Render List (With Security)
 function renderList(elId, data, type) {
     const el = document.getElementById(elId); if(!el) return; el.innerHTML='';
     if(!data) { el.innerHTML='<p>لا توجد بيانات</p>'; return; }
@@ -245,10 +231,9 @@ function renderList(elId, data, type) {
         if(type==='card') {
             content = `<strong style="color:${item.color}">${item.title}</strong>`;
         } else if(type==='teacher') {
-            // تنسيق المعلمين في الأدمن ليكون مرتباً
             content = `<span style="font-size:1.2rem; margin-left:5px;">${item.emoji||'👤'}</span> <strong>${item.name}</strong> <span style="color:gray; font-size:0.85rem;">(${item.role||'-'})</span>`;
         } else if(type==='rank') {
-            // عرض الإيموجي إذا وجد، أو الميدالية التلقائية
+            // عرض الإيموجي أو الميدالية
             let displayBadge = item.emoji ? item.emoji : (item.rank==1?'🥇':(item.rank==2?'🥈':(item.rank==3?'🥉':'🎖️')));
             content = `<span style="font-size:1.2rem;">${displayBadge}</span> <strong>${item.name}</strong> <small>(${item.rank})</small>`;
         } else {
@@ -258,6 +243,7 @@ function renderList(elId, data, type) {
         let path = (type==='card'?'custom_cards':(type==='teacher'?'teachers_list_v2':(type==='rank'?'ranks_list':'holidays_list'))) + '/' + key;
         const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
 
+        // 🛡️ كل زر هنا محمي
         el.innerHTML += `
             <div class="dynamic-item ${isActive?'':'hidden-item'}">
                 <div class="item-info" style="display:flex; align-items:center;">${content}</div>
@@ -274,7 +260,7 @@ function prepareEdit(type, key, item) {
     editKeys[type] = key;
     if(type === 'rank') { 
         fill('rank_name', item.name); fill('rank_ring', item.ring); fill('rank_num', item.rank); fill('rank_msg', item.message); 
-        fill('rank_emoji', item.emoji); // ملء الإيموجي عند التعديل
+        fill('rank_emoji', item.emoji); 
     }
     else if(type === 'card') { fill('card_title', item.title); fill('card_text', item.text); fill('card_color', item.color); fill('card_btn_text', item.btn_text); fill('card_link', item.link); }
     else if(type === 'teacher') { fill('t_name_v2', item.name); fill('t_role_v2', item.role); fill('t_emoji', item.emoji); }
