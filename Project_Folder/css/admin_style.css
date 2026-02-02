@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: css/admin_style.css (V17 - التصميم الأصلي المستقر + النوافذ)
+   ملف: css/admin_style.css (V20 - التصميم الأصلي + إصلاح النوافذ)
    ============================================================ */
 
 /* --- 1. الألوان والمتغيرات الأساسية --- */
@@ -20,7 +20,6 @@ body {
     display: flex; 
     height: 100vh; 
     overflow: hidden; 
-    direction: rtl;
 }
 
 /* --- 3. القائمة الجانبية (Sidebar) --- */
@@ -315,7 +314,6 @@ input:checked + .slider:before { transform: translateX(22px); }
 .btn-edit:hover { background: #d97706; }
 
 .btn-hide { background: #64748b; }   /* رمادي للإخفاء */
-.btn-hide:hover { background: #475569; }
 .btn-hide.active { background: #10b981; } /* أخضر عند التفعيل */
 
 .btn-delete { background: #ef4444; } /* أحمر للحذف */
