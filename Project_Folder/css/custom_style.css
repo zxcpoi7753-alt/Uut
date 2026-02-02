@@ -1,10 +1,10 @@
 /* ============================================================
-   ملف: css/custom_style.css (V18 - إصلاح جذري للإشعارات والختم)
+   ملف: css/custom_style.css (V20 - إصلاح العرض والتصميم)
    ============================================================ */
 
 :root {
-    --primary-color: #047857;
-    --accent-color: #fbbf24;
+    --primary-color: #047857; /* أخضر */
+    --accent-color: #fbbf24;  /* ذهبي */
     --bg-light: #f3f4f6;
     --text-dark: #1f2937;
 }
@@ -15,29 +15,29 @@ body {
     font-family: 'Cairo', sans-serif;
     background-color: var(--bg-light);
     direction: rtl;
-    padding-bottom: 60px;
+    padding-bottom: 60px; /* مسافة للأسفل */
 }
 
 /* ==========================================
-   1. إصلاح الإشعار المنبثق (Popup) 🛠️
+   1. إصلاح النوافذ المنبثقة (الإشعارات) لتكون في الوسط 🛠️
    ========================================== */
-/* يجب أن يكون هذا المعرف مطابقاً لما في HTML (سواء welcome-overlay أو site-notification) */
 #site-notification, #welcome-overlay {
-    position: fixed !important;
+    position: fixed !important; /* تثبيت فوق الصفحة */
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.85); /* تعتيم الخلفية */
-    z-index: 99999999; /* فوق كل شيء */
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85); /* خلفية سوداء شفافة */
+    z-index: 99999999; /* فوق كل العناصر */
     display: none; /* مخفي افتراضياً */
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(4px);
+    justify-content: center; /* توسيط أفقي */
+    align-items: center; /* توسيط عمودي */
+    backdrop-filter: blur(5px); /* تغويش الخلفية */
 }
 
-/* كلاس الإظهار */
-.show-popup {
+/* عندما يتم التفعيل عبر JS */
+#site-notification[style*="display: flex"],
+#welcome-overlay[style*="display: flex"] {
     display: flex !important;
 }
 
@@ -48,43 +48,49 @@ body {
     text-align: center;
     width: 90%;
     max-width: 400px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     border: 3px solid var(--accent-color);
     position: relative;
-    animation: zoomIn 0.3s ease-out;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .notif-title {
     color: var(--primary-color);
-    font-size: 1.5rem;
-    margin-bottom: 10px;
+    font-size: 1.6rem;
+    margin-bottom: 15px;
     font-weight: bold;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
 }
 
 .notif-body {
     color: #333;
     font-size: 1.1rem;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     line-height: 1.6;
 }
 
-/* زر الإغلاق */
+/* زر إغلاق الإشعار */
 .btn-close-popup {
     background: var(--primary-color);
     color: white;
     border: none;
-    padding: 10px 25px;
-    border-radius: 8px;
+    padding: 10px 30px;
+    border-radius: 50px;
     font-size: 1rem;
     cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
 }
+.btn-close-popup:hover { transform: scale(1.05); }
 
-@keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 
 /* ==========================================
-   2. إصلاح أزرار خطة الختم (Accordion) 🧮
+   2. إصلاح أزرار ركن الطالب (Accordion) 🧮
    ========================================== */
+/* الزر الظاهر */
 .accordion-btn {
     background-color: white !important;
     color: var(--primary-color) !important;
@@ -94,107 +100,130 @@ body {
     text-align: right;
     font-weight: bold;
     font-size: 1.1rem;
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
     margin-bottom: 10px;
     transition: all 0.3s ease;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+    overflow: hidden;
 }
 
-.accordion-btn:hover, .accordion-btn.active {
+.accordion-btn:hover {
+    background-color: #f0fdf4 !important;
+    transform: translateY(-2px);
+}
+
+/* حالة النشاط (عند الفتح) */
+.accordion-btn.active {
     background-color: var(--primary-color) !important;
     color: white !important;
-    box-shadow: 0 4px 10px rgba(4, 120, 87, 0.2);
+    box-shadow: 0 5px 15px rgba(4, 120, 87, 0.3);
 }
 
-/* السهم */
-.accordion-btn i { transition: transform 0.3s ease; }
-.accordion-btn.active i { transform: rotate(180deg); }
-
-/* المحتوى المخفي */
+/* المحتوى المخفي (الذي يجب أن يظهر) */
 .accordion-panel {
-    display: none;
+    display: none; /* مخفي أساساً */
     background: white;
     padding: 20px;
-    border: 1px solid #ddd;
+    border: 1px solid #e5e7eb;
     border-top: none;
-    border-radius: 0 0 10px 10px;
-    margin-top: -10px; /* لدمجه مع الزر */
+    border-radius: 0 0 12px 12px;
+    margin-top: -12px; /* تداخل بسيط مع الزر */
     margin-bottom: 20px;
     animation: slideDown 0.3s ease-out;
-}
-
-/* تنسيق حقول الآلة الحاسبة */
-.calc-input {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 1rem;
-}
-
-.calc-btn-action {
-    width: 100%;
-    padding: 12px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
+    position: relative;
+    z-index: 1; /* أسفل الزر */
 }
 
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
+/* تنسيق حقول الآلة الحاسبة */
+.calc-input {
+    width: 100%; padding: 12px; margin: 10px 0;
+    border: 2px solid #e2e8f0; border-radius: 8px;
+    text-align: center; font-size: 1rem; font-weight: bold;
+}
+.calc-btn-action {
+    width: 100%; padding: 12px; background: var(--accent-color); color: #fff;
+    border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
 
 /* ==========================================
-   3. تنسيق الهيدر (العنوان أبيض)
+   3. الهيدر (العنوان أبيض)
    ========================================== */
 header {
     background-color: var(--primary-color) !important;
     border-bottom: 5px solid var(--accent-color) !important;
-    padding: 25px 15px;
+    padding: 20px;
     text-align: center;
     color: white;
 }
 
-#txt_header_title { color: white !important; font-size: 2rem; font-weight: bold; font-family: 'Amiri', serif; margin-bottom: 5px; display: block; }
-#txt_header_subtitle { color: white !important; font-size: 1.1rem; opacity: 0.9; display: block; }
-#txt_header_location { color: white !important; font-size: 0.9rem; margin-top: 5px; opacity: 0.8; display: inline-block; background: rgba(0,0,0,0.1); padding: 2px 10px; border-radius: 15px; }
+#txt_header_title { 
+    color: #ffffff !important; 
+    font-size: 2rem; 
+    font-weight: bold; 
+    font-family: 'Amiri', serif; 
+    margin-bottom: 5px; 
+    display: block;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+#txt_header_subtitle { color: rgba(255,255,255,0.9) !important; display: block; }
+#txt_header_location { 
+    color: rgba(255,255,255,0.8) !important; 
+    font-size: 0.85rem; 
+    background: rgba(0,0,0,0.1); 
+    padding: 2px 10px; 
+    border-radius: 20px; 
+    margin-top: 5px; 
+    display: inline-block;
+}
 
 
 /* ==========================================
    4. الأوائل (الاسم يمين - الشعار يسار)
    ========================================== */
-.rank-group-card { background: white; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e5e7eb; overflow: hidden; }
-.rank-group-header { padding: 12px; font-weight: bold; border-bottom: 3px solid #fbbf24; background: #f8fafc; text-align: center; color: var(--primary-color); }
+.rank-group-card { 
+    background: white; border-radius: 12px; margin-bottom: 20px; 
+    border: 1px solid #e5e7eb; overflow: hidden; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.rank-group-header { 
+    padding: 12px; font-weight: bold; 
+    border-bottom: 3px solid #fbbf24; background: #f8fafc; 
+    text-align: center; color: var(--primary-color); 
+}
 
 .student-list-item {
     display: flex;
     justify-content: space-between; /* تباعد */
     align-items: center;
-    flex-direction: row; /* يمين لليسار */
+    flex-direction: row; /* الاسم يمين */
     background: white; padding: 15px;
     border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: 0.2s;
 }
+.student-list-item:hover { background-color: #f9fafb; padding-right: 20px; }
 
 .student-name-text { font-weight: bold; color: #333; text-align: right; font-size: 1.1rem; }
 .rank-icon { font-size: 1.4rem; }
 
 
 /* ==========================================
-   5. أزرار التواصل (ملونة) + ركن الطالب (شفاف)
+   5. أزرار التواصل وركن الطالب
    ========================================== */
 .nav-btn, .nav-btn-home {
     background: transparent !important;
     border: 2px solid var(--primary-color) !important;
     color: var(--primary-color) !important;
-    padding: 12px; border-radius: 10px; font-weight: bold; display: block; text-align: center; text-decoration: none; margin-bottom: 10px;
+    padding: 12px; border-radius: 10px; font-weight: bold; 
+    display: block; text-align: center; text-decoration: none; margin-bottom: 10px;
 }
 .nav-btn:hover { background: var(--primary-color) !important; color: white !important; }
 
@@ -209,6 +238,7 @@ header {
 .bg-call { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 .bg-map { background: linear-gradient(135deg, #ef4444, #b91c1c); }
 
+
 /* ==========================================
    6. المعلمون
    ========================================== */
@@ -216,3 +246,6 @@ header {
 .teacher-icon { font-size: 1.5rem; color: var(--primary-color); background: #f0f9ff; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
 .teacher-info h4 { margin: 0; font-size: 1.1rem; }
 .teacher-info p { margin: 2px 0 0 0; font-size: 0.9rem; color: #666; }
+
+/* إخفاء نوافذ الأدمن في الموقع العام لتجنب التداخل */
+.custom-modal { display: none; }
