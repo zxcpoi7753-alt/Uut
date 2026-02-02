@@ -1,6 +1,6 @@
 /* ============================================================
    ملف: css/custom_style.css
-   الوظيفة: V14 (التصميم الهجين: شفاف للطلاب + ملون للتواصل)
+   الوظيفة: V15 (الإصلاح النهائي الشامل)
    ============================================================ */
 
 :root {
@@ -11,20 +11,54 @@
 }
 
 /* ==========================================
-   1. النوافذ المنبثقة (Modals) - الأدمن
+   1. إصلاح شاشة الترحيب (المعلقة) 🛠️
    ========================================== */
-.custom-modal {
-    display: none; /* مخفية تماماً */
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.7); /* تعتيم قوي للتركيز */
-    z-index: 99999999;
-    justify-content: center;
+#welcome-overlay {
+    position: fixed !important; /* تثبيت إجباري */
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85); /* تعتيم الخلفية */
+    z-index: 999999999; /* فوق كل شيء */
+    display: none; /* مخفي افتراضياً */
+    justify-content: center; 
     align-items: center;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(5px);
 }
 
-/* لضمان ظهورها عندما يأمر الجافاسكربت */
+.welcome-card {
+    background: white; 
+    padding: 40px; 
+    border-radius: 20px; 
+    text-align: center; 
+    width: 90%; 
+    max-width: 350px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
+    border: 2px solid var(--primary-color);
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.welcome-title { color: var(--primary-color); font-family: 'Amiri', serif; font-size: 2rem; margin: 10px 0; }
+
+
+/* ==========================================
+   2. النوافذ المنبثقة (الحذف - كلمة السر)
+   ========================================== */
+.custom-modal {
+    display: none; 
+    position: fixed; /* تثبيت */
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7); 
+    z-index: 99999999; 
+    justify-content: center; 
+    align-items: center;
+    backdrop-filter: blur(3px);
+}
+
+/* كلاس مساعد للإظهار */
 .custom-modal[style*="display: flex"] {
     display: flex !important;
 }
@@ -37,14 +71,12 @@
     text-align: center;
     box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     border: 3px solid var(--primary-color);
-    animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: popUp 0.3s ease;
 }
 
 .modal-icon { font-size: 3rem; margin-bottom: 15px; display: block; }
 .modal-actions { display: flex; gap: 10px; margin-top: 25px; }
-.modal-actions button { flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; }
-.modal-actions button:hover { transform: scale(1.05); }
-
+.modal-actions button { flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
 .modal-actions .btn-danger { background: #ef4444; color: white; }
 .modal-actions .btn-secondary { background: #e5e7eb; color: #333; }
 .modal-actions .btn-primary { background: var(--primary-color); color: white; }
@@ -53,122 +85,7 @@
 
 
 /* ==========================================
-   2. أزرار "ركن الطالب" (الشفافة) ✨
-   ========================================== */
-.nav-btn, 
-.accordion-btn, 
-.nav-btn-home {
-    background-color: transparent !important;
-    border: 2px solid var(--primary-color) !important;
-    color: var(--primary-color) !important;
-    transition: all 0.3s ease;
-    font-weight: bold;
-    border-radius: 10px;
-}
-
-/* التفعيل والتحويم */
-.nav-btn:hover, 
-.nav-btn.active, 
-.accordion-btn:hover, 
-.accordion-btn.active, 
-.nav-btn-home.active {
-    background-color: var(--primary-color) !important;
-    color: white !important;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-
-/* ==========================================
-   3. أزرار "تواصل معنا" (الملونة) 🎨
-   ========================================== */
-.contact-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.contact-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    border-radius: 15px;
-    color: white !important; /* نص أبيض دائماً */
-    text-decoration: none;
-    font-weight: bold;
-    transition: transform 0.3s;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    border: none !important; /* إلغاء الحدود */
-}
-
-.contact-box:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
-.contact-icon { font-size: 1.8rem; margin-bottom: 5px; }
-
-/* الألوان الثابتة (كما في التصميم القديم) */
-.bg-whatsapp { background: linear-gradient(135deg, #25D366, #128C7E); }
-.bg-insta { background: linear-gradient(135deg, #833AB4, #FD1D1D, #FCAF45); }
-.bg-call { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.bg-map { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-
-
-/* ==========================================
-   4. الهيدر والعناوين
-   ========================================== */
-header {
-    background-color: var(--primary-color) !important;
-    border-bottom: 4px solid var(--accent-color) !important;
-    transition: background-color 0.5s;
-}
-
-/* العناوين تأخذ لون الثيم */
-h1, h2, h3, h4, 
-#txt_news_title, #txt_student_title, #txt_question_title,
-#txt_schedule_title, #txt_teachers_title, 
-#txt_about_title, #txt_contact_title {
-    color: var(--primary-color) !important;
-}
-
-/* ✅ نصوص الهيدر: حرة لتقبل اللون من الأدمن */
-#txt_header_title, 
-#txt_header_subtitle, 
-#txt_header_location {
-    transition: color 0.3s;
-}
-
-
-/* ==========================================
-   5. تنسيق المعلمين (مرتب)
-   ========================================== */
-.teacher-row {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 15px;
-    background: white;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 15px; /* مسافة بين المعلمين */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-    transition: 0.2s;
-}
-.teacher-icon {
-    font-size: 1.5rem;
-    color: var(--primary-color) !important;
-    background: #f0f9ff;
-    width: 50px; height: 50px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.teacher-info h4 { margin: 0; font-size: 1.1rem; color: #333; }
-.teacher-info p { margin: 5px 0 0 0; font-size: 0.9rem; color: #666; }
-
-
-/* ==========================================
-   6. الأوائل (التصميم الجديد + الإيموجي)
+   3. الأوائل (الاسم يمين - الشعار يسار) 🏅
    ========================================== */
 .rank-group-card { 
     background: #f9fafb; border-radius: 15px; margin-bottom: 30px; 
@@ -182,8 +99,11 @@ h1, h2, h3, h4,
 .students-list { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
 
 .student-list-item { 
-    display: flex; align-items: center; justify-content: space-between; 
-    flex-direction: row-reverse; /* الاسم يمين، الترتيب يسار */
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; /* يباعد بين الاسم والشعار */
+    /* الاتجاه الطبيعي للعربي هو اليمين لليسار، لذا الاسم سيكون يمين والشعار يسار */
+    flex-direction: row; 
     background: white; padding: 15px; 
     border-radius: 10px; border: 1px solid #f3f4f6; 
     box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
@@ -192,12 +112,88 @@ h1, h2, h3, h4,
 .student-list-item:hover { transform: translateX(-5px); border-color: var(--primary-color); }
 .student-list-item.pressing { transform: scale(0.98); background-color: #f0fdf4; }
 
-.rank-icon { font-size: 1.4rem; min-width: 35px; text-align: center; }
-.student-name-text { font-weight: bold; font-size: 1.1rem; }
+.rank-icon { font-size: 1.5rem; }
+.student-name-text { font-weight: bold; font-size: 1.1rem; color: #333; }
 
 
 /* ==========================================
-   7. إصلاح أزرار الأدمن (صغيرة)
+   4. الهيدر (العنوان أبيض دائماً)
+   ========================================== */
+header {
+    background-color: var(--primary-color) !important;
+    border-bottom: 4px solid var(--accent-color) !important;
+    padding-top: 20px; /* مسافة للأمان */
+}
+
+/* إجبار العنوان الرئيسي أن يكون أبيض إذا لم يتدخل الأدمن */
+#txt_header_title {
+    color: #ffffff !important; 
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* باقي العناوين تأخذ لون الثيم */
+h1, h2, h3, h4, 
+#txt_news_title, #txt_student_title, #txt_question_title,
+#txt_schedule_title, #txt_teachers_title, 
+#txt_about_title, #txt_contact_title {
+    color: var(--primary-color) !important;
+}
+
+
+/* ==========================================
+   5. أزرار التواصل (ملونة وممتلئة)
+   ========================================== */
+.contact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
+.contact-box {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 20px; border-radius: 15px;
+    color: white !important; text-decoration: none; font-weight: bold;
+    transition: transform 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border: none !important;
+}
+.contact-box:hover { transform: translateY(-5px); }
+.bg-whatsapp { background: linear-gradient(135deg, #25D366, #128C7E); }
+.bg-insta { background: linear-gradient(135deg, #833AB4, #FD1D1D, #FCAF45); }
+.bg-call { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.bg-map { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+
+
+/* ==========================================
+   6. أزرار "ركن الطالب" (شفافة)
+   ========================================== */
+.nav-btn, .accordion-btn, .nav-btn-home {
+    background-color: transparent !important;
+    border: 2px solid var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    transition: all 0.3s ease; font-weight: bold; border-radius: 10px;
+}
+.nav-btn:hover, .nav-btn.active, .accordion-btn:hover, .accordion-btn.active, .nav-btn-home.active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+
+/* ==========================================
+   7. المعلمون
+   ========================================== */
+.teacher-row {
+    display: flex; align-items: center; gap: 15px; padding: 15px;
+    background: white; border-radius: 12px; border: 1px solid #e5e7eb;
+    margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+.teacher-icon {
+    font-size: 1.5rem; color: var(--primary-color) !important;
+    background: #f0f9ff; width: 50px; height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; flex-shrink: 0;
+}
+.teacher-info h4 { margin: 0; font-size: 1.1rem; color: #333; }
+.teacher-info p { margin: 5px 0 0 0; font-size: 0.9rem; color: #666; }
+
+
+/* ==========================================
+   8. أزرار الأدمن (صغيرة)
    ========================================== */
 .action-buttons { display: flex; justify-content: flex-end; gap: 5px; flex-shrink: 0; }
 .btn-icon {
@@ -209,24 +205,8 @@ h1, h2, h3, h4,
 .btn-hide { background-color: #f59e0b; }   
 .btn-delete { background-color: #ef4444; } 
 
-/* ==========================================
-   8. الأساسيات
-   ========================================== */
-#maintenance-mode { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1e293b; color: white; z-index: 2147483647; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-.popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; display: none; justify-content: center; align-items: center; }
-.popup-content { background: white; padding: 30px; border-radius: 15px; max-width: 90%; width: 400px; text-align: center; border: 3px solid var(--accent-color); animation: popUp 0.4s ease; }
-.custom-dynamic-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #eee; border-right-width: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-.time-group-title { background: var(--bg-light); border-right: 5px solid var(--accent-color); padding: 10px 15px; margin: 20px 0 10px 0; font-weight: bold; color: var(--primary-color); border-radius: 5px; font-size: 1.1rem; }
-.ring-accordion-btn { width: 100%; text-align: right; background: white; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; color: #334155; }
-.ring-schedule-panel { display: none; padding: 10px; background: white; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 10px; animation: slideDown 0.3s ease; }
-.schedule-table-simple { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-.schedule-table-simple th, .schedule-table-simple td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-.schedule-table-simple th { background-color: #f1f5f9 !important; color: var(--primary-color) !important; }
-@keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-
 /* من نحن */
 .poetic-text { line-height: 2.2; text-align: center; font-size: 1.1rem; color: #333; padding: 20px; }
-.quran-verse-simple { display: block; margin: 20px 0; font-family: 'Amiri', serif; font-size: 1.5rem; color: var(--primary-color); font-weight: bold; text-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-
+.quran-verse-simple { display: block; margin: 20px 0; font-family: 'Amiri', serif; font-size: 1.5rem; color: var(--primary-color); font-weight: bold; }
 .student-toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: rgba(31, 41, 55, 0.95); color: white; padding: 20px 30px; border-radius: 15px; text-align: center; z-index: 99999; min-width: 250px; opacity: 0; pointer-events: none; transition: all 0.3s; }
 .student-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
