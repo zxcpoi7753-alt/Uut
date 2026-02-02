@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/custom_logic.js (V18 - إصلاح وظائف الأزرار والإشعارات)
+   ملف: js/custom_logic.js (يعمل مع V20 - إصلاح أزرار الطالب)
    ============================================================ */
 
 const firebaseConfig = {
@@ -15,18 +15,18 @@ try {
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // تشغيل الدوال عند تحميل الصفحة
+    // 1. تشغيل الوظائف عند تحميل الصفحة مباشرة
     document.addEventListener('DOMContentLoaded', function() {
-        initAccordion(); // تشغيل القوائم المنسدلة
-        initCalculator(); // تشغيل الآلة الحاسبة
+        console.log("تم تحميل الصفحة، جاري تشغيل الأزرار...");
+        initAccordion();   // تشغيل القوائم المنسدلة (دليلي، خطتي...)
+        initCalculator();  // تشغيل الحاسبة
     });
 
-    // الاتصال بقاعدة البيانات
+    // 2. الاتصال بقاعدة البيانات لجلب المحتوى
     db.ref().on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             applyAllData(data);
-            // التعامل مع الإشعار المنبثق
             if(data.settings) handlePopupNotification(data.settings);
         }
     });
@@ -35,34 +35,47 @@ try {
 
 
 // ============================================================
-// 1. منطق الأكورديون (فتح وإغلاق القوائم) ✅
+// 1. إصلاح أزرار ركن الطالب (Accordion Fix) 🛠️
 // ============================================================
 function initAccordion() {
+    // نحدد كل الأزرار التي لها كلاس accordion-btn
     const accButtons = document.querySelectorAll('.accordion-btn');
+    
+    if(accButtons.length === 0) {
+        console.warn("لم يتم العثور على أزرار accordion-btn");
+        return;
+    }
+
     accButtons.forEach(btn => {
-        // إزالة أي مستمعي أحداث سابقين لتجنب التكرار
+        // تنظيف الأحداث القديمة
         btn.onclick = null;
         
+        // إضافة حدث النقر الجديد
         btn.onclick = function() {
+            console.log("تم ضغط الزر:", this.innerText);
+            
+            // التبديل بين الفتح والإغلاق
             this.classList.toggle('active');
+            
+            // العنصر التالي هو المحتوى (Panel)
             const panel = this.nextElementSibling;
             
-            if (panel.style.display === "block") {
-                panel.style.display = "none";
-                // تغيير السهم (اختياري حسب الـ HTML لديك)
-                const icon = this.querySelector('i');
-                if(icon) icon.className = "fas fa-chevron-down";
+            if (panel) {
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                }
             } else {
-                panel.style.display = "block";
-                const icon = this.querySelector('i');
-                if(icon) icon.className = "fas fa-chevron-up";
+                console.error("لا يوجد محتوى (panel) بعد هذا الزر!");
             }
         };
     });
 }
 
+
 // ============================================================
-// 2. منطق الآلة الحاسبة ✅
+// 2. تشغيل الآلة الحاسبة (My Plan) 🧮
 // ============================================================
 function initCalculator() {
     const calcBtn = document.getElementById('calc-plan-btn');
@@ -76,7 +89,8 @@ function initCalculator() {
             const resultArea = document.getElementById('calc-result-area');
             
             if (totalDays <= 0) {
-                resultArea.innerHTML = "<p style='color:red;'>الرجاء إدخال مدة صحيحة!</p>";
+                resultArea.innerHTML = "<p style='color:red; font-weight:bold;'>⚠️ الرجاء إدخال مدة صحيحة!</p>";
+                resultArea.style.display = 'block';
                 return;
             }
 
@@ -85,108 +99,73 @@ function initCalculator() {
             
             let msg = "";
             if (pagesPerDay < 1) {
-                msg = `لختم القرآن في <strong>${totalDays}</strong> يوم، تحتاج لقراءة جزء بسيط يومياً (أقل من صفحة).`;
+                msg = `لختم القرآن في <strong>${totalDays}</strong> يوم، تحتاج لقراءة أقل من صفحة يومياً.`;
             } else {
-                msg = `تحتاج لقراءة <strong>${Math.ceil(pagesPerDay)}</strong> صفحات يومياً لختم القرآن في الموعد.`;
+                msg = `تحتاج لقراءة <strong>${Math.ceil(pagesPerDay)}</strong> صفحات يومياً.`;
             }
 
             resultArea.innerHTML = `
                 <div style="background:#e6fffa; border:1px solid #047857; padding:15px; border-radius:10px; margin-top:15px;">
-                    <h4 style="margin:0 0 10px 0; color:#047857;">النتيجة:</h4>
-                    <p>${msg}</p>
+                    <h4 style="margin:0 0 10px 0; color:#047857;">📊 النتيجة:</h4>
+                    <p style="font-size:1.1rem;">${msg}</p>
                 </div>`;
             resultArea.style.display = 'block';
         };
     }
 }
 
-// ============================================================
-// 3. منطق الإشعارات المنبثقة (Popups) ✅
-// ============================================================
-function handlePopupNotification(settings) {
-    const popup = document.getElementById('site-notification');
-    // تأكد من وجود العنصر في HTML
-    if (!popup) return;
-
-    // التحقق من "عدم الإظهار مرة أخرى"
-    const dontShow = localStorage.getItem('dont_show_popup_v2'); 
-    
-    if (settings.popup_active === true && dontShow !== 'true') {
-        // إظهار النافذة
-        popup.style.display = 'flex'; // استخدام display:flex للتوسط
-        
-        // تعبئة البيانات
-        const titleEl = document.getElementById('notif-title');
-        const bodyEl = document.getElementById('notif-body');
-        if(titleEl) titleEl.innerText = settings.popup_title || "تنبيه";
-        if(bodyEl) bodyEl.innerText = settings.popup_body || "";
-    } else {
-        popup.style.display = 'none';
-    }
-}
-
-// دالة إغلاق الإشعار (يجب ربطها بزر الإغلاق في HTML)
-window.closeNotification = function() {
-    const popup = document.getElementById('site-notification');
-    if(popup) popup.style.display = 'none';
-    
-    // حفظ خيار عدم الإظهار إذا تم تحديده (اختياري)
-    const checkbox = document.getElementById('popup-forever-check');
-    if(checkbox && checkbox.checked) {
-        localStorage.setItem('dont_show_popup_v2', 'true');
-    }
-};
-
 
 // ============================================================
-// 4. تطبيق البيانات العامة (كما كان سابقاً)
+// 3. الدوال الأساسية (الرسم والعرض)
 // ============================================================
 function applyAllData(data) {
-    data = data || {}; 
-    
-    // الألوان والهيدر
+    data = data || {};
     const s = data.settings || {};
+    
+    // الهيدر والألوان
     const themeColor = s.theme_color || '#047857';
     document.documentElement.style.setProperty('--primary-color', themeColor);
-    document.documentElement.style.setProperty('--accent-color', themeColor); // جعلنا الأكسنت نفس اللون للتبسيط
-    
     const header = document.querySelector('header');
     if(header) header.style.backgroundColor = themeColor;
 
-    // تعبئة النصوص
+    // النصوص
     const c = data.site_content || {};
     setText('txt_header_title', c.txt_header_title, "حلقات الثريا");
-    setColor('txt_header_title', '#ffffff'); // أبيض إجباري
-
     setText('txt_header_subtitle', c.txt_header_subtitle, "لتعليم القرآن الكريم");
-    setColor('txt_header_subtitle', '#ffffff');
-
     setText('txt_header_location', c.txt_header_location, "حضرموت - غيل باوزير");
-    setColor('txt_header_location', '#ffffff');
 
-    // باقي القوائم
-    renderComplexSchedule(data.schedule_complex);
+    // استدعاء دوال الرسم
+    renderRanks(data.ranks_list, s);
     renderTeachers(data.teachers_list_v2, s);
     renderCustomCards(data.custom_cards);
-    renderRanks(data.ranks_list, s);
+    renderComplexSchedule(data.schedule_complex);
     renderHolidays(data.holidays_list);
 }
 
 // دوال مساعدة
-function setText(id, text, def) { const el = document.getElementById(id); if(el) el.innerText = text || def; }
-function setColor(id, color) { const el = document.getElementById(id); if(el) el.style.color = color; }
+function setText(id, text, def) { 
+    const el = document.getElementById(id); 
+    if(el) {
+        el.innerText = text || def; 
+        el.style.color = "#ffffff"; // تثبيت الأبيض للهيدر
+    }
+}
 
-// ============================================================
-// 5. دوال الرسم (Ranks, Teachers...) - نفس المنطق السابق
-// ============================================================
+// رسم الأوائل (يمين - يسار)
 function renderRanks(list, settings) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return; container.innerHTML = '';
-    if(!list) { container.innerHTML = '<p style="text-align:center;">لا يوجد بيانات</p>'; return; }
+    
+    // إنشاء عنصر التوست للتهنئة
+    if(!document.getElementById('student-toast-msg')) { 
+        const t=document.createElement('div'); t.id='student-toast-msg'; t.className='student-toast'; 
+        document.body.appendChild(t); 
+    }
+
+    if(!list) { container.innerHTML = '<p style="text-align:center;">لا توجد بيانات</p>'; return; }
     
     const design = (settings && settings.ranks_design_v8) ? settings.ranks_design_v8 : { header_bg: '#047857', header_text: '#ffffff', student_color: '#333' };
     
-    // تجميع الحلقات
     const groups = {};
     Object.values(list).forEach(r => { if(r.active!==false) { let n=r.ring?r.ring.trim():"عام"; if(!groups[n])groups[n]=[]; groups[n].push(r); } });
     
@@ -198,7 +177,10 @@ function renderRanks(list, settings) {
         
         students.forEach(s => {
             let badge = s.emoji ? s.emoji : (s.rank==1?'🥇':(s.rank==2?'🥈':(s.rank==3?'🥉':'🎖️')));
-            html += `<div class="student-list-item">
+            const safeMsg = (s.message||"مبارك!").replace(/'/g, "\\'"); 
+            const safeName = s.name.replace(/'/g, "\\'");
+            
+            html += `<div class="student-list-item" onclick="showStudentPraise('${safeName}', '${safeMsg}')">
                         <span class="student-name-text" style="color:${design.student_color}">${s.name}</span>
                         <span class="rank-icon">${badge}</span>
                      </div>`;
@@ -209,6 +191,14 @@ function renderRanks(list, settings) {
     });
 }
 
+function showStudentPraise(n,m){ 
+    const t=document.getElementById('student-toast-msg'); 
+    t.innerHTML=`<div style="font-weight:bold;margin-bottom:5px;color:#fbbf24;font-size:1.2rem;">${n}</div><div>${m}</div>`; 
+    t.classList.add('show'); 
+    setTimeout(()=>t.classList.remove('show'),3000); 
+}
+
+// رسم المعلمين
 function renderTeachers(list, settings) {
     const container = document.getElementById('dynamic-teachers-container');
     if(!container) return; container.innerHTML = '';
@@ -226,15 +216,30 @@ function renderTeachers(list, settings) {
     });
 }
 
-function renderCustomCards(list) {
-    const container = document.getElementById('dynamic-custom-cards-container');
-    if(!container) return; container.innerHTML = '';
-    if(!list) return;
-    Object.values(list).forEach(c => {
-        if(c.active===false) return;
-        // هنا يمكن إضافة كود رسم البطاقات حسب تصميمك
-    });
+// التعامل مع الإشعارات
+function handlePopupNotification(settings) {
+    const popup = document.getElementById('site-notification');
+    if (!popup) return;
+    
+    const dontShow = localStorage.getItem('dont_show_popup_v2'); 
+    if (settings.popup_active === true && dontShow !== 'true') {
+        popup.style.display = 'flex';
+        const titleEl = document.getElementById('notif-title');
+        const bodyEl = document.getElementById('notif-body');
+        if(titleEl) titleEl.innerText = settings.popup_title || "تنبيه";
+        if(bodyEl) bodyEl.innerText = settings.popup_body || "";
+    } else {
+        popup.style.display = 'none';
+    }
 }
+window.closeNotification = function() {
+    const popup = document.getElementById('site-notification');
+    if(popup) popup.style.display = 'none';
+    const checkbox = document.getElementById('popup-forever-check');
+    if(checkbox && checkbox.checked) localStorage.setItem('dont_show_popup_v2', 'true');
+};
 
-function renderComplexSchedule(d) { /* كود الجداول السابق */ }
-function renderHolidays(l) { /* كود الإجازات السابق */ }
+// دوال فارغة لتجنب الأخطاء إذا لم تكن البيانات موجودة
+function renderCustomCards(l){}
+function renderComplexSchedule(d){}
+function renderHolidays(l){}
