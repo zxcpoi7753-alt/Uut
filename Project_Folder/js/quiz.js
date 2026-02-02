@@ -48,8 +48,6 @@ async function startQuiz() {
 
 function generateQuestion() {
     const type = document.getElementById('quiz-type').value;
-    // اختيار عشوائي بسيط الآن لضمان العمل
-    // (الكود الكامل يعتمد على quran.json المعقد)
     
     // سنستخدم الأسئلة الثابتة مؤقتاً لضمان عمل الزر، حتى نربط quran.json بدقة
     const questions = [
