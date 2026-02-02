@@ -1,5 +1,5 @@
 /* ============================================================
-   ملف: js/custom_logic.js (V13 - الثيم الذكي + الاستعادة الشفافة)
+   ملف: js/custom_logic.js (V15 - إصلاح الهيدر وترتيب الأوائل)
    ============================================================ */
 
 const firebaseConfig = {
@@ -25,7 +25,6 @@ try {
     db.ref().on('value', (snapshot) => {
         const data = snapshot.val();
         if (!data) {
-            // حالة ضبط المصنع (بيانات فارغة)
             localStorage.removeItem('site_cache_v3');
             applyAllData({}); 
         } else {
@@ -61,6 +60,8 @@ function handleSmartWelcome(settings) {
     if (!settings || !settings.welcome_screen || settings.welcome_screen.active !== true) return;
     const lastSeen = localStorage.getItem('welcome_last_seen_time');
     const now = new Date().getTime();
+    
+    // يظهر كل 12 ساعة
     if ((now - (lastSeen || 0)) > (12 * 60 * 60 * 1000)) {
         showWelcomeOverlay(settings.welcome_screen);
         localStorage.setItem('welcome_last_seen_time', now);
@@ -69,33 +70,40 @@ function handleSmartWelcome(settings) {
 
 function showWelcomeOverlay(config) {
     const overlay = document.getElementById('welcome-overlay'); if(!overlay) return;
+    
     document.getElementById('welcome-title').innerText = config.title || "أهلاً بك";
     let message = config.message || "نورتنا يا {name}";
     message = message.replace("{name}", localStorage.getItem('studentName') || "يا بطل");
     document.getElementById('welcome-text').innerText = message;
+    
+    // إظهار النافذة
     overlay.style.display = 'flex';
-    setTimeout(() => { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 500); }, 3000);
+    
+    // الإخفاء التلقائي بعد 3 ثواني
+    setTimeout(() => { 
+        overlay.style.opacity = '0'; 
+        setTimeout(() => overlay.style.display = 'none', 500); 
+    }, 3000);
 }
 
 
 // ============================================================
-// [SECTION 3]: الإعدادات وتطبيق الثيم الذكي
+// [SECTION 3]: الإعدادات وتطبيق الثيم
 // ============================================================
 
 function applySettings(data) {
     const s = data.settings || {}; 
 
     // 🎨 تطبيق الثيم الذكي
-    // الافتراضي هو الأخضر إذا لم يوجد لون
     const themeColor = s.theme_color || '#047857';
-    
-    // نرسل اللون لمتغيرات CSS
     document.documentElement.style.setProperty('--primary-color', themeColor);
-    
-    // لون الأكسنت (Accent) يكون نفس الرئيسي أو مشتق منه
     document.documentElement.style.setProperty('--accent-color', themeColor);
 
-    // 2. وضع الصيانة
+    // فرض لون الخلفية للهيدر فقط
+    const header = document.querySelector('header');
+    if(header) header.style.backgroundColor = themeColor;
+
+    // وضع الصيانة
     const maint = document.getElementById('maintenance-mode');
     if(s.maintenance_mode === true) {
         maint.style.display = 'flex';
@@ -107,19 +115,20 @@ function applySettings(data) {
         document.querySelector('header').style.display = 'block';
     }
 
-    // 3. الإشعارات
+    // الإشعارات
     const popup = document.getElementById('site-notification');
     const dontShow = localStorage.getItem('dont_show_popup');
     if(s.popup_active === true && dontShow !== 'true') {
         setTimeout(() => {
              const overlay = document.getElementById('welcome-overlay');
+             // لا نظهر الإشعار إلا بعد اختفاء الترحيب
              if(overlay.style.display === 'none' || overlay.style.opacity === '0') popup.style.display = 'flex';
         }, 3500);
         setSafeTxt('notif-title', s.popup_title, "تنبيه هام");
         setSafeTxt('notif-body', s.popup_body, "...");
     } else { popup.style.display = 'none'; }
 
-    // 4. إظهار/إخفاء الأقسام
+    // إظهار/إخفاء الأقسام
     toggleSection('block-news', s.show_news);
     toggleSection('block-student', s.show_student);
     toggleSection('block-question', s.show_question);
@@ -146,10 +155,10 @@ function applyContent(data) {
         setSafeTxt('top-student-desc', data.top_student.category, "..."); 
     }
     
-    // نصوص الموقع الأساسية (مع احترام الألوان الخاصة)
+    // نصوص الموقع
     const c = data.site_content || {};
     
-    // العناوين: نطبق النص، ثم نطبق اللون إذا وجد، وإلا نستخدم الأبيض (#ffffff) كافتراضي للهيدر
+    // ✅ الحل النهائي للون العنوان: استخدام الأبيض كافتراضي قوي
     setSafeTxt('txt_header_title', c.txt_header_title, "حلقات الثريا");
     applyColor('txt_header_title', c.col_header_title, '#ffffff');
 
@@ -159,7 +168,7 @@ function applyContent(data) {
     setSafeTxt('txt_header_location', c.txt_header_location, "حضرموت - غيل باوزير");
     applyColor('txt_header_location', c.col_header_location, '#ffffff');
     
-    // باقي العناوين (تتبع الثيم العام)
+    // باقي العناوين (تتبع الثيم)
     setSafeTxt('txt_news_title', c.txt_news_title, "📢 آخر الأخبار");
     setSafeTxt('txt_student_title', c.txt_student_title, "نجم الأسبوع");
     setSafeTxt('txt_question_title', c.txt_question_title, "❓ السؤال الأسبوعي");
@@ -193,7 +202,6 @@ function renderCustomCards(list) {
         if(card.active === false) return;
         const div = document.createElement('div');
         div.className = 'custom-dynamic-card';
-        // البطاقات تستخدم لونها الخاص، وليس الثيم العام دائماً
         div.style.borderRightColor = card.color || '#3b82f6';
         div.innerHTML = `<h3 style="color:${card.color || '#333'}">${card.title}</h3><p style="white-space: pre-line;">${card.text}</p>`;
         if(card.link) div.innerHTML += `<a href="${card.link}" target="_blank" class="nav-btn" style="margin-top:10px; border-color:${card.color}; color:${card.color}; width:auto; display:inline-block;">${card.btn_text || 'اضغط هنا'}</a>`;
@@ -216,6 +224,7 @@ function renderTeachers(list, settings) {
     });
 }
 
+// ⭐ رسم الأوائل (تعديل الهيكل لضمان الترتيب الصحيح)
 function renderRanks(list, settings) {
     const container = document.getElementById('dynamic-ranks-list');
     if(!container) return; container.innerHTML = '';
@@ -226,14 +235,25 @@ function renderRanks(list, settings) {
     
     const groups = {};
     Object.values(list).forEach(r => { if(r.active===false)return; let n=r.ring?r.ring.trim():"حلقات عامة"; if(!groups[n])groups[n]=[]; groups[n].push(r); });
+    
     Object.keys(groups).sort().forEach(ringName => {
         const students = groups[ringName].sort((a,b) => a.rank - b.rank);
+        
         const card = document.createElement('div'); card.className = 'rank-group-card';
         let html = `<div class="rank-group-header" style="background-color:${design.header_bg}; color:${design.header_text}; font-size:${design.ring_size}rem; text-align:center;">${ringName}</div><div class="students-list">`;
+        
         students.forEach(s => {
-            let medal = s.rank==1?'🥇':(s.rank==2?'🥈':(s.rank==3?'🥉':'🔹'));
-            const safeMsg = (s.message||"مبارك التفوق!").replace(/'/g, "\\'"); const safeName = s.name.replace(/'/g, "\\'");
-            html += `<div class="student-list-item" style="color:${design.student_color}; font-size:${design.name_size}rem; text-align:right;" oncontextmenu="return false;" ontouchstart="handleTouchStart(this,'${safeName}','${safeMsg}')" ontouchend="handleTouchEnd(this)" onmousedown="handleTouchStart(this,'${safeName}','${safeMsg}')" onmouseup="handleTouchEnd(this)"><span class="rank-icon">${medal}</span><span class="student-name-text">${s.name}</span></div>`;
+            let displayBadge = s.emoji ? s.emoji : (s.rank==1?'🥇':(s.rank==2?'🥈':(s.rank==3?'🥉':'🎖️')));
+            const safeMsg = (s.message||"مبارك التفوق!").replace(/'/g, "\\'"); 
+            const safeName = s.name.replace(/'/g, "\\'");
+            
+            // ✅ الهيكل الجديد: الاسم أولاً (يمين) - الشعار ثانياً (يسار)
+            html += `<div class="student-list-item" style="color:${design.student_color}; font-size:${design.name_size}rem;" oncontextmenu="return false;" ontouchstart="handleTouchStart(this,'${safeName}','${safeMsg}')" ontouchend="handleTouchEnd(this)" onmousedown="handleTouchStart(this,'${safeName}','${safeMsg}')" onmouseup="handleTouchEnd(this)">
+                        <span class="student-name-text">${s.name}</span>
+                        <div class="rank-badge-container">
+                            <span class="rank-icon">${displayBadge}</span>
+                        </div>
+                     </div>`;
         });
         html += '</div>'; card.innerHTML = html; container.appendChild(card);
     });
@@ -265,12 +285,4 @@ function toggleSection(id,s){const e=document.getElementById(id);if(e)e.style.di
 function closePopup(){document.getElementById('site-notification').style.display='none';}
 function disablePopupForever(){if(document.getElementById('popup-forever-check').checked){localStorage.setItem('dont_show_popup','true');alert("تم!");closePopup();}}
 function openLoginModal(){document.getElementById('login-modal').style.display='flex';}
-function secureLogin(){const u=document.getElementById('admin-user').value;const p=document.getElementById('admin-pass').value;if(!u||!p)return alert("أدخل البيانات");firebase.auth().signInWithEmailAndPassword(u,p).then(()=>window.location.href="admin.html").catch(e=>alert("خطأ: "+e.message));}
-
-function applyColor(id, color, defaultColor) {
-    const el = document.getElementById(id);
-    if(el) {
-        // نطبق اللون فقط إذا كان موجوداً، وإلا نستخدم الافتراضي
-        el.style.color = (color && color !== "") ? color : defaultColor;
-    }
-}
+function secureLogin(){const u=document.getElementById('admin-user').value;const p=document.getElementById('admin-pass').value;if(!u||!p)return alert("أدخل البيانات");firebase.auth().signInWithEmailAndPassword(u,p).then
