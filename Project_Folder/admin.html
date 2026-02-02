@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم V14</title>
+    <title>لوحة التحكم V15 (محمية بالكامل)</title>
     
     <link rel="stylesheet" href="css/admin_style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -15,7 +15,7 @@
     <div id="toast-container" class="toast-container"></div>
 
     <aside class="sidebar">
-        <div class="brand"><i class="fas fa-user-shield"></i> الإدارة V14</div>
+        <div class="brand"><i class="fas fa-shield-alt"></i> الإدارة V15</div>
         <ul class="menu">
             <li><a onclick="showTab('tab-general')" class="active"><i class="fas fa-sliders-h"></i> الإعدادات والثيم</a></li>
             <li><a onclick="showTab('tab-sections')"><i class="fas fa-eye"></i> الأقسام</a></li>
@@ -43,21 +43,20 @@
                 <h3><i class="fas fa-palette"></i> ألوان الموقع</h3>
                 <div class="form-grid" style="grid-template-columns: 1fr auto; align-items: end; gap: 15px;">
                     <div class="form-group">
-                        <label>اللون الرئيسي (للأزرار والعناوين):</label>
+                        <label>اللون الرئيسي:</label>
                         <input type="color" id="main_theme_color" class="input-field" style="height:45px; padding:2px;" value="#047857">
                     </div>
-                    <button onclick="protectedAction(restoreOriginalDesign)" class="btn btn-secondary" style="height:45px; white-space:nowrap; border:1px solid #ccc;">
-                        <i class="fas fa-history"></i> استعادة التصميم الأصلي
+                    <button onclick="protectedAction(restoreOriginalDesign)" class="btn btn-secondary" style="height:45px; border:1px solid #ccc;">
+                        <i class="fas fa-history"></i> استعادة الأصلي
                     </button>
                 </div>
             </div>
 
             <div class="card">
-                <h3><i class="fas fa-heading"></i> نصوص الهيدر وألوانها</h3>
-                <p style="font-size:0.85rem; color:gray;">تنبيه: اختر اللون الذي تريده للنص، وسيظهر كما هو في الموقع.</p>
+                <h3><i class="fas fa-heading"></i> نصوص الهيدر</h3>
                 
                 <div class="form-group">
-                    <label>العنوان الرئيسي (حلقات الثريا):</label>
+                    <label>العنوان الرئيسي (أبيض افتراضياً):</label>
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="inp_header_title" class="input-field" placeholder="حلقات الثريا">
                         <input type="color" id="col_header_title" class="input-field" style="width:60px; height:42px; padding:2px;" value="#ffffff">
@@ -65,7 +64,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>الوصف (لتعليم القرآن...):</label>
+                    <label>الوصف:</label>
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="inp_header_subtitle" class="input-field" placeholder="لتعليم القرآن الكريم">
                         <input type="color" id="col_header_subtitle" class="input-field" style="width:60px; height:42px; padding:2px;" value="#ffffff">
@@ -73,7 +72,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>الموقع (غيل باوزير...):</label>
+                    <label>الموقع:</label>
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="inp_header_location" class="input-field" placeholder="حضرموت - غيل باوزير">
                         <input type="color" id="col_header_location" class="input-field" style="width:60px; height:42px; padding:2px;" value="#ffffff">
@@ -81,13 +80,13 @@
                 </div>
 
                 <div class="form-group"><label>فيديو الخلفية:</label><input type="text" id="inp_video" class="input-field"></div>
-                <button onclick="protectedAction(saveGeneral)" class="btn btn-primary" style="margin-top:15px;">💾 حفظ التعديلات</button>
+                <button onclick="protectedAction(saveGeneral)" class="btn btn-primary" style="margin-top:15px;">💾 حفظ التعديلات 🔒</button>
             </div>
 
             <div class="card border-red">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div><strong><i class="fas fa-power-off"></i> وضع الصيانة</strong></div>
-                    <label class="switch"><input type="checkbox" id="toggle_maint"><span class="slider"></span></label>
+                    <label class="switch"><input type="checkbox" id="toggle_maint" onchange="protectedAction(saveGeneral)"><span class="slider"></span></label>
                 </div>
             </div>
 
@@ -95,14 +94,13 @@
                 <h3><i class="fas fa-hand-sparkles"></i> الترحيب</h3>
                 <div style="margin-bottom:10px;"><label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="welcome_active"> تفعيل</label></div>
                 <div class="form-grid"><input type="text" id="welcome_title_inp" class="input-field" placeholder="العنوان"><input type="text" id="welcome_msg_inp" class="input-field" placeholder="الرسالة"></div>
-                <button onclick="protectedAction(saveWelcomeSettings)" class="btn btn-success" style="margin-top:10px;">حفظ</button>
+                <button onclick="protectedAction(saveWelcomeSettings)" class="btn btn-success" style="margin-top:10px;">حفظ 🔒</button>
             </div>
 
             <div class="card" style="border: 2px solid #ef4444; background: #fff5f5; margin-top:30px;">
                 <h3 style="color:#dc2626;"><i class="fas fa-lock"></i> منطقة الخطر</h3>
-                <p style="color:#7f1d1d; font-size:0.9rem;">تحذير: هذا الخيار يحذف قاعدة البيانات بالكامل.</p>
                 <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button onclick="protectedAction(secureFactoryReset)" class="btn btn-danger" style="flex:1;">⚠️ تصفير الموقع بالكامل</button>
+                    <button onclick="protectedAction(secureFactoryReset)" class="btn btn-danger" style="flex:1;">⚠️ تصفير الموقع بالكامل 🔒</button>
                 </div>
             </div>
         </div>
@@ -116,7 +114,7 @@
                 <div class="dynamic-item"><span>🏆 أوائل الحلقات</span><label class="switch"><input type="checkbox" id="show_ranks"><span class="slider"></span></label></div>
                 <div class="dynamic-item"><span>📅 الجداول</span><label class="switch"><input type="checkbox" id="show_schedule"><span class="slider"></span></label></div>
                 <div class="dynamic-item"><span>👨‍🏫 المعلمون</span><label class="switch"><input type="checkbox" id="show_teachers"><span class="slider"></span></label></div>
-                <button onclick="protectedAction(saveSections)" class="btn btn-primary">💾 حفظ الحالة</button>
+                <button onclick="protectedAction(saveSections)" class="btn btn-primary">💾 حفظ الحالة 🔒</button>
             </div>
         </div>
 
@@ -126,7 +124,7 @@
                 <div class="form-grid"><div class="form-group"><label>العنوان:</label><input type="text" id="card_title" class="input-field"></div><div class="form-group"><label>اللون:</label><input type="color" id="card_color" class="input-field" style="height:45px;" value="#3b82f6"></div></div>
                 <div class="form-group"><label>النص:</label><textarea id="card_text" class="input-field" rows="3"></textarea></div>
                 <div class="form-grid"><div class="form-group"><label>نص الزر:</label><input type="text" id="card_btn_text" class="input-field"></div><div class="form-group"><label>الرابط:</label><input type="text" id="card_link" class="input-field"></div></div>
-                <button onclick="protectedAction(addCustomCard)" class="btn btn-success"><i class="fas fa-plus"></i> إضافة</button>
+                <button onclick="protectedAction(addCustomCard)" class="btn btn-success"><i class="fas fa-plus"></i> إضافة 🔒</button>
             </div>
             <div class="card"><h3><i class="fas fa-th-list"></i> البطاقات الحالية</h3><div id="custom-cards-list-admin"></div></div>
         </div>
@@ -136,7 +134,7 @@
                 <h3><i class="fas fa-calendar-plus"></i> إضافة حلقة</h3>
                 <div class="form-grid"><div class="form-group"><label>الوقت:</label><select id="comp_sch_time" class="input-field"><option value="time_1">☀️ عصر</option><option value="time_2">🌙 مغرب</option></select></div><div class="form-group"><label>الاسم:</label><input type="text" id="comp_sch_name" class="input-field"></div></div>
                 <div class="form-grid" style="background:#f8fafc; padding:15px; margin-top:10px;"><div class="form-group"><label>السبت:</label><input type="text" id="d_sat" class="input-field"></div><div class="form-group"><label>الأحد:</label><input type="text" id="d_sun" class="input-field"></div><div class="form-group"><label>الاثنين:</label><input type="text" id="d_mon" class="input-field"></div><div class="form-group"><label>الثلاثاء:</label><input type="text" id="d_tue" class="input-field"></div><div class="form-group"><label>الأربعاء:</label><input type="text" id="d_wed" class="input-field"></div><div class="form-group"><label>الخميس:</label><input type="text" id="d_thu" class="input-field"></div></div>
-                <button onclick="protectedAction(addComplexSchedule)" class="btn btn-success" style="margin-top:15px;"><i class="fas fa-plus"></i> إضافة</button>
+                <button onclick="protectedAction(addComplexSchedule)" class="btn btn-success" style="margin-top:15px;"><i class="fas fa-plus"></i> إضافة 🔒</button>
             </div>
             <div class="card"><h3><i class="fas fa-list-alt"></i> الجداول الحالية</h3><div id="complex-schedule-list-admin"></div></div>
         </div>
@@ -147,13 +145,13 @@
                 <div class="form-group">
                     <label style="display:flex; justify-content:space-between;"><span>المسافة:</span><span id="t_spacing_display" style="font-weight:bold; color:#0369a1;">15px</span></label>
                     <input type="range" id="t_spacing_range" min="10" max="60" step="5" class="input-field" oninput="document.getElementById('t_spacing_display').innerText = this.value + 'px'">
-                    <button onclick="protectedAction(saveTeacherSettings)" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ المسافة</button>
+                    <button onclick="protectedAction(saveTeacherSettings)" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ المسافة 🔒</button>
                 </div>
             </div>
             <div class="card border-blue">
                 <h3><i class="fas fa-user-plus"></i> إضافة معلم</h3>
                 <div class="form-grid"><div class="form-group"><label>الاسم:</label><input type="text" id="t_name_v2" class="input-field"></div><div class="form-group"><label>الدور:</label><input type="text" id="t_role_v2" class="input-field"></div><div class="form-group"><label>الأيقونة:</label><input type="text" id="t_emoji" class="input-field" placeholder="👑"></div></div>
-                <button onclick="protectedAction(addTeacherV2)" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة</button>
+                <button onclick="protectedAction(addTeacherV2)" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة 🔒</button>
             </div>
             <div class="card"><h3><i class="fas fa-users"></i> القائمة</h3><div id="teachers-list-v2-admin"></div></div>
         </div>
@@ -168,7 +166,7 @@
                     <div class="form-group"><label>حجم خط الحلقة:</label><input type="range" id="d_ring_size" min="1" max="2.5" step="0.1" value="1.2" class="input-field"></div>
                     <div class="form-group" style="grid-column: span 2;"><label>حجم خط الطالب:</label><input type="range" id="d_name_size" min="0.8" max="2" step="0.1" value="1.0" class="input-field"></div>
                 </div>
-                <button onclick="protectedAction(saveRankDesign)" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ الألوان</button>
+                <button onclick="protectedAction(saveRankDesign)" class="btn btn-primary" style="margin-top:10px; width:100%;">💾 حفظ الألوان 🔒</button>
             </div>
             <div class="card border-green">
                 <h3><i class="fas fa-medal"></i> إضافة طالب</h3>
@@ -179,7 +177,7 @@
                     <div class="form-group"><label>إيموجي (اختياري):</label><input type="text" id="rank_emoji" class="input-field" placeholder="🏅"></div>
                     <div class="form-group" style="grid-column: span 2;"><label>رسالة التهنئة:</label><input type="text" id="rank_msg" class="input-field" placeholder="مبارك لك التفوق..."></div>
                 </div>
-                <button onclick="protectedAction(addRank)" class="btn btn-success"><i class="fas fa-plus"></i> إضافة / حفظ</button>
+                <button onclick="protectedAction(addRank)" class="btn btn-success"><i class="fas fa-plus"></i> إضافة / حفظ 🔒</button>
             </div>
             <div class="card"><h3><i class="fas fa-list-ol"></i> القائمة الحالية</h3><div id="ranks-list-admin"></div></div>
         </div>
@@ -187,36 +185,36 @@
         <div id="tab-holidays" class="panel">
             <div class="card border-red">
                 <h3><i class="fas fa-umbrella-beach"></i> إضافة إجازة</h3>
-                <div class="form-grid"><div class="form-group"><label>النص:</label><input type="text" id="holiday_txt" class="input-field"></div><button onclick="protectedAction(addHoliday)" class="btn btn-danger"><i class="fas fa-plus"></i> إضافة</button></div>
+                <div class="form-grid"><div class="form-group"><label>النص:</label><input type="text" id="holiday_txt" class="input-field"></div><button onclick="protectedAction(addHoliday)" class="btn btn-danger"><i class="fas fa-plus"></i> إضافة 🔒</button></div>
             </div>
             <div class="card"><h3><i class="fas fa-list"></i> القائمة</h3><div id="holidays-list-admin"></div></div>
         </div>
 
         <div id="tab-news" class="panel">
-            <div class="card"><h3><i class="fas fa-bullhorn"></i> الأخبار</h3><textarea id="inp_news_bar" class="input-field" rows="3"></textarea><button onclick="protectedAction(saveNewsBar)" class="btn btn-primary" style="margin-top:10px;">تحديث</button></div>
-            <div class="card"><h3><i class="fas fa-question-circle"></i> السؤال</h3><div class="form-group"><label>السؤال:</label><textarea id="inp_q_text" class="input-field" rows="2"></textarea></div><div class="form-group"><label>الفائز:</label><input type="text" id="inp_q_winner" class="input-field"></div><button onclick="protectedAction(saveQuestion)" class="btn btn-primary">تحديث</button></div>
+            <div class="card"><h3><i class="fas fa-bullhorn"></i> الأخبار</h3><textarea id="inp_news_bar" class="input-field" rows="3"></textarea><button onclick="protectedAction(saveNewsBar)" class="btn btn-primary" style="margin-top:10px;">تحديث 🔒</button></div>
+            <div class="card"><h3><i class="fas fa-question-circle"></i> السؤال</h3><div class="form-group"><label>السؤال:</label><textarea id="inp_q_text" class="input-field" rows="2"></textarea></div><div class="form-group"><label>الفائز:</label><input type="text" id="inp_q_winner" class="input-field"></div><button onclick="protectedAction(saveQuestion)" class="btn btn-primary">تحديث 🔒</button></div>
             <div class="card">
                 <h3><i class="fas fa-info-circle"></i> من نحن</h3>
                 <p style="color:gray; font-size:0.9rem;">تلميح: الآيات بين قوسين { }.</p>
                 <textarea id="inp_about_content" class="input-field" rows="8"></textarea>
-                <button onclick="protectedAction(saveAbout)" class="btn btn-primary" style="margin-top:10px;">حفظ</button>
+                <button onclick="protectedAction(saveAbout)" class="btn btn-primary" style="margin-top:10px;">حفظ 🔒</button>
             </div>
         </div>
     </div>
 
-    <div id="confirm-modal" class="custom-modal" style="display:none !important;">
+    <div id="confirm-modal" class="custom-modal modal-hidden">
         <div class="custom-modal-content">
             <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
             <h3>تأكيد الحذف</h3>
             <p>هل أنت متأكد؟ لا يمكن التراجع.</p>
             <div class="modal-actions">
-                <button onclick="protectedAction(confirmAction)" class="btn btn-danger">نعم، احذف</button>
+                <button onclick="confirmAction()" class="btn btn-danger">نعم، احذف</button>
                 <button onclick="closeModal()" class="btn btn-secondary">إلغاء</button>
             </div>
         </div>
     </div>
 
-    <div id="security-modal" class="custom-modal" style="display:none !important;">
+    <div id="security-modal" class="custom-modal modal-hidden">
         <div class="custom-modal-content" style="border-color: #3b82f6;">
             <div class="modal-icon" style="color: #3b82f6;"><i class="fas fa-lock"></i></div>
             <h3>نظام الحماية</h3>
@@ -229,7 +227,7 @@
         </div>
     </div>
 
-    <div id="logout-modal" class="custom-modal" style="display:none !important;">
+    <div id="logout-modal" class="custom-modal modal-hidden">
         <div class="custom-modal-content" style="border-color: #fca5a5;">
             <div class="modal-icon" style="color: #fca5a5;"><i class="fas fa-sign-out-alt"></i></div>
             <h3>تسجيل الخروج</h3>
