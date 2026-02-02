@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم V15 (محمية بالكامل)</title>
+    <title>لوحة التحكم V20</title>
     
-    <link rel="stylesheet" href="css/admin_style.css">
+    <link rel="stylesheet" href="css/admin_style.css?v=20">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
-<body style="display: none;">
-
+<body> 
     <div id="toast-container" class="toast-container"></div>
 
     <aside class="sidebar">
-        <div class="brand"><i class="fas fa-shield-alt"></i> الإدارة V15</div>
+        <div class="brand"><i class="fas fa-shield-alt"></i> الإدارة V20</div>
         <ul class="menu">
             <li><a onclick="showTab('tab-general')" class="active"><i class="fas fa-sliders-h"></i> الإعدادات والثيم</a></li>
             <li><a onclick="showTab('tab-sections')"><i class="fas fa-eye"></i> الأقسام</a></li>
@@ -202,19 +201,19 @@
         </div>
     </div>
 
-    <div id="confirm-modal" class="custom-modal modal-hidden">
+    <div id="confirm-modal" class="custom-modal">
         <div class="custom-modal-content">
             <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
             <h3>تأكيد الحذف</h3>
             <p>هل أنت متأكد؟ لا يمكن التراجع.</p>
             <div class="modal-actions">
                 <button onclick="confirmAction()" class="btn btn-danger">نعم، احذف</button>
-                <button onclick="closeModal()" class="btn btn-secondary">إلغاء</button>
+                <button onclick="closeModal('confirm-modal')" class="btn btn-secondary">إلغاء</button>
             </div>
         </div>
     </div>
 
-    <div id="security-modal" class="custom-modal modal-hidden">
+    <div id="security-modal" class="custom-modal">
         <div class="custom-modal-content" style="border-color: #3b82f6;">
             <div class="modal-icon" style="color: #3b82f6;"><i class="fas fa-lock"></i></div>
             <h3>نظام الحماية</h3>
@@ -227,14 +226,14 @@
         </div>
     </div>
 
-    <div id="logout-modal" class="custom-modal modal-hidden">
+    <div id="logout-modal" class="custom-modal">
         <div class="custom-modal-content" style="border-color: #fca5a5;">
             <div class="modal-icon" style="color: #fca5a5;"><i class="fas fa-sign-out-alt"></i></div>
             <h3>تسجيل الخروج</h3>
             <p>هل تريد الخروج من لوحة التحكم؟</p>
             <div class="modal-actions">
                 <button onclick="performLogout()" class="btn btn-danger">نعم، خروج</button>
-                <button onclick="closeLogoutModal()" class="btn btn-secondary">بقاء</button>
+                <button onclick="closeModal('logout-modal')" class="btn btn-secondary">بقاء</button>
             </div>
         </div>
     </div>
@@ -242,6 +241,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="js/admin_logic.js"></script>
+    <script src="js/admin_logic.js?v=20"></script>
 </body>
 </html>
