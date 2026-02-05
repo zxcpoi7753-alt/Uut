@@ -200,3 +200,4 @@ function findPageNumber(sNum, aNum) {
 function resetQuiz() {
     document.getElementById('quiz-area').style.display = 'none';
 }
+
