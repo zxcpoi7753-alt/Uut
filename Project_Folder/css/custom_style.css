@@ -1,251 +1,186 @@
 /* ============================================================
-   ملف: css/custom_style.css (V20 - إصلاح العرض والتصميم)
+   ملف: js/logic.js (V34 - متوافق مع CSS 100%)
    ============================================================ */
 
-:root {
-    --primary-color: #047857; /* أخضر */
-    --accent-color: #fbbf24;  /* ذهبي */
-    --bg-light: #f3f4f6;
-    --text-dark: #1f2937;
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("جاري تهيئة النظام V34...");
+    
+    buildNavigationMenu();
+    populateJuzuDropdowns();
+    if(typeof startVerseTicker === 'function') startVerseTicker();
+    
+    // استرجاع الثيم
+    if(localStorage.getItem('site_theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        const btn = document.getElementById('theme-btn');
+        if(btn) btn.innerText = "☀️";
+    }
+
+    // --- إصلاح سحري للأزرار ---
+    // هذا الكود يبحث عن كل زر أكورديون ويعيد ربط الحدث يدوياً
+    // لضمان أنه سيعمل حتى لو كان هناك تضارب سابق
+    const accButtons = document.querySelectorAll('.accordion-btn');
+    accButtons.forEach(btn => {
+        btn.onclick = function() { toggleAccordion(this); };
+    });
+});
+
+// ==========================================
+// 1. وظيفة الأكورديون (ركن الطالب) - المعدلة
+// ==========================================
+window.toggleAccordion = function(btn) {
+    // 1. تبديل كلاس النشاط للزر
+    btn.classList.toggle("active");
+    
+    // 2. العثور على العنصر التالي (اللوحة)
+    const panel = btn.nextElementSibling;
+    const arrow = btn.querySelector('span');
+
+    // 3. التبديل باستخدام style.display الصريح لتجاوز أي CSS
+    if (panel.style.display === "block") {
+        panel.style.display = "none";
+        if(arrow) arrow.innerText = "▼";
+    } else {
+        panel.style.display = "block";
+        if(arrow) arrow.innerText = "▲";
+        
+        // تحسين: تمرير الشاشة قليلاً لرؤية المحتوى إذا كان في الأسفل
+        setTimeout(() => {
+            const rect = panel.getBoundingClientRect();
+            if(rect.bottom > window.innerHeight) {
+                window.scrollBy({ top: 100, behavior: 'smooth' });
+            }
+        }, 300);
+    }
+};
+
+// ==========================================
+// 2. وظيفة فتح القائمة الجانبية
+// ==========================================
+window.toggleNavMenu = function() {
+    const grid = document.getElementById('nav-menu-grid');
+    const btn = document.querySelector('.nav-expand-btn');
+    const arrow = document.getElementById('nav-arrow');
+    
+    if(!grid) return;
+    if(grid.children.length === 0) buildNavigationMenu();
+
+    // استخدام كلاس visible المتوافق مع layout.css
+    if (grid.classList.contains('visible')) {
+        grid.classList.remove('visible');
+        setTimeout(() => grid.classList.add('hidden'), 400); 
+        if(btn) btn.classList.remove('open');
+        if(arrow) arrow.style.transform = "rotate(0deg)";
+    } else {
+        grid.classList.remove('hidden');
+        setTimeout(() => grid.classList.add('visible'), 10);
+        if(btn) btn.classList.add('open');
+        if(arrow) arrow.style.transform = "rotate(180deg)";
+    }
+};
+
+// ==========================================
+// 3. دوال التنقل
+// ==========================================
+window.showSection = function(sectionId) {
+    document.querySelectorAll('.page-section').forEach(s => {
+        s.style.display = 'none';
+        s.classList.remove('active');
+    });
+
+    const target = document.getElementById(`section-${sectionId}`);
+    if(target) {
+        target.style.display = 'block';
+        setTimeout(() => target.classList.add('active'), 10);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    const grid = document.getElementById('nav-menu-grid');
+    if(grid && grid.classList.contains('visible')) toggleNavMenu();
+    
+    const homeBtn = document.querySelector('.nav-btn-home');
+    if(homeBtn) {
+        if(sectionId === 'home') homeBtn.classList.add('active');
+        else homeBtn.classList.remove('active');
+    }
+
+    if(sectionId === 'student' && typeof preloadQuranData === 'function') preloadQuranData();
+};
+
+function buildNavigationMenu() {
+    const navGrid = document.getElementById('nav-menu-grid');
+    if(!navGrid) return;
+    const menus = [
+        { id: 'ranks', text: '🏆 الأوائل' },
+        { id: 'schedule', text: '📅 الجداول' },
+        { id: 'teachers', text: '👨‍🏫 المعلمون' },
+        { id: 'student', text: '📖 ركن الطالب' },
+        { id: 'myname', text: '🏷️ بطاقتي' },
+        { id: 'about', text: '🕌 من نحن' }
+    ];
+    navGrid.innerHTML = ''; 
+    menus.forEach(menu => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        btn.innerText = menu.text;
+        btn.onclick = () => showSection(menu.id);
+        navGrid.appendChild(btn);
+    });
 }
 
-body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Cairo', sans-serif;
-    background-color: var(--bg-light);
-    direction: rtl;
-    padding-bottom: 60px; /* مسافة للأسفل */
+// ==========================================
+// 4. بقية الوظائف المساعدة
+// ==========================================
+window.openLoginModal = function() {
+    const modal = document.getElementById('login-modal');
+    if(modal) modal.style.display = 'flex';
+};
+
+window.setQuranTheme = function(theme) {
+    const display = document.getElementById('quran-text-display');
+    const area = document.getElementById('reading-area');
+    if(!display) return;
+    if(theme === 'yellow') {
+        if(area) area.style.backgroundColor = "#fdf6e3";
+        display.style.backgroundColor = "#fdf6e3";
+        display.style.color = "#5b4636";
+    } else {
+        if(area) area.style.backgroundColor = "#ffffff";
+        display.style.backgroundColor = "#ffffff";
+        display.style.color = "#333";
+    }
+    showToast("تم تغيير اللون 🎨");
+};
+
+function populateJuzuDropdowns() {
+    const ids = ['skip-juzu-calc1', 'skip-juzu-calc2', 'quiz-juz'];
+    ids.forEach(id => {
+        const select = document.getElementById(id);
+        if(select && select.options.length <= 1) {
+            for(let i=1; i<=30; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.innerText = `الجزء ${i}`;
+                select.appendChild(opt);
+            }
+        }
+    });
 }
 
-/* ==========================================
-   1. إصلاح النوافذ المنبثقة (الإشعارات) لتكون في الوسط 🛠️
-   ========================================== */
-#site-notification, #welcome-overlay {
-    position: fixed !important; /* تثبيت فوق الصفحة */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85); /* خلفية سوداء شفافة */
-    z-index: 99999999; /* فوق كل العناصر */
-    display: none; /* مخفي افتراضياً */
-    justify-content: center; /* توسيط أفقي */
-    align-items: center; /* توسيط عمودي */
-    backdrop-filter: blur(5px); /* تغويش الخلفية */
-}
+window.showToast = function(msg, type='info') {
+    const box = document.getElementById('toast-container');
+    if(!box) return;
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerText = msg;
+    box.appendChild(t);
+    setTimeout(() => t.style.opacity='1', 10);
+    setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),500); }, 3000);
+};
 
-/* عندما يتم التفعيل عبر JS */
-#site-notification[style*="display: flex"],
-#welcome-overlay[style*="display: flex"] {
-    display: flex !important;
-}
-
-.popup-content, .welcome-card {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    text-align: center;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    border: 3px solid var(--accent-color);
-    position: relative;
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.notif-title {
-    color: var(--primary-color);
-    font-size: 1.6rem;
-    margin-bottom: 15px;
-    font-weight: bold;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
-}
-
-.notif-body {
-    color: #333;
-    font-size: 1.1rem;
-    margin-bottom: 25px;
-    line-height: 1.6;
-}
-
-/* زر إغلاق الإشعار */
-.btn-close-popup {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 50px;
-    font-size: 1rem;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
-}
-.btn-close-popup:hover { transform: scale(1.05); }
-
-@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-
-/* ==========================================
-   2. إصلاح أزرار ركن الطالب (Accordion) 🧮
-   ========================================== */
-/* الزر الظاهر */
-.accordion-btn {
-    background-color: white !important;
-    color: var(--primary-color) !important;
-    border: 2px solid var(--primary-color) !important;
-    padding: 15px 20px;
-    width: 100%;
-    text-align: right;
-    font-weight: bold;
-    font-size: 1.1rem;
-    border-radius: 12px;
-    cursor: pointer;
-    margin-bottom: 10px;
-    transition: all 0.3s ease;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.accordion-btn:hover {
-    background-color: #f0fdf4 !important;
-    transform: translateY(-2px);
-}
-
-/* حالة النشاط (عند الفتح) */
-.accordion-btn.active {
-    background-color: var(--primary-color) !important;
-    color: white !important;
-    box-shadow: 0 5px 15px rgba(4, 120, 87, 0.3);
-}
-
-/* المحتوى المخفي (الذي يجب أن يظهر) */
-.accordion-panel {
-    display: none; /* مخفي أساساً */
-    background: white;
-    padding: 20px;
-    border: 1px solid #e5e7eb;
-    border-top: none;
-    border-radius: 0 0 12px 12px;
-    margin-top: -12px; /* تداخل بسيط مع الزر */
-    margin-bottom: 20px;
-    animation: slideDown 0.3s ease-out;
-    position: relative;
-    z-index: 1; /* أسفل الزر */
-}
-
-@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* تنسيق حقول الآلة الحاسبة */
-.calc-input {
-    width: 100%; padding: 12px; margin: 10px 0;
-    border: 2px solid #e2e8f0; border-radius: 8px;
-    text-align: center; font-size: 1rem; font-weight: bold;
-}
-.calc-btn-action {
-    width: 100%; padding: 12px; background: var(--accent-color); color: #fff;
-    border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-}
-
-
-/* ==========================================
-   3. الهيدر (العنوان أبيض)
-   ========================================== */
-header {
-    background-color: var(--primary-color) !important;
-    border-bottom: 5px solid var(--accent-color) !important;
-    padding: 20px;
-    text-align: center;
-    color: white;
-}
-
-#txt_header_title { 
-    color: #ffffff !important; 
-    font-size: 2rem; 
-    font-weight: bold; 
-    font-family: 'Amiri', serif; 
-    margin-bottom: 5px; 
-    display: block;
-    text-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-#txt_header_subtitle { color: rgba(255,255,255,0.9) !important; display: block; }
-#txt_header_location { 
-    color: rgba(255,255,255,0.8) !important; 
-    font-size: 0.85rem; 
-    background: rgba(0,0,0,0.1); 
-    padding: 2px 10px; 
-    border-radius: 20px; 
-    margin-top: 5px; 
-    display: inline-block;
-}
-
-
-/* ==========================================
-   4. الأوائل (الاسم يمين - الشعار يسار)
-   ========================================== */
-.rank-group-card { 
-    background: white; border-radius: 12px; margin-bottom: 20px; 
-    border: 1px solid #e5e7eb; overflow: hidden; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-.rank-group-header { 
-    padding: 12px; font-weight: bold; 
-    border-bottom: 3px solid #fbbf24; background: #f8fafc; 
-    text-align: center; color: var(--primary-color); 
-}
-
-.student-list-item {
-    display: flex;
-    justify-content: space-between; /* تباعد */
-    align-items: center;
-    flex-direction: row; /* الاسم يمين */
-    background: white; padding: 15px;
-    border-bottom: 1px solid #f1f5f9;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.student-list-item:hover { background-color: #f9fafb; padding-right: 20px; }
-
-.student-name-text { font-weight: bold; color: #333; text-align: right; font-size: 1.1rem; }
-.rank-icon { font-size: 1.4rem; }
-
-
-/* ==========================================
-   5. أزرار التواصل وركن الطالب
-   ========================================== */
-.nav-btn, .nav-btn-home {
-    background: transparent !important;
-    border: 2px solid var(--primary-color) !important;
-    color: var(--primary-color) !important;
-    padding: 12px; border-radius: 10px; font-weight: bold; 
-    display: block; text-align: center; text-decoration: none; margin-bottom: 10px;
-}
-.nav-btn:hover { background: var(--primary-color) !important; color: white !important; }
-
-.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-.contact-box {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 15px; border-radius: 12px; color: white !important;
-    text-decoration: none; font-weight: bold;
-}
-.bg-whatsapp { background: linear-gradient(135deg, #25D366, #128C7E); }
-.bg-insta { background: linear-gradient(135deg, #833AB4, #FD1D1D, #FCAF45); }
-.bg-call { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.bg-map { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-
-
-/* ==========================================
-   6. المعلمون
-   ========================================== */
-.teacher-row { display: flex; align-items: center; gap: 15px; padding: 15px; background: white; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 10px; }
-.teacher-icon { font-size: 1.5rem; color: var(--primary-color); background: #f0f9ff; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-.teacher-info h4 { margin: 0; font-size: 1.1rem; }
-.teacher-info p { margin: 2px 0 0 0; font-size: 0.9rem; color: #666; }
-
-/* إخفاء نوافذ الأدمن في الموقع العام لتجنب التداخل */
-.custom-modal { display: none; }
+window.alert = function(m) { showToast(m); };
+window.closePopup = function() { document.getElementById('site-notification').style.display='none'; };
+window.toggleTheme = function() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('site_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+};
