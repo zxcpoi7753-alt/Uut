@@ -1,262 +1,201 @@
-// js/quran_app.js - المصحف (النسخة النهائية: خط + تلميحات + حدود التكبير)
+/* ============================================================
+   ملف: js/quran_app.js (V30 - الإصدار المطور)
+   الوظيفة: تشغيل المصحف، البحث بالآيات، ونظام العلامات المرجعية
+   ============================================================ */
 
-let fullQuranData = null; 
-let isQuranLoading = false; 
-let currentFontSize = 1.3; // حجم الخط الافتراضي (rem)
+let fullQuranData = null;
+let currentFontSize = 1.3; // الحجم الافتراضي
+let isDataLoading = false;
 
-// 1. دالة التحميل المسبق
+// 1. التحميل المسبق للبيانات لضمان السرعة
 async function preloadQuranData() {
-    if (fullQuranData || isQuranLoading) return; 
-    
-    isQuranLoading = true;
+    if (fullQuranData || isDataLoading) return;
+    isDataLoading = true;
     try {
         const response = await fetch('quran.json');
-        if(!response.ok) throw new Error("فشل التحميل المسبق");
         fullQuranData = await response.json();
         renderSurahGrid();
-        console.log("تم تحميل بيانات المصحف في الخلفية بنجاح ✅");
+        console.log("تم تحميل بيانات المصحف بنجاح ✅");
     } catch (e) {
-        console.warn("فشل التحميل المسبق.", e);
+        console.error("خطأ في تحميل بيانات المصحف:", e);
     } finally {
-        isQuranLoading = false;
+        isDataLoading = false;
     }
 }
 
-// 2. دالة فتح تطبيق المصحف
+// 2. فتح تطبيق المصحف
 async function openQuranApp() {
-    const container = document.getElementById('quran-app-container');
-    const btn = document.querySelector('.accordion-btn[onclick="openQuranApp()"]');
-
-    // أ. الإغلاق الانسيابي
-    if (container.classList.contains('active-panel')) {
-        container.style.maxHeight = container.scrollHeight + "px"; // تثبيت الارتفاع
-        setTimeout(() => {
-            container.style.maxHeight = null; // إغلاق
-            container.classList.remove('active-panel');
-            if(btn) btn.classList.remove('active-acc');
-        }, 10);
-        return; 
-    }
-
-    // ب. الفتح
-    container.style.display = 'block';
-    container.classList.add('active-panel');
-    if(btn) btn.classList.add('active-acc');
-    
-    container.style.maxHeight = "800px"; // ارتفاع مبدئي
-
-    // ج. التحقق من البيانات
-    if (fullQuranData) {
-        renderSurahGrid(); 
-        setTimeout(() => { 
-            container.style.maxHeight = container.scrollHeight + 50 + "px"; 
-        }, 200);
-        return;
-    }
-
-    // د. التحميل (إذا لم يحمل مسبقاً)
-    const grid = document.getElementById('surah-grid');
-    try {
-        if(grid) grid.innerHTML = '<div style="text-align:center; padding:20px; color:var(--primary-color);">⏳ جاري تحميل المصحف...</div>';
-
-        isQuranLoading = true;
-        const response = await fetch('quran.json');
-        if(!response.ok) throw new Error(`Status: ${response.status}`);
-        
-        fullQuranData = await response.json();
-        renderSurahGrid(); 
-        setTimeout(() => { container.style.maxHeight = container.scrollHeight + 50 + "px"; }, 100);
-        if(window.showToast) window.showToast("تم تحميل المصحف", "success");
-        
-    } catch (error) {
-        console.error(error);
-        if(grid) grid.innerHTML = `<div style="color:red; text-align:center; padding:15px;">خطأ: ${error.message}</div>`;
-    } finally {
-        isQuranLoading = false;
-    }
+    await preloadQuranData();
+    document.getElementById('surah-grid').style.display = 'grid';
+    document.getElementById('reading-area').style.display = 'none';
 }
 
-// 3. التحكم في حجم الخط (معدل مع تنبيهات)
-function changeFontSize(step) {
-    // التحقق من الحدود قبل التغيير
-    if (step > 0 && currentFontSize >= 3.0) {
-        if(window.showToast) window.showToast("⚠️ وصلت لأكبر حجم للخط", "info");
-        return;
-    }
-    if (step < 0 && currentFontSize <= 0.8) {
-         if(window.showToast) window.showToast("⚠️ وصلت لأصغر حجم للخط", "info");
-         return;
-    }
-
-    currentFontSize += (step * 0.1); 
-    
-    // تأكيد الحدود رقمياً
-    if(currentFontSize < 0.8) currentFontSize = 0.8;
-    if(currentFontSize > 3.0) currentFontSize = 3.0;
-
-    const textDiv = document.getElementById('quran-text-display');
-    if(textDiv) {
-        textDiv.style.fontSize = currentFontSize + "rem";
-    }
-}
-
-// 4. رسم شبكة السور
-function renderSurahGrid(filter = "") {
+// 3. عرض شبكة السور
+function renderSurahGrid(filteredList = null) {
     const grid = document.getElementById('surah-grid');
-    if(!grid) return;
-    grid.innerHTML = "";
-    
-    if(typeof SURAH_NAMES === 'undefined') return;
+    if (!grid) return;
+    grid.innerHTML = '';
 
-    SURAH_NAMES.forEach((name, index) => {
-        if (index === 0) return;
-        if (filter && !name.includes(filter)) return;
+    // استخدام الأسماء من SURAH_NAMES (data.js) أو من JSON
+    const list = filteredList || Object.keys(fullQuranData || {});
 
-        const box = document.createElement('div');
-        box.className = 'surah-box';
-        box.innerHTML = `<span class="surah-number">${index}</span> ${name}`;
-        box.onclick = () => loadSurah(index);
-        grid.appendChild(box);
+    list.forEach(num => {
+        const s = fullQuranData[num];
+        const card = document.createElement('div');
+        card.className = 'surah-card';
+        card.innerHTML = `
+            <div class="surah-num">${num}</div>
+            <div class="surah-info">
+                <h4>${s.name}</h4>
+                <span>${s.ayahCount} آية</span>
+            </div>
+        `;
+        card.onclick = () => loadSurah(num);
+        grid.appendChild(card);
     });
 }
 
-// 5. البحث
-function filterSurahs() {
-    const query = document.getElementById('quran-search').value;
-    renderSurahGrid(query);
-}
-
-// 6. القراءة
-function loadSurah(surahIndex) {
-    if(!fullQuranData) return;
+// 4. البحث عن سورة
+window.filterSurahs = function() {
+    const term = document.getElementById('quran-search-surah').value.trim();
+    if (!fullQuranData) return;
     
-    const surahData = fullQuranData[surahIndex.toString()];
-    if(!surahData) return;
+    const filtered = Object.keys(fullQuranData).filter(num => 
+        fullQuranData[num].name.includes(term) || num.toString() === term
+    );
+    renderSurahGrid(filtered);
+};
+
+// 5. البحث العميق بنص الآية (ميزة جديدة)
+window.searchByAyahText = function() {
+    const term = document.getElementById('quran-search-ayah').value.trim();
+    const grid = document.getElementById('surah-grid');
+    
+    if (term.length < 3) {
+        if(term.length === 0) renderSurahGrid();
+        return;
+    }
+
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">جاري البحث عن الآية...</p>';
+    
+    let resultsHtml = '';
+    let count = 0;
+
+    Object.keys(fullQuranData).forEach(sNum => {
+        fullQuranData[sNum].ayahs.forEach(ayah => {
+            if (ayah.text.includes(term)) {
+                count++;
+                if (count > 20) return; // تحديد النتائج لسرعة العرض
+                resultsHtml += `
+                    <div class="search-result-item" onclick="loadSurah(${sNum}, ${ayah.num})">
+                        <strong>سورة ${fullQuranData[sNum].name} (آية ${ayah.num}):</strong>
+                        <p class="quran-verse-small">"...${ayah.text}..."</p>
+                    </div>`;
+            }
+        });
+    });
+
+    if (count === 0) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">لم يتم العثور على نتائج للآية.</p>';
+    } else {
+        grid.innerHTML = `<div style="grid-column: 1/-1;">${resultsHtml}</div>`;
+    }
+};
+
+// 6. عرض السورة المختار (مع دعم العلامة المرجعية)
+window.loadSurah = function(surahNum, highlightAyah = null) {
+    const s = fullQuranData[surahNum];
+    if (!s) return;
 
     document.getElementById('surah-grid').style.display = 'none';
     document.getElementById('reading-area').style.display = 'block';
-    
-    // إظهار تلميح الحفظ
-    const tip = document.getElementById('bookmark-tip');
-    if(tip) tip.style.display = 'block';
+    document.getElementById('current-surah-title').innerText = `سورة ${s.name}`;
 
-    const controls = document.querySelector('.quran-header-controls');
-    if(controls) controls.style.display = 'none';
-    
-    document.getElementById('current-surah-title').innerText = `سورة ${surahData.name}`;
-    
-    // تحديث ارتفاع الحاوية
-    const container = document.getElementById('quran-app-container');
-    if(container) {
-         setTimeout(() => {
-             container.style.maxHeight = container.scrollHeight + 50 + "px";
-         }, 50);
+    const display = document.getElementById('quran-text-display');
+    display.innerHTML = '';
+
+    // البسملة (لغير التوبة والفاتحة)
+    if (surahNum !== "1" && surahNum !== "9") {
+        display.innerHTML += `<div class="basmala">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>`;
     }
 
-    const contentDiv = document.getElementById('quran-text-display');
-    contentDiv.innerHTML = "";
-    // تطبيق حجم الخط الحالي
-    contentDiv.style.fontSize = currentFontSize + "rem";
-
-    if(surahIndex !== 1 && surahIndex !== 9) {
-        contentDiv.innerHTML += `<div style="text-align:center; margin-bottom:20px; font-size:1.3rem; color:var(--primary-color); font-family:'Amiri', serif;">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>`;
-    }
-
-    let fullText = "";
-    surahData.ayahs.forEach(ayah => {
-        fullText += `
-            <span class="ayah-span" id="ayah-${surahIndex}-${ayah.num}">
-                ${ayah.text} 
-                <span class="quran-symbol">(${ayah.num})</span>
-                <span class="bookmark-btn" onclick="saveBookmark(${surahIndex}, ${ayah.num})" title="حفظ الموضع">🔖</span>
-            </span> 
+    s.ayahs.forEach(ayah => {
+        const ayahSpan = document.createElement('span');
+        ayahSpan.id = `ayah-${surahNum}-${ayah.num}`;
+        ayahSpan.className = 'ayah-text';
+        ayahSpan.style.fontSize = currentFontSize + 'rem';
+        
+        // زر العلامة المرجعية بجانب كل آية
+        ayahSpan.innerHTML = `
+            ${ayah.text} 
+            <span class="ayah-end" onclick="saveBookmark(${surahNum}, ${ayah.num})">
+                (${ayah.num}) <i class="bookmark-icon">🔖</i>
+            </span>
         `;
-    });
-    contentDiv.innerHTML += fullText;
-    
-    // تمرير ناعم
-    const readingArea = document.getElementById('reading-area');
-    if(readingArea) readingArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
+        
+        if (highlightAyah && ayah.num === highlightAyah) {
+            ayahSpan.classList.add('highlight-ayah');
+        }
 
-function closeReading() {
+        display.appendChild(ayahSpan);
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    if (highlightAyah) {
+        setTimeout(() => {
+            const el = document.getElementById(`ayah-${surahNum}-${highlightAyah}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 500);
+    }
+};
+
+// 7. نظام العلامة المرجعية (Bookmark)
+window.saveBookmark = function(sNum, aNum) {
+    const bookmark = { sNum, aNum, sName: fullQuranData[sNum].name };
+    localStorage.setItem('quran_bookmark', JSON.stringify(bookmark));
+    showToast(`تم حفظ العلامة المرجعية: سورة ${bookmark.sName} آية ${aNum} 🔖`, "success");
+};
+
+window.goToBookmark = function() {
+    const saved = localStorage.getItem('quran_bookmark');
+    if (!saved) {
+        showToast("لا توجد علامة مرجعية محفوظة بعد.", "info");
+        return;
+    }
+    const b = JSON.parse(saved);
+    loadSurah(b.sNum, b.aNum);
+};
+
+// 8. التحكم في حجم الخط والرجوع
+window.changeFontSize = function(delta) {
+    currentFontSize += delta * 0.1;
+    if (currentFontSize < 1) currentFontSize = 1;
+    if (currentFontSize > 3) currentFontSize = 3;
+    
+    document.querySelectorAll('.ayah-text').forEach(el => {
+        el.style.fontSize = currentFontSize + 'rem';
+    });
+};
+
+window.closeReading = function() {
     document.getElementById('reading-area').style.display = 'none';
     document.getElementById('surah-grid').style.display = 'grid';
-    
-    const controls = document.querySelector('.quran-header-controls');
-    if(controls) controls.style.display = 'flex';
-    
-    const container = document.getElementById('quran-app-container');
-    if(container) {
-        setTimeout(() => {
-            container.style.maxHeight = container.scrollHeight + 50 + "px";
-        }, 50);
-    }
-}
+};
 
-// 7. الحفظ والمنبه والدعاء
-function saveBookmark(surah, ayah) {
-    localStorage.setItem('quranBookmark', JSON.stringify({ surah, ayah }));
-    if(window.showToast) window.showToast(`تم حفظ: سورة ${SURAH_NAMES[surah]} - آية ${ayah}`, "success");
-}
+// 9. دالة تغيير لون الصفحة (يستدعيها index.html)
+window.setQuranTheme = function(theme) {
+    const display = document.getElementById('quran-text-display');
+    const readingArea = document.getElementById('reading-area');
+    if (!display || !readingArea) return;
 
-function goToBookmark() {
-    const saved = localStorage.getItem('quranBookmark');
-    if(!saved) {
-        if(window.showToast) window.showToast("لم تحفظ أي موضع بعد", "info");
-        return;
-    }
-    const { surah, ayah } = JSON.parse(saved);
-    const jump = () => {
-        loadSurah(surah);
-        setTimeout(() => scrollToAyah(surah, ayah), 300);
-    };
-
-    if(fullQuranData) jump();
-    else openQuranApp().then(() => setTimeout(() => { if(fullQuranData) jump(); }, 500));
-}
-
-function scrollToAyah(surah, ayah) {
-    const el = document.getElementById(`ayah-${surah}-${ayah}`);
-    if(el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.style.backgroundColor = "rgba(251, 191, 36, 0.4)";
-        el.style.borderRadius = "5px";
-        setTimeout(() => el.style.backgroundColor = "transparent", 2000);
-    }
-}
-
-function setStudyAlarm() {
-    const timeInput = document.getElementById('alarm-time').value;
-    if(!timeInput) {
-        if(window.showToast) window.showToast("اختر وقتاً أولاً", "error");
-        return;
-    }
-    if ("Notification" in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                localStorage.setItem('studyAlarm', timeInput);
-                if(window.showToast) window.showToast(`تم الضبط على: ${timeInput}`, "success");
-                if(!window.alarmInterval) checkAlarmLoop(timeInput);
-            } else {
-                alert("يجب السماح بالإشعارات.");
-            }
-        });
+    if (theme === 'yellow') {
+        readingArea.style.backgroundColor = "#fdf6e3";
+        display.style.backgroundColor = "#fdf6e3";
+        display.style.color = "#5b4636";
     } else {
-        alert("متصفحك لا يدعم التنبيهات.");
+        readingArea.style.backgroundColor = "#ffffff";
+        display.style.backgroundColor = "#ffffff";
+        display.style.color = "var(--text-dark)";
     }
-}
-
-function checkAlarmLoop(time) {
-    window.alarmInterval = setInterval(() => {
-        const now = new Date();
-        const current = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-        if (current === time) {
-            new Notification("حلقات الثريا", { body: "حان وقت وردك القرآني!", icon: "1768411699920.png" });
-        }
-    }, 60000);
-}
-
-function showDuaa() {
-    alert("اللهم ارحمني بالقرآن واجعله لي إماماً ونوراً وهدىً ورحمة...");
-}
+};
