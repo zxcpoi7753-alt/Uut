@@ -1,10 +1,10 @@
 /* ============================================================
-   ملف: js/logic.js (V30 - المحرك الرئيسي المطور)
-   الوظيفة: التحكم في القوائم، الألوان، التنبيهات، والتهيئة
+   ملف: js/logic.js (V31 - الإصدار المصلح والكامل)
+   الوظيفة: التحكم في القوائم، الألوان، التنبيهات، نافذة الأدمن
    ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("جاري تهيئة محرك الواجهة V30...");
+    console.log("جاري تهيئة محرك الواجهة V31...");
 
     // 1. تعبئة قوائم تخطي الأجزاء (1-30) في الحاسبات
     populateJuzuDropdowns();
@@ -21,11 +21,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 1. وظائف التنقل وفتح الأقسام (حل مشكلة التعليق)
+// 1. وظائف التنقل وفتح الأقسام + الأدمن (القسم المعدل)
 // ==========================================
 
+// --- إضافة هامة: دالة فتح نافذة الأدمن (كانت ناقصة) ---
+window.openLoginModal = function() {
+    const modal = document.getElementById('login-modal');
+    if(modal) {
+        modal.style.display = 'flex'; // استخدام flex لتوسط النافذة
+        console.log("تم فتح نافذة الدخول ✅");
+    } else {
+        console.error("خطأ: نافذة الدخول غير موجودة في HTML");
+    }
+};
+
+// دالة التنقل بين الأقسام (تم تحسينها)
 window.showSection = function(sectionId) {
-    // إخفاء كل الأقسام
+    console.log("محاولة فتح القسم:", sectionId);
+
+    // إخفاء كل الأقسام أولاً
     document.querySelectorAll('.page-section').forEach(s => {
         s.classList.remove('active');
         s.style.display = 'none';
@@ -37,39 +51,48 @@ window.showSection = function(sectionId) {
         target.classList.add('active');
         target.style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        console.error(`القسم section-${sectionId} غير موجود!`);
     }
 
-    // إدارة حالة زر الرئيسية
+    // إدارة حالة زر الرئيسية (تنشيط/إلغاء تنشيط)
     const homeBtn = document.querySelector('.nav-btn-home');
-    if(sectionId === 'home') homeBtn?.classList.add('active');
-    else homeBtn?.classList.remove('active');
+    if(homeBtn) {
+        if(sectionId === 'home') homeBtn.classList.add('active');
+        else homeBtn.classList.remove('active');
+    }
 
-    // إغلاق القائمة الجانبية للموبايل بعد الاختيار
+    // إغلاق القائمة الجانبية للموبايل تلقائياً بعد الاختيار
     const grid = document.getElementById('nav-menu-grid');
     if (grid && grid.classList.contains('visible')) {
         toggleNavMenu();
     }
     
-    // تحميل بيانات المصحف إذا دخل المستخدم ركن الطالب
+    // تحميل بيانات المصحف مسبقاً إذا دخل المستخدم ركن الطالب
     if(sectionId === 'student' && typeof preloadQuranData === 'function') {
         preloadQuranData();
     }
 };
 
+// دالة القائمة المنسدلة (تم تحسينها لمنع الأخطاء)
 window.toggleNavMenu = function() {
     const grid = document.getElementById('nav-menu-grid');
     const btn = document.querySelector('.nav-expand-btn');
     const arrow = document.getElementById('nav-arrow');
     
+    if(!grid) return; // حماية من الأخطاء
+    
     if (grid.classList.contains('visible')) {
+        // إغلاق القائمة
         grid.classList.remove('visible');
         setTimeout(() => grid.classList.add('hidden'), 400); 
-        btn.classList.remove('open');
+        if(btn) btn.classList.remove('open');
         if(arrow) arrow.style.transform = "rotate(0deg)";
     } else {
+        // فتح القائمة
         grid.classList.remove('hidden');
         setTimeout(() => grid.classList.add('visible'), 10);
-        btn.classList.add('open');
+        if(btn) btn.classList.add('open');
         if(arrow) arrow.style.transform = "rotate(180deg)";
     }
 };
@@ -118,12 +141,16 @@ function populateJuzuDropdowns() {
 
 window.setQuranTheme = function(theme) {
     const display = document.getElementById('quran-text-display');
+    const readingArea = document.getElementById('reading-area');
+    
     if(!display) return;
 
     if(theme === 'yellow') {
+        if(readingArea) readingArea.style.backgroundColor = "#fdf6e3";
         display.style.backgroundColor = "#fdf6e3"; // لون الورق الأصفر
         display.style.color = "#5b4636";
     } else {
+        if(readingArea) readingArea.style.backgroundColor = "#ffffff";
         display.style.backgroundColor = "#ffffff";
         display.style.color = "var(--text-dark)";
     }
@@ -155,11 +182,12 @@ window.showToast = function(message, type = 'info') {
     }, 4000);
 };
 
-// استبدال الـ Alert القديم
+// استبدال الـ Alert القديم بـ Toast أجمل
 window.alert = function(msg) { showToast(msg, 'info'); };
 
 window.closePopup = function() {
-    document.getElementById('site-notification').style.display = 'none';
+    const popup = document.getElementById('site-notification');
+    if(popup) popup.style.display = 'none';
 };
 
 // ==========================================
@@ -168,8 +196,10 @@ window.closePopup = function() {
 
 function buildNavigationMenu() {
     const navGrid = document.getElementById('nav-menu-grid');
-    if(!navGrid || typeof siteData === 'undefined') return;
+    // نتأكد من وجود العنصر ومن وجود بيانات القوائم (siteData قد تكون في data.js)
+    if(!navGrid) return;
 
+    // تعريف القوائم يدوياً لضمان العمل حتى لو لم يتم تحميل data.js بشكل صحيح
     const menus = [
         { id: 'ranks', text: '🏆 الأوائل' },
         { id: 'schedule', text: '📅 الجداول' },
@@ -184,7 +214,8 @@ function buildNavigationMenu() {
         const btn = document.createElement('button');
         btn.className = 'nav-btn'; 
         btn.innerText = menu.text;
-        btn.onclick = () => showSection(menu.id);
+        // استخدام window.showSection لضمان الوصول للدالة
+        btn.onclick = () => window.showSection(menu.id);
         navGrid.appendChild(btn);
     });
 }
