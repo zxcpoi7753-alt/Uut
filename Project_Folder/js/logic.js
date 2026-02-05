@@ -1,26 +1,29 @@
 /* ============================================================
-   ملف: js/logic.js (V32 - الإصلاح النهائي للقوائم)
-   الوظيفة: إجبار القوائم على الفتح وبناء العناصر يدوياً
+   ملف: js/logic.js (V33 - الإصلاح المتوافق مع CSS)
    ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("جاري تهيئة النظام V32...");
+    console.log("جاري تهيئة النظام V33...");
     
-    // تشغيل الدوال الأساسية
-    populateJuzuDropdowns();
-    if(typeof startVerseTicker === 'function') startVerseTicker();
-
-    // بناء القائمة فوراً عند التحميل
+    // 1. بناء القائمة فوراً
     buildNavigationMenu();
 
-    // استرجاع الثيم
+    // 2. تعبئة قوائم الأجزاء
+    populateJuzuDropdowns();
+
+    // 3. تشغيل شريط الآيات
+    if(typeof startVerseTicker === 'function') startVerseTicker();
+
+    // 4. استرجاع الثيم
     if(localStorage.getItem('site_theme') === 'dark') {
         document.body.classList.add('dark-mode');
+        const btn = document.getElementById('theme-btn');
+        if(btn) btn.innerText = "☀️";
     }
 });
 
 // ==========================================
-// 1. وظيفة فتح قائمة "بقية الأقسام" (الحل الجذري)
+// 1. وظيفة فتح قائمة "بقية الأقسام" (الحل الصحيح)
 // ==========================================
 window.toggleNavMenu = function() {
     const grid = document.getElementById('nav-menu-grid');
@@ -29,34 +32,36 @@ window.toggleNavMenu = function() {
     
     if(!grid) return;
 
-    // خطوة أمان: إذا كانت القائمة فارغة، قم ببنائها الآن فوراً
+    // خطوة أمان: إذا كانت القائمة فارغة، قم ببنائها الآن
     if(grid.children.length === 0) {
-        console.log("القائمة فارغة، جاري البناء...");
         buildNavigationMenu();
     }
 
-    // التبديل بين الإظهار والإخفاء (مباشرة بستايل العنصر)
-    if (grid.style.display === 'grid') {
+    // استخدام الكلاس visible كما هو في ملف layout.css
+    if (grid.classList.contains('visible')) {
         // إغلاق
-        grid.style.display = 'none';
+        grid.classList.remove('visible');
+        setTimeout(() => grid.classList.add('hidden'), 400); // للتوافق مع الأنيميشن
         if(btn) btn.classList.remove('open');
-        if(arrow) arrow.innerText = "▼"; // سهم لأسفل
+        if(arrow) arrow.style.transform = "rotate(0deg)";
     } else {
-        // فتح (إجبار الظهور كشبكة)
-        grid.style.display = 'grid';
+        // فتح
+        grid.classList.remove('hidden');
+        // تأخير بسيط جداً للسماح للـ CSS بتفعيل الحركة
+        setTimeout(() => grid.classList.add('visible'), 10);
+        
         if(btn) btn.classList.add('open');
-        if(arrow) arrow.innerText = "▲"; // سهم لأعلى
+        if(arrow) arrow.style.transform = "rotate(180deg)";
     }
 };
 
 // ==========================================
-// 2. دالة بناء أزرار القائمة (مدمجة هنا لضمان وجودها)
+// 2. دالة بناء أزرار القائمة
 // ==========================================
 function buildNavigationMenu() {
     const navGrid = document.getElementById('nav-menu-grid');
     if(!navGrid) return;
 
-    // القائمة الثابتة لضمان ظهورها حتى لو لم تكن هناك انترنت
     const menus = [
         { id: 'ranks', text: '🏆 الأوائل' },
         { id: 'schedule', text: '📅 الجداول' },
@@ -66,28 +71,16 @@ function buildNavigationMenu() {
         { id: 'about', text: '🕌 من نحن' }
     ];
 
-    navGrid.innerHTML = ''; // تنظيف
+    navGrid.innerHTML = ''; 
     menus.forEach(menu => {
         const btn = document.createElement('button');
-        btn.className = 'nav-btn';
-        // إضافة ستايل بسيط لضمان أن الزر يظهر بشكل جيد
-        btn.style.padding = "15px";
-        btn.style.fontSize = "1rem";
-        btn.style.cursor = "pointer";
+        btn.className = 'nav-btn'; // سيأخذ تنسيق CSS الموجود
         btn.innerText = menu.text;
-        
-        // ربط الزر بدالة الانتقال
         btn.onclick = function() {
             showSection(menu.id);
         };
-        
         navGrid.appendChild(btn);
     });
-    
-    // إضافة تنسيق الشبكة يدوياً لضمان الشكل
-    navGrid.style.gridTemplateColumns = "repeat(2, 1fr)";
-    navGrid.style.gap = "10px";
-    navGrid.style.marginTop = "10px";
 }
 
 // ==========================================
@@ -104,13 +97,13 @@ window.showSection = function(sectionId) {
     const target = document.getElementById(`section-${sectionId}`);
     if(target) {
         target.style.display = 'block';
-        target.classList.add('active');
+        setTimeout(() => target.classList.add('active'), 10); // تفعيل أنيميشن الظهور
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // إغلاق القائمة الجانبية بعد الاختيار
+    // إغلاق القائمة الجانبية تلقائياً
     const grid = document.getElementById('nav-menu-grid');
-    if(grid && grid.style.display === 'grid') {
+    if(grid && grid.classList.contains('visible')) {
         toggleNavMenu();
     }
     
@@ -128,14 +121,20 @@ window.showSection = function(sectionId) {
 };
 
 // ==========================================
-// 4. بقية الوظائف (الأدمن، الأكورديون، وغيرها)
+// 4. دالة فتح نافذة الأدمن (حل مشكلة القفل)
 // ==========================================
-
 window.openLoginModal = function() {
     const modal = document.getElementById('login-modal');
-    if(modal) modal.style.display = 'flex';
+    if(modal) {
+        modal.style.display = 'flex'; // تأكدنا من ملف CSS أن display الافتراضي هو flex للتوسط
+    } else {
+        alert("خطأ: نافذة الدخول غير موجودة");
+    }
 };
 
+// ==========================================
+// 5. دوال مساعدة (الأكورديون، التنبيهات، الألوان)
+// ==========================================
 window.toggleAccordion = function(btn) {
     btn.classList.toggle("active");
     const panel = btn.nextElementSibling;
@@ -155,9 +154,8 @@ function populateJuzuDropdowns() {
     ids.forEach(id => {
         const select = document.getElementById(id);
         if(!select) return;
-        const first = select.options[0];
-        select.innerHTML = '';
-        select.appendChild(first);
+        if(select.options.length > 1) return; // منع التكرار
+        
         for(let i=1; i<=30; i++) {
             const opt = document.createElement('option');
             opt.value = i;
@@ -167,23 +165,6 @@ function populateJuzuDropdowns() {
     });
 }
 
-// الألوان والتنبيهات
-window.setQuranTheme = function(theme) {
-    const display = document.getElementById('quran-text-display');
-    const area = document.getElementById('reading-area');
-    if(!display) return;
-    if(theme === 'yellow') {
-        if(area) area.style.backgroundColor = "#fdf6e3";
-        display.style.backgroundColor = "#fdf6e3";
-        display.style.color = "#5b4636";
-    } else {
-        if(area) area.style.backgroundColor = "#ffffff";
-        display.style.backgroundColor = "#ffffff";
-        display.style.color = "#000";
-    }
-    showToast("تم تغيير اللون 🎨", "info");
-};
-
 window.showToast = function(msg, type='info') {
     const box = document.getElementById('toast-container');
     if(!box) return;
@@ -191,15 +172,17 @@ window.showToast = function(msg, type='info') {
     t.className = `toast ${type}`;
     t.innerText = msg;
     box.appendChild(t);
-    setTimeout(() => { t.style.opacity='1'; }, 10);
+    setTimeout(() => t.style.opacity='1', 10);
     setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),500); }, 3000);
 };
 
 window.alert = function(m) { showToast(m); };
-window.closePopup = function() { document.getElementById('site-notification').style.display='none'; };
-
-window.toggleTheme = function() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('site_theme', isDark ? 'dark' : 'light');
+window.closePopup = function() { 
+    const p = document.getElementById('site-notification');
+    if(p) p.style.display='none'; 
+};
+window.disablePopupForever = function() {
+    const chk = document.getElementById('popup-forever-check');
+    if(chk && chk.checked) localStorage.setItem('dont_show_popup_v2', 'true');
+    closePopup();
 };
